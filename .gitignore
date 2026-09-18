@@ -6,7 +6,7 @@ sim/data/
 sim/outputs/
 sim/logs/
 sim/venv/
-sim/menagerie/            # re-fetched by setup_ubuntu.sh (sparse clone of mujoco_menagerie)
+sim/menagerie/
 sim/brick_sim/__pycache__/
 **/__pycache__/
 *.pyc
