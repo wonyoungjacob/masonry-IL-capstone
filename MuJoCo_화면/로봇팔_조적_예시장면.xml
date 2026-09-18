@@ -1,0 +1,43 @@
+<mujoco model="dry_stack_masonry_example">
+<option timestep="0.002" gravity="0 0 -9.81" iterations="100"/>
+<visual><global offwidth="1600" offheight="900"/><quality shadowsize="4096" offsamples="4"/><headlight ambient=".4 .4 .4" diffuse=".5 .5 .5"/></visual>
+<asset><texture name="sky" type="skybox" builtin="gradient" rgb1=".84 .88 .91" rgb2=".98 .98 .98" width="512" height="2048"/><texture name="grid" type="2d" builtin="checker" rgb1=".36 .40 .43" rgb2=".40 .44 .47" width="512" height="512"/><material name="floor" texture="grid" texrepeat="12 12" reflectance="0"/><material name="brick" rgba=".67 .32 .18 1" specular=".1" shininess=".1"/></asset>
+<default><geom friction="1 .005 .0001" condim="3" solref=".01 1" solimp=".95 .99 .001"/></default>
+<worldbody><light pos="-1 -1 2.5" dir=".3 .3 -1" diffuse=".8 .8 .8" castshadow="true"/><geom type="plane" size="2 2 .05" material="floor"/>
+<geom name="target_line" type="box" pos="0 .055 .001" size=".42 .003 .001" rgba=".12 .5 .85 1" contype="0" conaffinity="0"/>
+<body name="brick_0_0" pos="-0.246 0 0.035"><freejoint/><geom type="box" size=".08 .04 .035" material="brick" mass=".65"/></body><body name="brick_0_1" pos="-0.082 0 0.035"><freejoint/><geom type="box" size=".08 .04 .035" material="brick" mass=".65"/></body><body name="brick_0_2" pos="0.082 0 0.035"><freejoint/><geom type="box" size=".08 .04 .035" material="brick" mass=".65"/></body><body name="brick_0_3" pos="0.246 0 0.035"><freejoint/><geom type="box" size=".08 .04 .035" material="brick" mass=".65"/></body><body name="brick_1_0" pos="-0.206 0 0.106"><freejoint/><geom type="box" size=".08 .04 .035" material="brick" mass=".65"/></body><body name="brick_1_1" pos="-0.042 0 0.106"><freejoint/><geom type="box" size=".08 .04 .035" material="brick" mass=".65"/></body><body name="brick_1_2" pos="0.122 0 0.106"><freejoint/><geom type="box" size=".08 .04 .035" material="brick" mass=".65"/></body><body name="brick_1_3" pos="0.286 0 0.106"><freejoint/><geom type="box" size=".08 .04 .035" material="brick" mass=".65"/></body><body name="brick_2_0" pos="-0.246 0 0.177"><freejoint/><geom type="box" size=".08 .04 .035" material="brick" mass=".65"/></body><body name="brick_2_1" pos="-0.082 0 0.177"><freejoint/><geom type="box" size=".08 .04 .035" material="brick" mass=".65"/></body><body name="brick_2_2" pos="0.082 0 0.177"><freejoint/><geom type="box" size=".08 .04 .035" material="brick" mass=".65"/></body><body name="brick_2_3" pos="0.246 0 0.177"><freejoint/><geom type="box" size=".08 .04 .035" material="brick" mass=".65"/></body><body name="brick_3_0" pos="-0.206 0 0.24799999999999997"><freejoint/><geom type="box" size=".08 .04 .035" material="brick" mass=".65"/></body><body name="brick_3_1" pos="-0.042 0 0.24799999999999997"><freejoint/><geom type="box" size=".08 .04 .035" material="brick" mass=".65"/></body><body name="brick_3_2" pos="0.122 0 0.24799999999999997"><freejoint/><geom type="box" size=".08 .04 .035" material="brick" mass=".65"/></body><body name="brick_3_3" pos="0.286 0 0.24799999999999997"><freejoint/><geom type="box" size=".08 .04 .035" material="brick" mass=".65"/></body><body name="supply_0" pos="-0.39 -0.31 .035" euler="0 0 14"><freejoint/><geom type="box" size=".08 .04 .035" material="brick" mass=".65"/></body><body name="supply_1" pos="-0.1 -0.32 .035" euler="0 0 -8"><freejoint/><geom type="box" size=".08 .04 .035" material="brick" mass=".65"/></body><body name="supply_2" pos="0.19 -0.32 .035" euler="0 0 18"><freejoint/><geom type="box" size=".08 .04 .035" material="brick" mass=".65"/></body>
+<body name="robot_base" pos="-.65 .12 0">
+ <geom type="cylinder" size=".115 .035" pos="0 0 .035" rgba=".13 .16 .19 1"/>
+ <body name="base_rotation" pos="0 0 .07" gravcomp="1">
+  <joint name="joint_1" axis="0 0 1" damping="10"/>
+  <geom type="cylinder" size=".075 .07" pos="0 0 .07" rgba=".2 .24 .28 1"/>
+  <body name="shoulder" pos="0 0 .14" gravcomp="1">
+   <joint name="joint_2" axis="0 1 0" damping="10"/>
+   <geom type="sphere" size=".075" rgba=".14 .18 .22 1"/>
+   <geom type="capsule" fromto="0 0 0 -.15 0 .38" size=".047" rgba=".82 .85 .88 1"/>
+   <body name="elbow" pos="-.15 0 .38" gravcomp="1">
+    <joint name="joint_3" axis="0 1 0" damping="10"/>
+    <geom type="sphere" size=".067" rgba=".16 .20 .24 1"/>
+    <geom type="cylinder" pos="0 -.055 0" size=".044 .015" euler="90 0 0" rgba=".12 .42 .72 1"/>
+    <geom type="capsule" fromto="0 0 0 .42 -.04 .16" size=".039" rgba=".82 .85 .88 1"/>
+    <body name="forearm" pos=".42 -.04 .16" gravcomp="1">
+     <joint name="joint_4" axis="1 0 0" damping="10"/>
+     <geom type="sphere" size=".056" rgba=".16 .20 .24 1"/>
+     <geom type="capsule" fromto="0 0 0 .29 -.08 -.12" size=".032" rgba=".82 .85 .88 1"/>
+     <body name="wrist" pos=".29 -.08 -.12" gravcomp="1">
+      <joint name="joint_5" axis="0 1 0" damping="10"/>
+      <geom type="sphere" size=".045" rgba=".16 .20 .24 1"/>
+      <body name="tool" pos="0 0 -.05" gravcomp="1">
+       <joint name="joint_6" axis="0 0 1" damping="10"/>
+       <geom type="box" size=".052 .072 .027" rgba=".24 .28 .32 1"/>
+       <geom type="box" size=".016 .011 .052" pos="0 -.051 -.057" rgba=".10 .13 .16 1"/>
+       <geom type="box" size=".016 .011 .052" pos="0 .051 -.057" rgba=".10 .13 .16 1"/>
+       <geom name="held_brick_illustration" type="box" size=".08 .04 .035" pos="0 0 -.08" material="brick"/>
+      </body>
+     </body>
+    </body>
+   </body>
+  </body>
+ </body>
+</body>
+</worldbody></mujoco>

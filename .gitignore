@@ -1,0 +1,21 @@
+# generated / large
+brick_sim_bundle.zip
+*.tmp.md
+sim/out/
+sim/data/
+sim/outputs/
+sim/logs/
+sim/venv/
+sim/menagerie/            # re-fetched by setup_ubuntu.sh (sparse clone of mujoco_menagerie)
+sim/brick_sim/__pycache__/
+**/__pycache__/
+*.pyc
+.work/
+.document_tools/
+# rendered copies of markdown (regenerate with md2html); keep the PDFs
+*.html
+# local datasets / checkpoints anywhere
+data/
+outputs/
+wandb/
+.venv/
