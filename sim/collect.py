@@ -59,6 +59,7 @@ def main():
     ap.add_argument("--spec", default="v2", choices=["v1", "v2"], help="scene spec (see brick_sim.scene.SPEC_V1/V2)")
     ap.add_argument("--disturb", type=float, default=0.0, help="P(a brick gets knocked) before each pick and after each release; the expert recovers (re-pick, re-place) and the recovery is recorded")
     ap.add_argument("--retries", type=int, default=2, help="max re-placements per brick after a bad placement")
+    ap.add_argument("--max-kicks", type=int, default=2, help="max disturbances per episode (1 with a low --disturb gives a mostly-clean set with some recoveries)")
     a = ap.parse_args()
 
     from lerobot.datasets.lerobot_dataset import LeRobotDataset
@@ -87,7 +88,7 @@ def main():
     for ep in range(a.episodes):
         seed = a.seed0 + ep
         env.reset(seed)
-        ex = ScriptedExpert(env, noise_std=a.noise, seed=seed, disturb_prob=a.disturb, max_retries=a.retries)
+        ex = ScriptedExpert(env, noise_std=a.noise, seed=seed, disturb_prob=a.disturb, max_retries=a.retries, max_kicks=a.max_kicks)
 
         def rec(obs, act, info):
             frame = {"task": TASK, "observation.state": obs["observation.state"], "action": act}

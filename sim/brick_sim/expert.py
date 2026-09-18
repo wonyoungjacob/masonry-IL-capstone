@@ -123,17 +123,9 @@ class ScriptedExpert:
         The arm holds still while physics runs, and those frames are recorded with the clean 'hold' action so the
         policy sees the brick move.  Returns the kick description for the episode log.
         """
-        env = self.env
-        rng = self.rng
-        dof = env.brick_dofadr[i]
-        ang = rng.uniform(-np.pi, np.pi)
-        v = rng.uniform(*speed)                        # 0.3-0.6 m/s -> slides ~0.6-2.5 cm (mu=0.75); stays reachable
-        wz = rng.uniform(-4.0, 4.0)
-        tip = rng.random() < self.tip_prob             # occasionally a real knock-over (unrecoverable for a 5-DoF arm)
-        env.data.qvel[dof: dof + 3] = [v * np.cos(ang), v * np.sin(ang), 0.0]
-        env.data.qvel[dof + 3: dof + 6] = [rng.uniform(-7, 7) if tip else 0.0, rng.uniform(-7, 7) if tip else 0.0, wz]
+        info = self.env.kick_brick(i, self.rng, speed=speed, tip_prob=self.tip_prob)
         self._hold(hold_steps, record_fn)
-        return {"brick": int(i), "t": int(env.t), "speed": float(v), "tip": bool(tip)}
+        return info
 
     def _hold(self, n_steps, record_fn=None):
         """Keep the arm at its current joint targets for n control steps (recorded as clean hold actions)."""

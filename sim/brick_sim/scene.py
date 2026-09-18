@@ -593,6 +593,18 @@ class BrickEnv:
                 d.eq_active[eq] = 1
                 self.cured[i] = True
 
+    def kick_brick(self, i, rng, speed=(0.3, 0.6), tip_prob=0.15):
+        """Knock brick i: planar shove (0.3-0.6 m/s -> slides ~0.6-2.5 cm at mu=0.75) with an optional tipping
+        component.  Physics only; the caller decides what the arm does meanwhile.  Returns a log dict."""
+        dof = self.brick_dofadr[i]
+        ang = rng.uniform(-np.pi, np.pi)
+        v = rng.uniform(*speed)
+        wz = rng.uniform(-4.0, 4.0)
+        tip = rng.random() < tip_prob
+        self.data.qvel[dof: dof + 3] = [v * np.cos(ang), v * np.sin(ang), 0.0]
+        self.data.qvel[dof + 3: dof + 6] = [rng.uniform(-7, 7) if tip else 0.0, rng.uniform(-7, 7) if tip else 0.0, wz]
+        return {"brick": int(i), "t": int(self.t), "speed": float(v), "tip": bool(tip)}
+
     def settle(self, n_ctrl_steps=25):
         """Let physics run with the arm held still (used before metrics)."""
         for _ in range(n_ctrl_steps):

@@ -116,6 +116,8 @@ def main():
     ap.add_argument("--out", default="")
     ap.add_argument("--task", default="wall", help="wall | 2p1 (blueprint 4.3)")
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    ap.add_argument("--disturb", type=float, default=0.0, help="P(one brick gets knocked during the episode): tests recovery. "
+                    "The kick happens at a random step in [40, 400] on a random brick that is not in the hand (planar, no tipping)")
     ap.add_argument("--rename-map", default="", help='JSON {dataset key: policy key}, same as lerobot-train --rename_map, '
                     'e.g. \'{"observation.images.front":"observation.images.camera1"}\'')
     a = ap.parse_args()
@@ -142,11 +144,22 @@ def main():
         staged = 0
         env.stage_brick(0); staged = 1
         t0 = time.time()
+        rng = np.random.default_rng(seed + 777)
+        kick_t = int(rng.integers(40, 400)) if rng.random() < a.disturb else -1
+        kicks = []
         for t in range(a.max_steps):
             obs = build_obs(env, cam_src, pcfg)
             with torch.inference_mode():
                 act = post(policy.select_action(pre(obs)))
             env.step(act.squeeze(0).detach().cpu().numpy())
+            if t == kick_t:
+                tcp = env.tcp_pose()[0]
+                free = [i for i in range(env.n_bricks) if np.linalg.norm(env.brick_pose(i)[0] - tcp) > 0.05
+                        and not env.cured[i]]
+                if free:
+                    kicks.append(env.kick_brick(int(rng.choice(free)), rng, speed=(0.3, 0.5), tip_prob=0.0))
+                else:
+                    kick_t += 20   # try again a second later
             # stage the next brick once the current one has been released on the wall line
             if staged < env.n_bricks:
                 p, _ = env.brick_pose(staged - 1)
@@ -157,9 +170,9 @@ def main():
         M = compute_metrics(env.brick_poses(), env.design, env.brick, cfg.wall, poses_before_settle=before)
         if cfg.layout == "2p1":
             M.update({f"bp_{k}": v for k, v in compute_metrics3(env.brick_poses(), env.design, env.brick, cfg.wall).items() if k != "assignment"})
-        M["seed"] = seed; M["staged"] = staged; M["wall_s"] = time.time() - t0
+        M["seed"] = seed; M["staged"] = staged; M["wall_s"] = time.time() - t0; M["kicks"] = kicks
         results.append(M)
-        print(f"ep {ep} seed {seed} staged {staged}/{env.n_bricks} succ {M['m1_success_rate']:.2f} exy {M['m1_exy_mean_mm']:.1f}mm "
+        print(f"ep {ep} seed {seed} kicks {len(kicks)} succ {M['m1_success_rate']:.2f} exy {M['m1_exy_mean_mm']:.1f}mm "
               f"fallen {M['m7_fallen_count']} iou {M['m8_voxel_iou']:.2f}  ({M['wall_s']:.0f}s)")
     agg = {k: float(np.mean([r[k] for r in results])) for k in ["m1_success_rate", "m1_exy_mean_mm", "m2_level_range_max_mm",
                                                               "m3_plumb_mm", "m4_straightness_max_mm", "m6_through_joints",
