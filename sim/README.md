@@ -48,6 +48,16 @@ python eval_policy.py --ckpt outputs/act_2p1_dry/checkpoints/last/pretrained_mod
 
 `collect.py`는 `--task 2p1`을 지원한다(20 Hz 자동 적용). 영상/좌표 입력 분리는 `--policy.input_features`를 명시하거나 데이터셋을 두 벌로 나누어 학습한다.
 
+## 장면 사양 v2 (2026-09-18)
+
+`brick_sim/scene.py`의 `SPEC_V2`(기본값). 머리줄눈 1 mm(실제 시공처럼 밀착), 접촉층 A = 각 벽돌 윗면의 얇은 모르타르 대리 형상(가시, 그 형상과 다른 벽돌 본체 사이에만 순응 접촉), 바닥에 아래층 목표 테두리(청색)와 벽면 먹선(흑색), 벽돌 3개는 시작부터 작업 공간 안 슬롯 3개에 무작위 순열·±5 mm·±10°로 산개. `SPEC_V1`은 9/18 이전 데이터셋(`data/2p1_*`)의 사양(4.737 mm 줄눈, 보이지 않는 margin 접촉층, 공급기).
+
+- `collect.py --spec v1|v2`가 장면 사양을 `collect_config.json["scene"]`에 기록하고, `eval_policy.py`·`view_demo.py --ckpt`는 체크포인트의 `train_config.json` → 데이터셋 → 사양을 읽어 **학습한 장면 그대로** 평가·재생한다.
+- `view_demo.py --ckpt <pretrained_model>`로 학습된 정책을, `--noise 0.003`으로 DART 노이즈 전문가를 뷰어에서 볼 수 있다.
+- `eval_policy.py`는 lerobot 0.6의 pre/post-processor(정규화)를 적용하고 GPU에서 추론한다(이전 버전은 정규화를 빼먹어 평가가 무의미했음). torch 스레드는 1개로 제한(`EVAL_THREADS`).
+- `metrics.py`의 복셀 IoU는 목표 영역에서 먼 벽돌(미배치)을 해석적으로 처리해 실패 에피소드에서도 1초 안에 끝난다.
+- `run_mortar.sh`: mortarB 조건에서 ACT·Diffusion·SmolVLA(+π0, `PI0=1`)·ACT(state)·ACT(dart) 학습과 100회 평가를 순차 실행. SmolVLA/π0는 `--rename_map`으로 카메라 이름을 사전학습 모델에 맞춘다.
+
 ## 알려진 한계
 
 - 전문가의 배치 정밀도(≈2 mm)는 위치 구동기(kp=50)의 정상상태 오차와 해제 시 미세 이동이 지배한다. 서보 보정 구간이 이를 절반으로 줄였다.

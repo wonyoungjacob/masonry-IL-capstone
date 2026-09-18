@@ -73,16 +73,46 @@ class SceneConfig:
     timestep: float = 0.002                 # physics step
     layout: str = "wall"                    # "wall" (running bond, n_courses x n_per_course) | "2p1" (blueprint 4.3)
     seed: int = 0
+    # --- scene spec (v2, 2026-09-18; see SPEC_V1 / SPEC_V2 and blueprint_config) ---
+    mortar_impl: str = "pad"                # "pad": mortar bed = thin collision+visual geom on every brick top, soft contact
+                                            #        pair with the brick above (blueprint 4.8.2 "접촉용 얇은 형상")
+                                            # "margin": legacy invisible <pair margin> between whole bricks
+    mortar_visual: bool = True              # draw the mortar (bed, squeeze-out lip, head-joint sliver); pad impl only
+    target_marks: bool = True               # floor outlines of the course-0 targets + chalk line (먹선) on the wall face
+    supply: str = "scatter"                 # "scatter": bricks lie near the workspace from the start (random slot/jitter/yaw)
+                                            # "feeder": legacy - parked far away, teleported one at a time to feeder_pos
+    supply_slots: tuple = ((0.05, -0.16), (0.15, -0.14), (0.10, -0.23))   # scatter slot centres (m), permuted per episode
 
 
-def blueprint_config(mortar: str = "dry", **kw) -> "SceneConfig":
+# Scene specs.  v1 = what the 2026-09-18 datasets (data/2p1_*) were generated with; v2 = current default.
+SPEC_V1 = dict(head_gap=0.004737, mortar_impl="margin", mortar_visual=False, target_marks=False, supply="feeder")
+SPEC_V2 = dict(head_gap=0.001, mortar_impl="pad", mortar_visual=True, target_marks=True, supply="scatter")
+SPEC_KEYS = tuple(SPEC_V2)
+
+
+def scene_spec(cfg: SceneConfig) -> dict:
+    """The spec fields that change the task geometry / physics / observations (recorded with every dataset)."""
+    return dict(head_gap=cfg.wall.head_gap, mortar_impl=cfg.mortar_impl, mortar_visual=cfg.mortar_visual,
+                target_marks=cfg.target_marks, supply=cfg.supply)
+
+
+def blueprint_config(mortar: str = "dry", spec: str = "v2", **kw) -> "SceneConfig":
     """SceneConfig matching 설계수행계획서_14조_통합최종본 4.3/4.4: 3 bricks 2+1, 90x42.632x27 mm, 1800 kg/m3,
-    lower-course gap 4.737 mm, joint 4.737 mm (equivalent contact layer), 20 Hz control, 1 ms physics."""
+    bed joint 4.737 mm (equivalent contact layer), 20 Hz control, 1 ms physics.
+
+    spec="v2" (default): 1 mm head joint, visible mortar bed (pad impl), floor target outlines + chalk line,
+                         bricks scattered near the workspace from the start.
+    spec="v1": the 2026-09-18 datasets: 4.737 mm head joint, invisible margin mortar, feeder supply.
+    Individual spec fields (SPEC_KEYS) may be overridden through kw, e.g. **collect_config["scene"].
+    """
+    s = dict(SPEC_V2 if spec == "v2" else SPEC_V1)
+    s.update({k: kw.pop(k) for k in list(kw) if k in SPEC_KEYS})
+    head_gap = s.pop("head_gap")
     bed = 0.004737 if mortar != "dry" else 0.0
     cfg = SceneConfig(brick=BrickSpec(L=0.09, W=0.042632, H=0.027, density=1800.0),
                       wall=WallSpec(n_courses=2, n_per_course=2, origin_x=-0.10, origin_y=-0.17,
-                                    head_gap=0.004737, bed_joint=bed),
-                      mortar=mortar, layout="2p1", ctrl_dt=0.05, timestep=0.001, feeder_pos=(0.10, -0.17), **kw)
+                                    head_gap=head_gap, bed_joint=bed),
+                      mortar=mortar, layout="2p1", ctrl_dt=0.05, timestep=0.001, feeder_pos=(0.10, -0.17), **s, **kw)
     return cfg
 
 
@@ -124,7 +154,7 @@ def n_bricks_for(wall: WallSpec, layout: str = "wall") -> int:
     return sum((wall.n_per_course + 1) if k % 2 else wall.n_per_course for k in range(wall.n_courses))
 
 
-def build_xml(cfg: SceneConfig, brick: BrickSpec, supply_poses, mortar_margin: float, lengths) -> str:
+def build_xml(cfg: SceneConfig, brick: BrickSpec, supply_poses, mortar_margin: float, lengths, design=None) -> str:
     n = len(supply_poses)
     hy, hz = brick.W / 2, brick.H / 2
     mass = brick.mass
@@ -132,6 +162,13 @@ def build_xml(cfg: SceneConfig, brick: BrickSpec, supply_poses, mortar_margin: f
     # A brick sags g/k under its own weight, so k = g / sag ; b = 2*zeta*sqrt(k).
     k = 9.81 / cfg.mortar_sag
     b = 2.0 * cfg.mortar_zeta * np.sqrt(k)
+    mortar_on = cfg.mortar in ("mortarA", "mortarB")
+    pad_impl = mortar_on and cfg.mortar_impl == "pad"
+    tb = cfg.wall.bed_joint            # mortar bed thickness
+    g = cfg.wall.head_gap              # head-joint width
+    inset = 0.001                      # the bed pad stays 1 mm inside the brick edge so the jaw pads never touch it
+    fr = f'friction="{cfg.mortar_friction} 0.005 0.0001"'
+    visual = 'contype="0" conaffinity="0" mass="0" material="mortar"'
 
     bricks = []
     for i, (x, y, z, yaw) in enumerate(supply_poses):
@@ -139,15 +176,40 @@ def build_xml(cfg: SceneConfig, brick: BrickSpec, supply_poses, mortar_margin: f
         rgba = "0.72 0.33 0.22 1" if i % 2 == 0 else "0.78 0.40 0.28 1"
         hx = lengths[i] / 2
         m_i = mass * lengths[i] / brick.L
-        bricks.append(
-            f'<body name="brick_{i}" pos="{_fmt([x, y, z])}" quat="{_fmt(q)}">'
-            f'<freejoint name="brick_{i}_free"/>'
-            f'<geom name="brick_{i}" type="box" size="{_fmt([hx, hy, hz])}" mass="{m_i:.5f}" '
-            f'rgba="{rgba}" friction="{cfg.mortar_friction} 0.005 0.0001" condim="3" priority="1"/>'
-            f'</body>'
-        )
+        # pad impl: brick boxes collide with everything (contype 1 / conaffinity 3); bed pads (contype 2 /
+        # conaffinity 0) collide only with other bricks' boxes -> never with the floor, the arm or other pads.
+        col = 'contype="1" conaffinity="3" ' if pad_impl else ''
+        parts = [
+            f'<body name="brick_{i}" pos="{_fmt([x, y, z])}" quat="{_fmt(q)}">',
+            f'<freejoint name="brick_{i}_free"/>',
+            f'<geom name="brick_{i}" type="box" size="{_fmt([hx, hy, hz])}" mass="{m_i:.5f}" {col}'
+            f'rgba="{rgba}" {fr} condim="3" priority="1"/>',
+        ]
+        if pad_impl:
+            # mortar bed on the top face: the brick above rests on this pad through the soft contact pair
+            parts.append(f'<geom name="bed_{i}" type="box" pos="0 0 {hz + tb / 2:.6f}" '
+                         f'size="{_fmt([hx - inset, hy - inset, tb / 2])}" contype="2" conaffinity="0" mass="0" '
+                         f'material="mortar" {fr} condim="3"/>')
+            if cfg.mortar_visual:
+                # wet mortar squeezed out past the front/back edges (visual only)
+                parts.append(f'<geom type="box" pos="0 0 {hz + tb * 0.3:.6f}" '
+                             f'size="{_fmt([hx - inset, hy + 0.0012, tb * 0.3])}" {visual}/>')
+                # head-joint mortar on the +x end (visual only)
+                parts.append(f'<geom type="box" pos="{hx + g / 2:.6f} 0 0" '
+                             f'size="{_fmt([g / 2, hy - inset, hz - inset])}" {visual}/>')
+        parts.append('</body>')
+        bricks.append(''.join(parts))
     pairs = []
-    if cfg.mortar in ("mortarA", "mortarB"):
+    if pad_impl:
+        for i in range(n):
+            for j in range(n):
+                if i != j:
+                    pairs.append(
+                        f'<pair geom1="bed_{i}" geom2="brick_{j}" condim="4" '
+                        f'friction="{cfg.mortar_friction} {cfg.mortar_friction} 0.005 0.0001 0.0001" '
+                        f'solref="{-k:.4f} {-b:.4f}" solimp="0.95 0.99 0.001 0.5 2"/>'
+                    )
+    elif mortar_on:
         for i in range(n):
             for j in range(i + 1, n):
                 pairs.append(
@@ -156,6 +218,28 @@ def build_xml(cfg: SceneConfig, brick: BrickSpec, supply_poses, mortar_margin: f
                     f'margin="{mortar_margin:.5f}" solref="{-k:.4f} {-b:.4f}" '
                     f'solimp="0.95 0.99 0.001 0.5 2"/>'
                 )
+    marks = []
+    if cfg.target_marks and design is not None:
+        z = 0.0002
+        bw, bh = 0.00075, 0.00015           # outline bar half-width / half-height
+        outline = 'contype="0" conaffinity="0" mass="0" rgba="0.10 0.25 0.75 1"'
+        chalk = 'contype="0" conaffinity="0" mass="0" rgba="0.06 0.06 0.08 1"'
+        for (x, y, zc, yaw, Li) in design:
+            if zc > brick.H:                # only the course on the floor has a footprint to mark
+                continue
+            hxd, hyd = Li / 2, brick.W / 2
+            marks += [f'<geom type="box" pos="{_fmt([x, y - hyd, z])}" size="{_fmt([hxd, bw, bh])}" {outline}/>',
+                      f'<geom type="box" pos="{_fmt([x, y + hyd, z])}" size="{_fmt([hxd, bw, bh])}" {outline}/>',
+                      f'<geom type="box" pos="{_fmt([x - hxd, y, z])}" size="{_fmt([bw, hyd, bh])}" {outline}/>',
+                      f'<geom type="box" pos="{_fmt([x + hxd, y, z])}" size="{_fmt([bw, hyd, bh])}" {outline}/>']
+        # chalk line (먹선) snapped along the design wall face, running past both ends of the wall
+        xs = [d[0] - d[4] / 2 for d in design] + [d[0] + d[4] / 2 for d in design]
+        x0, x1 = min(xs) - 0.06, max(xs) + 0.06
+        y_face = cfg.wall.origin_y - brick.W / 2
+        marks.append(f'<geom type="box" pos="{_fmt([(x0 + x1) / 2, y_face, z])}" '
+                     f'size="{_fmt([(x1 - x0) / 2, 0.0004, bh])}" {chalk}/>')
+        for xe in (min(xs), max(xs)):       # short cross ticks at the wall ends
+            marks.append(f'<geom type="box" pos="{_fmt([xe, y_face - 0.012, z])}" size="{_fmt([0.0004, 0.012, bh])}" {chalk}/>')
     welds = []
     if cfg.mortar == "mortarB":
         for i in range(n):
@@ -174,6 +258,10 @@ def build_xml(cfg: SceneConfig, brick: BrickSpec, supply_poses, mortar_margin: f
     <texture type="2d" name="ground" builtin="checker" mark="edge" rgb1="0.82 0.82 0.80" rgb2="0.70 0.70 0.68"
       markrgb="0.6 0.6 0.6" width="300" height="300"/>
     <material name="ground" texture="ground" texuniform="true" texrepeat="8 8" reflectance="0.05"/>
+    <texture type="2d" name="mortar" builtin="checker" mark="random" random="0.45" rgb1="0.55 0.53 0.49"
+      rgb2="0.52 0.50 0.46" markrgb="0.40 0.38 0.35" width="256" height="256"/>
+    <material name="mortar" texture="mortar" texuniform="true" texrepeat="40 40" reflectance="0.0" shininess="0.05"
+      specular="0.1"/>
   </asset>
   <worldbody>
     <light pos="0.3 -0.6 1.2" dir="-0.2 0.4 -1" directional="true" castshadow="true"/>
@@ -182,6 +270,7 @@ def build_xml(cfg: SceneConfig, brick: BrickSpec, supply_poses, mortar_margin: f
     <site name="wall_origin" pos="{_fmt([cfg.wall.origin_x, cfg.wall.origin_y, 0])}" size="0.003" rgba="0 1 0 0.4"/>
     <camera name="front" pos="0.02 -0.64 0.36" xyaxes="1 0 0 0 0.62 0.78"/>
     <camera name="top" pos="-0.02 -0.18 0.70" xyaxes="1 0 0 0 1 0"/>
+    {''.join(marks)}
     {''.join(bricks)}
   </worldbody>
   <contact>
@@ -242,13 +331,26 @@ class BrickEnv:
         n = n_bricks_for(cfg.wall, cfg.layout)
         poses = []
         self.feeder_targets = []
+        scatter = cfg.supply == "scatter" and n <= len(cfg.supply_slots)
+        slots = list(cfg.supply_slots)
+        if scatter:
+            self.rng.shuffle(slots)   # which brick lies where changes every episode
         for i in range(n):
-            # parked in a row far from the workspace; staged to the feeder slot when it is that brick's turn
-            poses.append((cfg.park_pos[0] + 0.07 * (i % 5), cfg.park_pos[1] + 0.06 * (i // 5), H / 2 + 0.0005, 0.0))
-            fx = cfg.feeder_pos[0] + self.rng.uniform(-cfg.pos_rand, cfg.pos_rand)
-            fy = cfg.feeder_pos[1] + self.rng.uniform(-cfg.pos_rand, cfg.pos_rand)
-            fyaw = np.deg2rad(self.rng.uniform(-cfg.supply_yaw_deg, cfg.supply_yaw_deg))
+            if scatter:
+                # all bricks lie in the workspace from the start: random slot, +-pos_rand jitter, +-yaw
+                sx, sy = slots[i]
+                fx = sx + self.rng.uniform(-cfg.pos_rand, cfg.pos_rand)
+                fy = sy + self.rng.uniform(-cfg.pos_rand, cfg.pos_rand)
+                fyaw = np.deg2rad(self.rng.uniform(-cfg.supply_yaw_deg, cfg.supply_yaw_deg))
+                poses.append((fx, fy, H / 2 + 0.0005, fyaw))
+            else:
+                # parked in a row far from the workspace; staged to the feeder slot when it is that brick's turn
+                poses.append((cfg.park_pos[0] + 0.07 * (i % 5), cfg.park_pos[1] + 0.06 * (i // 5), H / 2 + 0.0005, 0.0))
+                fx = cfg.feeder_pos[0] + self.rng.uniform(-cfg.pos_rand, cfg.pos_rand)
+                fy = cfg.feeder_pos[1] + self.rng.uniform(-cfg.pos_rand, cfg.pos_rand)
+                fyaw = np.deg2rad(self.rng.uniform(-cfg.supply_yaw_deg, cfg.supply_yaw_deg))
             self.feeder_targets.append((fx, fy, fyaw))
+        self._scatter = scatter
         return brick, poses
 
     def reset(self, seed: int | None = None):
@@ -258,7 +360,7 @@ class BrickEnv:
         self.design = design_poses(self.cfg, self.brick)
         self.brick_L = np.array([d[4] for d in self.design])
         margin = self.cfg.wall.bed_joint if self.cfg.mortar != "dry" else 0.0
-        xml = build_xml(self.cfg, self.brick, self.supply_poses, margin, list(self.brick_L))
+        xml = build_xml(self.cfg, self.brick, self.supply_poses, margin, list(self.brick_L), self.design)
         xml = xml.replace("ARM_XML", self.arm_xml.name)
         self.last_xml = xml
         self.model = mujoco.MjModel.from_xml_string(xml, self._assets)
@@ -286,7 +388,12 @@ class BrickEnv:
 
     # ------------------------------------------------------------------ feeder
     def stage_brick(self, i):
-        """Teleport brick i from the park row to the feeder slot (simulates an automatic brick feeder)."""
+        """Teleport brick i from the park row to the feeder slot (simulates an automatic brick feeder).
+
+        No-op with supply="scatter": every brick already lies at its (random) place in the workspace.
+        """
+        if getattr(self, "_scatter", False):
+            return
         fx, fy, fyaw = self.feeder_targets[i]
         a = self.brick_qadr[i]
         self.data.qpos[a: a + 3] = [fx, fy, self.brick.H / 2 + 0.0005]

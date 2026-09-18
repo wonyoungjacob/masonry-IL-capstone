@@ -14,7 +14,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from brick_sim.scene import BrickEnv, SceneConfig, WallSpec, n_bricks_for, blueprint_config
+from brick_sim.scene import BrickEnv, SceneConfig, WallSpec, n_bricks_for, blueprint_config, scene_spec
 from brick_sim.expert import ScriptedExpert
 from brick_sim.metrics import compute_metrics
 
@@ -56,13 +56,14 @@ def main():
     ap.add_argument("--task", default="wall", help="wall | 2p1 (blueprint 4.3: 3 bricks, 90x42.6x27 mm, 20 Hz)")
     ap.add_argument("--obs-set", default="both", choices=["both", "image", "state"],
                     help="image = vision policy dataset (no brick poses); state = coordinate baseline (no cameras); both")
+    ap.add_argument("--spec", default="v2", choices=["v1", "v2"], help="scene spec (see brick_sim.scene.SPEC_V1/V2)")
     a = ap.parse_args()
 
     from lerobot.datasets.lerobot_dataset import LeRobotDataset
 
     cams = a.cams.split(",")
     if a.task == "2p1":
-        cfg = blueprint_config(a.mortar, size_rand=a.size_rand, pos_rand=a.pos_rand, supply_yaw_deg=a.yaw_rand,
+        cfg = blueprint_config(a.mortar, spec=a.spec, size_rand=a.size_rand, pos_rand=a.pos_rand, supply_yaw_deg=a.yaw_rand,
                                img_h=a.img, img_w=a.img)
         a.fps = int(round(1.0 / cfg.ctrl_dt))   # 20 Hz per blueprint 4.4
     else:
@@ -115,7 +116,8 @@ def main():
               f"stable {M['m7_stable']} kept {keep}  ({time.time()-t0:.0f}s)")
     ds.finalize()
     (root / "episode_metrics.json").write_text(json.dumps(metrics_log, indent=1, default=float), encoding="utf-8")
-    (root / "collect_config.json").write_text(json.dumps(vars(a), indent=1), encoding="utf-8")
+    # the scene spec is recorded so that eval_policy.py / view_demo.py rebuild exactly this task for the policy
+    (root / "collect_config.json").write_text(json.dumps({**vars(a), "scene": scene_spec(cfg)}, indent=1), encoding="utf-8")
     print(f"done: kept {kept}/{a.episodes} episodes -> {root}  ({time.time()-t0:.0f}s)")
 
 

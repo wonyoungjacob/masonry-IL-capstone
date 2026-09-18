@@ -163,26 +163,40 @@ def compute_metrics(poses, design, brick, wall, tol_frac=0.05, tol_yaw_deg=5.0, 
 
 
 def _voxel_iou(P, D, Lvec, W, H, res=0.002):
+    """IoU between the union of the real boxes P and the union of the target boxes D on a voxel grid.
+
+    Real bricks far from the design region (e.g. still parked in the feeder row ~0.5 m away when the policy
+    did not finish) cannot intersect the targets, so they are not rasterised: their volume is added to the
+    union analytically.  Otherwise the grid would span the whole table (hundreds of millions of cells at
+    0.5 mm) and one evaluation episode takes minutes.
+    """
+    Lvec = np.asarray(Lvec, float)
     L = float(np.max(Lvec))
-    allc = np.vstack([P[:, :3], D[:, :3]])
+    dmin, dmax = D[:, :3].min(axis=0), D[:, :3].max(axis=0)
+    far = np.array([bool(np.any(c < dmin - 2 * L) or np.any(c > dmax + 2 * L)) for c in P[:, :3]])
+    far_vol = float(sum(li * W * H for li, f in zip(Lvec, far) if f))
+    Pn, Ln = P[~far], Lvec[~far]
+    allc = np.vstack([Pn[:, :3], D[:, :3]])
     xmin, xmax = allc[:, 0].min() - L, allc[:, 0].max() + L
     ymin, ymax = allc[:, 1].min() - W * 2, allc[:, 1].max() + W * 2
     zmin, zmax = 0.0, allc[:, 2].max() + H
     gx = np.arange(xmin, xmax, res); gy = np.arange(ymin, ymax, res); gz = np.arange(zmin, zmax, res)
     X, Y, Z = np.meshgrid(gx, gy, gz, indexing="ij")
 
-    def occ(centers, yaws):
+    def occ(centers, yaws, lengths):
         grid = np.zeros(X.shape, bool)
-        for c, yw, li in zip(centers, yaws, Lvec):
+        for c, yw, li in zip(centers, yaws, lengths):
             dx, dy, dz = X - c[0], Y - c[1], Z - c[2]
             u = np.cos(yw) * dx + np.sin(yw) * dy
             v = -np.sin(yw) * dx + np.cos(yw) * dy
             grid |= (np.abs(u) <= li / 2) & (np.abs(v) <= W / 2) & (np.abs(dz) <= H / 2)
         return grid
-    yaws_a = np.array([quat_to_yaw_tilt(q)[0] for q in P[:, 3:7]])
-    A = occ(P[:, :3], yaws_a)
-    B = occ(D[:, :3], D[:, 3])
-    inter = np.logical_and(A, B).sum(); union = np.logical_or(A, B).sum()
+    yaws_a = np.array([quat_to_yaw_tilt(q)[0] for q in Pn[:, 3:7]]) if len(Pn) else np.zeros(0)
+    A = occ(Pn[:, :3], yaws_a, Ln)
+    B = occ(D[:, :3], D[:, 3], Lvec)
+    cell = res ** 3
+    inter = np.logical_and(A, B).sum() * cell
+    union = np.logical_or(A, B).sum() * cell + far_vol
     return inter / union if union else 0.0
 
 

@@ -4,41 +4,99 @@ with the 8-metric masonry scorecard.  Works for image-based and state-based (env
 Usage:
   python eval_policy.py --ckpt outputs/act_dry_v0/checkpoints/last/pretrained_model --episodes 5 --mortar dry
 """
-import argparse, json, sys, time
+import argparse, functools, json, os, sys, time
 from pathlib import Path
 
 import numpy as np
 import torch
 
+# The rollout is one MuJoCo thread + tiny CPU tensors; torch's default 32 intra-op threads just spin and,
+# with a training job on the same box, slow each step ~8x.  Log lines are flushed so progress is visible.
+torch.set_num_threads(int(os.environ.get("EVAL_THREADS", "1")))
+print = functools.partial(print, flush=True)
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from brick_sim.scene import BrickEnv, SceneConfig, WallSpec, blueprint_config
 from brick_sim.metrics import compute_metrics, compute_metrics3
 from run_expert_eval import KEYS
+from collect import TASK  # the language instruction must match the one recorded in the datasets (VLA policies)
 
 
-def load_policy(ckpt: str):
-    from lerobot.policies.factory import get_policy_class
+def load_policy(ckpt: str, device: str, rename_map: dict | None = None):
+    """Load a LeRobot (>=0.6) checkpoint together with its pre/post-processor pipelines.
+
+    In lerobot 0.6 observation normalisation and action un-normalisation live in the saved
+    `policy_preprocessor` / `policy_postprocessor` pipelines, not inside the policy, so calling
+    `policy.select_action` on raw observations silently produces garbage actions.
+    """
+    from lerobot.policies.factory import get_policy_class, make_pre_post_processors
     from lerobot.configs.policies import PreTrainedConfig
     cfg = PreTrainedConfig.from_pretrained(ckpt)
-    cfg.device = "cpu"
+    cfg.device = device
     cls = get_policy_class(cfg.type)
     policy = cls.from_pretrained(ckpt, config=cfg)
     policy.eval()
-    return policy, cfg
+    overrides = {"device_processor": {"device": device}}
+    if rename_map:
+        overrides["rename_observations_processor"] = {"rename_map": rename_map}
+    pre, post = make_pre_post_processors(policy_cfg=cfg, pretrained_path=ckpt, preprocessor_overrides=overrides)
+    return policy, cfg, pre, post
 
 
-def build_obs(env, cams, cfg):
-    obs = {}
+def scene_spec_for_ckpt(ckpt: str) -> dict:
+    """Scene spec (head joint, mortar impl, marks, supply) recorded with the dataset this checkpoint was trained on.
+
+    A policy must be evaluated in the task it was trained for; datasets from before the spec was recorded
+    (2026-09-18 data/2p1_*) are the legacy v1 scene.
+    """
+    from brick_sim.scene import SPEC_V1
+    try:
+        tc = json.loads((Path(ckpt) / "train_config.json").read_text(encoding="utf-8"))
+        root = Path(tc["dataset"]["root"])
+        if not root.is_absolute():
+            root = Path(__file__).resolve().parent / root
+        cc = json.loads((root / "collect_config.json").read_text(encoding="utf-8"))
+        spec = cc.get("scene")
+        if spec is None:
+            print(f"scene spec: {root.name} predates the spec record -> legacy v1")
+            return dict(SPEC_V1)
+        return dict(spec)
+    except Exception as e:  # noqa: BLE001 - fall back loudly, never silently evaluate in the wrong scene
+        print(f"scene spec: cannot read the dataset's collect_config.json ({e}) -> legacy v1")
+        return dict(SPEC_V1)
+
+
+def camera_sources(cfg, rename_map: dict | None, available=("front", "wrist", "top")):
+    """Map each image feature the policy expects -> the simulator camera that feeds it.
+
+    Pretrained VLAs (SmolVLA: camera1..3, pi0: base_0_rgb/left_wrist_0_rgb/...) keep their own feature
+    names; `rename_map` {dataset key -> policy key} is the same map used with `lerobot-train --rename_map`.
+    Policy image keys with no source (e.g. a third camera we do not have) are left out and handled by the
+    policy's `empty_cameras` padding.
+    """
+    inv = {v: k for k, v in (rename_map or {}).items()}
+    out = {}
     for k in cfg.input_features:
-        if k.startswith("observation.images."):
-            cam = k.split(".")[-1]
-            img = env.render(cam)  # HWC uint8
-            obs[k] = torch.from_numpy(img).permute(2, 0, 1).float().div(255.0).unsqueeze(0)
-        elif k == "observation.state":
+        if not k.startswith("observation.images."):
+            continue
+        src = inv.get(k, k).split(".")[-1]
+        if src in available:
+            out[inv.get(k, k)] = src
+    return out
+
+
+def build_obs(env, cam_src, cfg):
+    """Raw (un-normalised) observation with the *dataset* key names; the preprocessor renames/normalises."""
+    obs = {}
+    for key, cam in cam_src.items():
+        img = env.render(cam)  # HWC uint8
+        obs[key] = torch.from_numpy(img).permute(2, 0, 1).float().div(255.0).unsqueeze(0)
+    for k in cfg.input_features:
+        if k == "observation.state":
             obs[k] = torch.from_numpy(env.qpos_arm()).unsqueeze(0)
         elif k == "observation.environment_state":
             obs[k] = torch.from_numpy(env.env_state()).unsqueeze(0)
-    obs["task"] = ["Stack the bricks into a running-bond wall on the marked line."]
+    obs["task"] = [TASK]
     return obs
 
 
@@ -57,18 +115,24 @@ def main():
     ap.add_argument("--fps", type=int, default=25)
     ap.add_argument("--out", default="")
     ap.add_argument("--task", default="wall", help="wall | 2p1 (blueprint 4.3)")
+    ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    ap.add_argument("--rename-map", default="", help='JSON {dataset key: policy key}, same as lerobot-train --rename_map, '
+                    'e.g. \'{"observation.images.front":"observation.images.camera1"}\'')
     a = ap.parse_args()
 
-    policy, pcfg = load_policy(a.ckpt)
-    print("policy", pcfg.type, "inputs", list(pcfg.input_features.keys()))
+    rename_map = json.loads(a.rename_map) if a.rename_map else None
+    policy, pcfg, pre, post = load_policy(a.ckpt, a.device, rename_map)
+    cam_src = camera_sources(pcfg, rename_map)
+    print("policy", pcfg.type, "device", a.device, "inputs", list(pcfg.input_features.keys()), "cameras", cam_src)
     if a.task == "2p1":
-        cfg = blueprint_config(a.mortar, size_rand=a.size_rand, pos_rand=a.pos_rand, supply_yaw_deg=a.yaw_rand)
+        spec = scene_spec_for_ckpt(a.ckpt)
+        print("scene spec", spec)
+        cfg = blueprint_config(a.mortar, size_rand=a.size_rand, pos_rand=a.pos_rand, supply_yaw_deg=a.yaw_rand, **spec)
     else:
         bed = 0.002 if a.mortar != "dry" else 0.0
         cfg = SceneConfig(wall=WallSpec(n_courses=a.courses, n_per_course=a.per_course, bed_joint=bed), mortar=a.mortar,
                           size_rand=a.size_rand, pos_rand=a.pos_rand, supply_yaw_deg=a.yaw_rand, ctrl_dt=1.0 / a.fps)
     env = BrickEnv(cfg)
-    cams = [k.split(".")[-1] for k in pcfg.input_features if k.startswith("observation.images.")]
     results = []
     for ep in range(a.episodes):
         seed = a.seed0 + ep
@@ -79,10 +143,10 @@ def main():
         env.stage_brick(0); staged = 1
         t0 = time.time()
         for t in range(a.max_steps):
-            obs = build_obs(env, cams, pcfg)
+            obs = build_obs(env, cam_src, pcfg)
             with torch.inference_mode():
-                act = policy.select_action(obs)
-            env.step(act.squeeze(0).numpy())
+                act = post(policy.select_action(pre(obs)))
+            env.step(act.squeeze(0).detach().cpu().numpy())
             # stage the next brick once the current one has been released on the wall line
             if staged < env.n_bricks:
                 p, _ = env.brick_pose(staged - 1)
