@@ -28,7 +28,8 @@ def smoothstep(s):
 
 class ScriptedExpert:
     def __init__(self, env: BrickEnv, noise_std: float = 0.0, seed: int = 0, speed: float = 1.0,
-                 disturb_prob: float = 0.0, max_retries: int = 2, tip_prob: float = 0.15, max_kicks: int = 2):
+                 disturb_prob: float = 0.0, max_retries: int = 2, tip_prob: float = 0.15, max_kicks: int = 2,
+                 kick_hold: int = 12, per_episode: bool = False):
         self.env = env
         self.rng = np.random.default_rng(seed)
         self.noise_std = noise_std
@@ -36,6 +37,11 @@ class ScriptedExpert:
         self.max_retries = max_retries
         self.tip_prob = tip_prob              # P(a kick has a tipping component | kick)
         self.max_kicks = max_kicks            # at most this many kicks per episode
+        self.kick_hold = kick_hold            # control steps the arm holds still after a kick; 0 = keep moving
+                                              # (holding teaches the policy to freeze, which it then does at test time)
+        self.per_episode = per_episode        # True: disturb_prob is P(this episode gets a kick) and the moment is
+                                              # drawn once; False (legacy): it is rolled at every opportunity, so the
+                                              # episode rate is 1-(1-p)^(2*n_bricks) -- 0.15 gave 62 %, not 15 %
         self.events, self.recoveries, self.unrecoverable = [], 0, []
         self.speed = speed
         self.ik = DLSIK(env.model, env.tcp_site, env.arm_qidx, env.arm_dofidx)
@@ -117,11 +123,12 @@ class ScriptedExpert:
         return np.array([r * np.cos(th), r * np.sin(th), z])
 
     # ---------------------------------------------------------------- disturbances / checks
-    def kick_brick(self, i, record_fn=None, hold_steps=12, speed=(0.3, 0.6)):
+    def kick_brick(self, i, record_fn=None, hold_steps=0, speed=(0.3, 0.6)):
         """Simulate the arm (or anything else) knocking brick i: a planar shove, sometimes with a tipping component.
 
-        The arm holds still while physics runs, and those frames are recorded with the clean 'hold' action so the
-        policy sees the brick move.  Returns the kick description for the episode log.
+        With hold_steps > 0 the arm freezes while physics runs and those frames are recorded as a 'hold' action;
+        that teaches the policy to freeze mid-episode, so hold_steps=0 (the brick slides while the arm carries on
+        with its planned motion) is the default.  Returns the kick description for the episode log.
         """
         info = self.env.kick_brick(i, self.rng, speed=speed, tip_prob=self.tip_prob)
         self._hold(hold_steps, record_fn)
@@ -196,14 +203,23 @@ class ScriptedExpert:
         self.order = sorted(range(env.n_bricks), key=lambda b: env.brick_pose(b)[0][0])
         self.slot = {b: k for k, b in enumerate(self.order)}
 
+        n_slots = 2 * env.n_bricks          # one opportunity before each pick and after each release
+        if self.per_episode:
+            self._kick_slot = int(self.rng.integers(n_slots)) if self.rng.random() < self.disturb_prob else -1
+        self._slot = -1
+
         def may_kick():   # disturbances only on first attempts and at most max_kicks per episode (no cascades)
-            return (self.disturb_prob > 0 and len(self.events) < self.max_kicks
-                    and self.rng.random() < self.disturb_prob)
+            self._slot += 1
+            if self.disturb_prob <= 0 or len(self.events) >= self.max_kicks:
+                return False
+            if self.per_episode:
+                return self._slot == self._kick_slot
+            return self.rng.random() < self.disturb_prob
 
         for i in self.order:
             for attempt in range(1 + self.max_retries):
                 if attempt == 0 and may_kick():
-                    self.events.append({"when": "before_pick", **self.kick_brick(i, record_fn, speed=(0.3, 0.45))})
+                    self.events.append({"when": "before_pick", **self.kick_brick(i, record_fn, hold_steps=self.kick_hold, speed=(0.3, 0.45))})
                     ok, why = self.placement_ok(i)
                     if why == "toppled":
                         self.unrecoverable.append(i)
@@ -225,7 +241,7 @@ class ScriptedExpert:
                 err0 = dict(self.last_err)
                 kicked = False
                 if attempt == 0 and may_kick():
-                    self.events.append({"when": "after_place", **self.kick_brick(i, record_fn)})
+                    self.events.append({"when": "after_place", **self.kick_brick(i, record_fn, hold_steps=self.kick_hold)})
                     kicked = True
                 ok, why = self.placement_ok(i)
                 self.log.append({"brick": int(i), "attempt": attempt, "ok": bool(ok), "why": why, "t": int(env.t),
