@@ -62,6 +62,9 @@ def main():
     ap.add_argument("--max-kicks", type=int, default=2, help="max disturbances per episode (1 with a low --disturb gives a mostly-clean set with some recoveries)")
     ap.add_argument("--kick-hold", type=int, default=0, help="control steps the arm freezes after a kick (0 = keep moving)")
     ap.add_argument("--per-episode-kick", action="store_true", help="--disturb is P(episode has one kick) instead of P(kick) at each of the 2*n_bricks opportunities")
+    ap.add_argument("--disturb-from", type=int, default=-1, help="episodes with index >= N always get a kick, earlier ones never do "
+                    "(a 'clean + extra recovery episodes' set: the clean part stays identical to the clean dataset, "
+                    "recovery is added on top instead of replacing clean demonstrations)")
     a = ap.parse_args()
 
     from lerobot.datasets.lerobot_dataset import LeRobotDataset
@@ -90,8 +93,12 @@ def main():
     for ep in range(a.episodes):
         seed = a.seed0 + ep
         env.reset(seed)
-        ex = ScriptedExpert(env, noise_std=a.noise, seed=seed, disturb_prob=a.disturb, max_retries=a.retries, max_kicks=a.max_kicks,
-                            kick_hold=a.kick_hold, per_episode=a.per_episode_kick)
+        dprob = a.disturb
+        per_ep = a.per_episode_kick
+        if a.disturb_from >= 0:
+            dprob, per_ep = (1.0 if ep >= a.disturb_from else 0.0), True
+        ex = ScriptedExpert(env, noise_std=a.noise, seed=seed, disturb_prob=dprob, max_retries=a.retries, max_kicks=a.max_kicks,
+                            kick_hold=a.kick_hold, per_episode=per_ep)
 
         def rec(obs, act, info):
             frame = {"task": TASK, "observation.state": obs["observation.state"], "action": act}
