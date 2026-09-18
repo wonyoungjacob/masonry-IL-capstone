@@ -74,33 +74,43 @@ class SceneConfig:
     layout: str = "wall"                    # "wall" (running bond, n_courses x n_per_course) | "2p1" (blueprint 4.3)
     seed: int = 0
     # --- scene spec (v2, 2026-09-18; see SPEC_V1 / SPEC_V2 and blueprint_config) ---
-    mortar_impl: str = "pad"                # "pad": mortar bed = thin collision+visual geom on every brick top, soft contact
-                                            #        pair with the brick above (blueprint 4.8.2 "접촉용 얇은 형상")
+    mortar_impl: str = "bed"                # "bed": one continuous mortar bed (3 mocap slabs) is laid on top of the lower
+                                            #        course once both bricks have settled there, following their real
+                                            #        poses; the top brick rests on it through a soft contact pair
+                                            #        (blueprint 4.8.2 "접촉용 얇은 형상").  Nothing is laid after that.
                                             # "margin": legacy invisible <pair margin> between whole bricks
-    mortar_visual: bool = True              # draw the mortar (bed, squeeze-out lip, head-joint sliver); pad impl only
+    mortar_visual: bool = True              # draw the bed (overhang, random drips down the faces, surface bumps)
+    bed_overhang: float = 0.002             # m: how far the wet bed spreads past the brick edges
     target_marks: bool = True               # floor outlines of the course-0 targets + chalk line (먹선) on the wall face
     supply: str = "scatter"                 # "scatter": bricks lie near the workspace from the start (random slot/jitter/yaw)
                                             # "feeder": legacy - parked far away, teleported one at a time to feeder_pos
-    supply_slots: tuple = ((0.05, -0.16), (0.15, -0.14), (0.10, -0.23))   # scatter slot centres (m), permuted per episode
+    supply_slots: tuple = ((0.065, -0.145), (0.17, -0.145), (0.09, -0.225))  # scatter slot centres (m), permuted per episode
+                                            # constraints (validated 2026-09-18, 0/40 failures with and without kicks):
+                                            # radii 0.16-0.24 m from the base (r=0.25 made the descending jaw knock the brick
+                                            # over); >= 2 cm clear of the wall's right end (x=-0.0095) so a brick placed there
+                                            # never lands on a waiting brick; neighbours >= 10 cm apart along x or >= 8 cm
+                                            # along y, because the open moving jaw swings out ~7 cm and hits a closer brick
 
 
 # Scene specs.  v1 = what the 2026-09-18 datasets (data/2p1_*) were generated with; v2 = current default.
-SPEC_V1 = dict(head_gap=0.004737, mortar_impl="margin", mortar_visual=False, target_marks=False, supply="feeder")
-SPEC_V2 = dict(head_gap=0.001, mortar_impl="pad", mortar_visual=True, target_marks=True, supply="scatter")
+SPEC_V1 = dict(head_gap=0.004737, mortar_impl="margin", mortar_visual=False, target_marks=False, supply="feeder",
+               cure_settle_steps=25)
+SPEC_V2 = dict(head_gap=0.001, mortar_impl="bed", mortar_visual=True, target_marks=True, supply="scatter",
+               cure_settle_steps=40)   # 2 s settle before cure / bed laying (blueprint 4.8.2 first comparison value)
 SPEC_KEYS = tuple(SPEC_V2)
 
 
 def scene_spec(cfg: SceneConfig) -> dict:
     """The spec fields that change the task geometry / physics / observations (recorded with every dataset)."""
     return dict(head_gap=cfg.wall.head_gap, mortar_impl=cfg.mortar_impl, mortar_visual=cfg.mortar_visual,
-                target_marks=cfg.target_marks, supply=cfg.supply)
+                target_marks=cfg.target_marks, supply=cfg.supply, cure_settle_steps=cfg.cure_settle_steps)
 
 
 def blueprint_config(mortar: str = "dry", spec: str = "v2", **kw) -> "SceneConfig":
     """SceneConfig matching 설계수행계획서_14조_통합최종본 4.3/4.4: 3 bricks 2+1, 90x42.632x27 mm, 1800 kg/m3,
     bed joint 4.737 mm (equivalent contact layer), 20 Hz control, 1 ms physics.
 
-    spec="v2" (default): 1 mm head joint, visible mortar bed (pad impl), floor target outlines + chalk line,
+    spec="v2" (default): 1 mm head joint, continuous mortar bed laid on the settled lower course, floor target outlines + chalk line,
                          bricks scattered near the workspace from the start.
     spec="v1": the 2026-09-18 datasets: 4.737 mm head joint, invisible margin mortar, feeder supply.
     Individual spec fields (SPEC_KEYS) may be overridden through kw, e.g. **collect_config["scene"].
@@ -163,10 +173,8 @@ def build_xml(cfg: SceneConfig, brick: BrickSpec, supply_poses, mortar_margin: f
     k = 9.81 / cfg.mortar_sag
     b = 2.0 * cfg.mortar_zeta * np.sqrt(k)
     mortar_on = cfg.mortar in ("mortarA", "mortarB")
-    pad_impl = mortar_on and cfg.mortar_impl == "pad"
+    bed_impl = mortar_on and cfg.mortar_impl == "bed" and cfg.layout == "2p1"
     tb = cfg.wall.bed_joint            # mortar bed thickness
-    g = cfg.wall.head_gap              # head-joint width
-    inset = 0.001                      # the bed pad stays 1 mm inside the brick edge so the jaw pads never touch it
     fr = f'friction="{cfg.mortar_friction} 0.005 0.0001"'
     visual = 'contype="0" conaffinity="0" mass="0" material="mortar"'
 
@@ -176,39 +184,45 @@ def build_xml(cfg: SceneConfig, brick: BrickSpec, supply_poses, mortar_margin: f
         rgba = "0.72 0.33 0.22 1" if i % 2 == 0 else "0.78 0.40 0.28 1"
         hx = lengths[i] / 2
         m_i = mass * lengths[i] / brick.L
-        # pad impl: brick boxes collide with everything (contype 1 / conaffinity 3); bed pads (contype 2 /
-        # conaffinity 0) collide only with other bricks' boxes -> never with the floor, the arm or other pads.
-        col = 'contype="1" conaffinity="3" ' if pad_impl else ''
-        parts = [
-            f'<body name="brick_{i}" pos="{_fmt([x, y, z])}" quat="{_fmt(q)}">',
-            f'<freejoint name="brick_{i}_free"/>',
-            f'<geom name="brick_{i}" type="box" size="{_fmt([hx, hy, hz])}" mass="{m_i:.5f}" {col}'
-            f'rgba="{rgba}" {fr} condim="3" priority="1"/>',
-        ]
-        if pad_impl:
-            # mortar bed on the top face: the brick above rests on this pad through the soft contact pair
-            parts.append(f'<geom name="bed_{i}" type="box" pos="0 0 {hz + tb / 2:.6f}" '
-                         f'size="{_fmt([hx - inset, hy - inset, tb / 2])}" contype="2" conaffinity="0" mass="0" '
-                         f'material="mortar" {fr} condim="3"/>')
+        bricks.append(
+            f'<body name="brick_{i}" pos="{_fmt([x, y, z])}" quat="{_fmt(q)}">'
+            f'<freejoint name="brick_{i}_free"/>'
+            f'<geom name="brick_{i}" type="box" size="{_fmt([hx, hy, hz])}" mass="{m_i:.5f}" '
+            f'rgba="{rgba}" {fr} condim="3" priority="1"/>'
+            f'</body>'
+        )
+    beds, pairs = [], []
+    if bed_impl:
+        # The bed is laid at run time (BrickEnv._update_bed) on the real poses of the two settled lower bricks:
+        # slab bed_0 / bed_1 over each brick top (mocap bodies, parked under the floor until then) and bed_j
+        # bridging the head joint, so the three form one continuous layer.  contype/conaffinity 0: they touch
+        # nothing except through the explicit soft <pair>s with the bricks (never the floor, the arm, each other).
+        ov = cfg.bed_overhang
+        hxb, hyb = brick.L / 2 + ov, hy + ov
+        for kk in range(2):
+            lips = ''
             if cfg.mortar_visual:
-                # wet mortar squeezed out past the front/back edges (visual only)
-                parts.append(f'<geom type="box" pos="0 0 {hz + tb * 0.3:.6f}" '
-                             f'size="{_fmt([hx - inset, hy + 0.0012, tb * 0.3])}" {visual}/>')
-                # head-joint mortar on the +x end (visual only)
-                parts.append(f'<geom type="box" pos="{hx + g / 2:.6f} 0 0" '
-                             f'size="{_fmt([g / 2, hy - inset, hz - inset])}" {visual}/>')
-        parts.append('</body>')
-        bricks.append(''.join(parts))
-    pairs = []
-    if pad_impl:
-        for i in range(n):
+                for side, tag in ((-1, "f"), (1, "b")):
+                    for s in range(5):   # drips down the front/back faces; length/bulge randomised per episode
+                        lips += (f'<geom name="lip_{kk}_{tag}{s}" type="box" '
+                                 f'pos="{(-0.8 + 0.4 * s) * hxb * 0.92:.5f} {side * (hyb - 0.0008):.5f} {-tb / 2:.5f}" '
+                                 f'size="{hxb * 0.18:.5f} 0.0008 0.001" {visual}/>')
+                for s in range(3):       # small bumps on the surface (visual only)
+                    lips += (f'<geom name="bump_{kk}_{s}" type="box" pos="0 0 {tb / 2:.5f}" '
+                             f'size="0.008 0.005 0.0003" {visual}/>')
+            beds.append(f'<body name="bed_{kk}" mocap="true" pos="0 0 -1">'
+                        f'<geom name="bed_{kk}" type="box" size="{_fmt([hxb, hyb, tb / 2])}" '
+                        f'contype="0" conaffinity="0" mass="0" material="mortar" {fr} condim="3"/>{lips}</body>')
+        beds.append(f'<body name="bed_j" mocap="true" pos="0 0 -1">'
+                    f'<geom name="bed_j" type="box" size="{_fmt([0.004, hyb, tb / 2])}" '
+                    f'contype="0" conaffinity="0" mass="0" material="mortar" {fr} condim="3"/></body>')
+        for gname in ("bed_0", "bed_1", "bed_j"):
             for j in range(n):
-                if i != j:
-                    pairs.append(
-                        f'<pair geom1="bed_{i}" geom2="brick_{j}" condim="4" '
-                        f'friction="{cfg.mortar_friction} {cfg.mortar_friction} 0.005 0.0001 0.0001" '
-                        f'solref="{-k:.4f} {-b:.4f}" solimp="0.95 0.99 0.001 0.5 2"/>'
-                    )
+                pairs.append(
+                    f'<pair geom1="{gname}" geom2="brick_{j}" condim="4" '
+                    f'friction="{cfg.mortar_friction} {cfg.mortar_friction} 0.005 0.0001 0.0001" '
+                    f'solref="{-k:.4f} {-b:.4f}" solimp="0.95 0.99 0.001 0.5 2"/>'
+                )
     elif mortar_on:
         for i in range(n):
             for j in range(i + 1, n):
@@ -272,6 +286,7 @@ def build_xml(cfg: SceneConfig, brick: BrickSpec, supply_poses, mortar_margin: f
     <camera name="top" pos="-0.02 -0.18 0.70" xyaxes="1 0 0 0 1 0"/>
     {''.join(marks)}
     {''.join(bricks)}
+    {''.join(beds)}
   </worldbody>
   <contact>
     {''.join(pairs)}
@@ -377,6 +392,37 @@ class BrickEnv:
         self.brick_dofadr = [m.joint(f"brick_{i}_free").dofadr[0] for i in range(self.n_bricks)]
         self.cured = np.zeros(self.n_bricks, dtype=bool)
         self.settle_count = np.zeros(self.n_bricks, dtype=int)
+        # mortar bed (spec v2): laid once the lower course has settled
+        self.bed_impl = self.cfg.mortar in ("mortarA", "mortarB") and self.cfg.mortar_impl == "bed" and self.cfg.layout == "2p1"
+        self.bed_laid = False
+        self.bed_count = np.zeros(self.n_bricks, dtype=int)
+        self.bed_bricks = []
+        if self.bed_impl:
+            self.bed_mocap = [m.body_mocapid[m.body(f"bed_{kk}").id] for kk in ("0", "1", "j")]
+            self.bed_geom_j = m.geom("bed_j").id
+            tb = self.cfg.wall.bed_joint
+            if self.cfg.mortar_visual:
+                # randomise the wet look per episode: drip length / bulge and bump placement
+                hxb = self.brick.L / 2 + self.cfg.bed_overhang
+                for kk in range(2):
+                    for tag in ("f", "b"):
+                        for s in range(5):
+                            gid = m.geom(f"lip_{kk}_{tag}{s}").id
+                            drop = self.rng.uniform(0.0004, 0.0028)
+                            m.geom_size[gid, 0] = hxb * self.rng.uniform(0.10, 0.19)
+                            m.geom_size[gid, 2] = drop
+                            m.geom_pos[gid, 2] = -tb / 2 - drop + 0.0006
+                            m.geom_pos[gid, 1] += np.sign(m.geom_pos[gid, 1]) * self.rng.uniform(0.0, 0.0006)
+                    for s in range(3):
+                        gid = m.geom(f"bump_{kk}_{s}").id
+                        m.geom_pos[gid, 0] = self.rng.uniform(-0.7, 0.7) * hxb
+                        m.geom_pos[gid, 1] = self.rng.uniform(-0.5, 0.5) * self.brick.W / 2
+                        m.geom_size[gid, 0] = self.rng.uniform(0.005, 0.012)
+                        m.geom_size[gid, 1] = self.rng.uniform(0.003, 0.008)
+                        m.geom_size[gid, 2] = self.rng.uniform(0.0002, 0.0005)
+            else:
+                for gname in ("bed_0", "bed_1", "bed_j"):
+                    m.geom_rgba[m.geom(gname).id, 3] = 0.0
         self.n_sub = int(round(self.cfg.ctrl_dt / m.opt.timestep))
         d.qpos[self.arm_qidx] = HOME_QPOS[:5]
         d.qpos[self.jaw_qidx] = JAW_OPEN
@@ -445,7 +491,77 @@ class BrickEnv:
         self.t += 1
         if self.cfg.mortar == "mortarB":
             self._update_cure()
+        if self.bed_impl and not self.bed_laid:
+            self._update_bed()
         return self.observe()
+
+    def brick_in_slot(self, i, slots=None, tol_xy=0.008, tol_yaw_deg=10.0, tol_tilt_deg=10.0):
+        """Index of the design slot brick i correctly occupies (position/yaw/tilt within tolerance), else None."""
+        p, q = self.brick_pose(i)
+        w, x, y, z = q
+        yaw = np.arctan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z))
+        tilt = np.degrees(np.arccos(np.clip(1 - 2 * (x * x + y * y), -1, 1)))
+        if tilt > tol_tilt_deg:
+            return None
+        for k in (slots if slots is not None else range(len(self.design))):
+            dx, dy, dz, dyaw = self.design[k][:4]
+            if np.hypot(p[0] - dx, p[1] - dy) > tol_xy or abs(p[2] - dz) > 0.003:
+                continue
+            if np.degrees(abs((yaw - dyaw + np.pi / 2) % np.pi - np.pi / 2)) > tol_yaw_deg:
+                continue
+            return k
+        return None
+
+    def _hand_clear(self, p, dist=0.05):
+        """True when the TCP is at least `dist` away from point p (the mason's hand is not on the brick)."""
+        return np.linalg.norm(self.tcp_pose()[0] - p) > dist
+
+    def _lower_course_settled(self):
+        """Indices of bricks correctly placed in a lower-course slot, released, hand clear and static long enough."""
+        lower = [k for k, dd in enumerate(self.design) if dd[2] < self.brick.H]
+        out = []
+        for i in range(self.n_bricks):
+            p, _ = self.brick_pose(i)
+            v = self.brick_vel(i)
+            placed = self.brick_in_slot(i, lower) is not None
+            static = np.linalg.norm(v[:3]) < 0.01 and np.linalg.norm(v[3:]) < 0.2
+            ok = placed and static and self._hand_clear(p)
+            self.bed_count[i] = self.bed_count[i] + 1 if ok else 0
+            if self.bed_count[i] >= self.cfg.cure_settle_steps:
+                out.append(i)
+        return out
+
+    def _update_bed(self):
+        """Lay one continuous mortar bed on the real top faces of the two settled lower bricks (spec v2).
+
+        Real practice: the bed is spread on the finished course, not carried on the brick.  It is laid only once
+        both lower bricks are *correctly* in their slots (so a shoved brick is never pinned under the bed and can
+        still be re-placed); nothing is laid after the top brick.
+        """
+        idx = self._lower_course_settled()
+        if len(idx) < 2:
+            return
+        m, d = self.model, self.data
+        tb = self.cfg.wall.bed_joint
+        L, H = self.brick.L, self.brick.H
+        idx = sorted(idx[:2], key=lambda i: self.brick_pose(i)[0][0])   # left, right
+        tops = []
+        for kk, i in enumerate(idx):
+            p, q = self.brick_pose(i)
+            R = _quat_rotmat(q)
+            c = p + R @ np.array([0.0, 0.0, H / 2 + tb / 2])
+            d.mocap_pos[self.bed_mocap[kk]] = c
+            d.mocap_quat[self.bed_mocap[kk]] = q
+            tops.append((p, c))
+        (pl, cl), (pr, cr) = tops
+        gap = max((pr[0] - L / 2) - (pl[0] + L / 2), 0.0)
+        m.geom_size[self.bed_geom_j, 0] = gap / 2 + self.cfg.bed_overhang + 0.002
+        d.mocap_pos[self.bed_mocap[2]] = [(pl[0] + pr[0]) / 2, (cl[1] + cr[1]) / 2, (cl[2] + cr[2]) / 2]
+        d.mocap_quat[self.bed_mocap[2]] = [1, 0, 0, 0]
+        mujoco.mj_forward(m, d)
+        self.bed_laid = True
+        self.bed_bricks = list(idx)
+        self.bed_t = self.t
 
     def _update_cure(self):
         """Cure a brick once it is on the wall line, nearly static and released (mortarB).
@@ -454,7 +570,6 @@ class BrickEnv:
         of the brick's world pose (verified empirically: 0.07 mm drift after activation).
         """
         m, d = self.model, self.data
-        jaw_open = d.qpos[self.jaw_qidx] > 0.3
         w = self.cfg.wall
         # only bricks inside the designed wall footprint may cure (never at the feeder or in the park row)
         xs = [dd[0] for dd in self.design]
@@ -466,7 +581,8 @@ class BrickEnv:
             v = self.brick_vel(i)
             on_wall = abs(p[1] - w.origin_y) < 0.02 and x_lo < p[0] < x_hi and p[2] > 0.3 * self.brick.H
             static = np.linalg.norm(v[:3]) < 0.01 and np.linalg.norm(v[3:]) < 0.2
-            self.settle_count[i] = self.settle_count[i] + 1 if (on_wall and static and jaw_open) else 0
+            # the hand must be off the brick: a brick about to be re-grasped (recovery) must not cure under the jaw
+            self.settle_count[i] = self.settle_count[i] + 1 if (on_wall and static and self._hand_clear(p)) else 0
             if self.settle_count[i] >= self.cfg.cure_settle_steps:
                 eq = m.equality(f"cure_{i}").id
                 qi = np.r_[q[0], -q[1:]]

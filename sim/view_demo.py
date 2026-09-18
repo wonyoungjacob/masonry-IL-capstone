@@ -54,6 +54,7 @@ def main():
     ap.add_argument("--loop", action="store_true")
     ap.add_argument("--task", default="2p1", help="2p1 (blueprint 4.3, default) | wall")
     ap.add_argument("--noise", type=float, default=0.0, help="expert only: DART execution noise std (m)")
+    ap.add_argument("--disturb", type=float, default=0.0, help="expert only: P(brick knocked) before pick / after release")
     ap.add_argument("--ckpt", default="", help="LeRobot checkpoint dir: roll out the trained policy instead of the expert")
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--rename-map", default="", help="JSON {dataset key: policy key} for pretrained VLAs (see eval_policy.py)")
@@ -76,10 +77,10 @@ def main():
                           size_rand=a.size_rand, pos_rand=a.pos_rand, supply_yaw_deg=5.0)
     env = BrickEnv(cfg)
     seed = a.seed
-    who = f"policy {Path(a.ckpt).parts[-4] if a.ckpt else ''}" if a.ckpt else f"expert noise={a.noise}"
+    who = f"policy {Path(a.ckpt).parts[-4] if a.ckpt else ''}" if a.ckpt else f"expert noise={a.noise} disturb={a.disturb}"
     while True:
         env.reset(seed)
-        ex = ScriptedExpert(env, noise_std=a.noise, seed=seed)
+        ex = ScriptedExpert(env, noise_std=a.noise, seed=seed, disturb_prob=a.disturb)
         with mujoco.viewer.launch_passive(env.model, env.data) as v:
             v.cam.lookat[:] = [-0.03, -0.18, 0.05]
             v.cam.distance = 0.75
@@ -108,7 +109,8 @@ def main():
                 env.settle(50)
                 v.sync()
                 M = compute_metrics(env.brick_poses(), env.design, env.brick, cfg.wall, poses_before_settle=before)
-                print(f"[{who} | seed {seed} {a.mortar}] placement success {M['m1_success_rate']:.2f}, xy err {M['m1_exy_mean_mm']:.2f} mm, "
+                extra = f" kicks {len(ex.events)} recov {ex.recoveries} unrec {ex.unrecoverable}" if not a.ckpt else ""
+                print(f"[{who} | seed {seed} {a.mortar}{extra}] placement success {M['m1_success_rate']:.2f}, xy err {M['m1_exy_mean_mm']:.2f} mm, "
                       f"plumb {M['m3_plumb_mm']:.2f} mm, straightness {M['m4_straightness_max_mm']:.2f} mm, fallen {M['m7_fallen_count']}, IoU {M['m8_voxel_iou']:.2f}")
                 # hold the finished wall on screen
                 t_end = time.time()

@@ -57,6 +57,8 @@ def main():
     ap.add_argument("--obs-set", default="both", choices=["both", "image", "state"],
                     help="image = vision policy dataset (no brick poses); state = coordinate baseline (no cameras); both")
     ap.add_argument("--spec", default="v2", choices=["v1", "v2"], help="scene spec (see brick_sim.scene.SPEC_V1/V2)")
+    ap.add_argument("--disturb", type=float, default=0.0, help="P(a brick gets knocked) before each pick and after each release; the expert recovers (re-pick, re-place) and the recovery is recorded")
+    ap.add_argument("--retries", type=int, default=2, help="max re-placements per brick after a bad placement")
     a = ap.parse_args()
 
     from lerobot.datasets.lerobot_dataset import LeRobotDataset
@@ -85,7 +87,7 @@ def main():
     for ep in range(a.episodes):
         seed = a.seed0 + ep
         env.reset(seed)
-        ex = ScriptedExpert(env, noise_std=a.noise, seed=seed)
+        ex = ScriptedExpert(env, noise_std=a.noise, seed=seed, disturb_prob=a.disturb, max_retries=a.retries)
 
         def rec(obs, act, info):
             frame = {"task": TASK, "observation.state": obs["observation.state"], "action": act}
@@ -100,7 +102,9 @@ def main():
         env.settle(50)
         M = compute_metrics(env.brick_poses(), env.design, env.brick, cfg.wall, poses_before_settle=before)
         M.update({"episode_seed": seed, "steps": env.t, "ik_fail_steps": nfail, "n_bricks": env.n_bricks,
-                  "brick_LWH": [env.brick.L, env.brick.W, env.brick.H], "cured": env.cured.tolist()})
+                  "brick_LWH": [env.brick.L, env.brick.W, env.brick.H], "cured": env.cured.tolist(),
+                  "disturbances": ex.events, "recoveries": ex.recoveries, "unrecoverable": ex.unrecoverable,
+                  "bed_laid": bool(getattr(env, "bed_laid", False))})
         if cfg.layout == "2p1":
             from brick_sim.metrics import compute_metrics3
             M.update({f"bp_{k}": v for k, v in compute_metrics3(env.brick_poses(), env.design, env.brick, cfg.wall).items() if k != "assignment"})
@@ -113,7 +117,7 @@ def main():
         else:
             ds.clear_episode_buffer()
         print(f"ep {ep:3d} seed {seed} steps {env.t} exy {M['m1_exy_mean_mm']:.2f}mm succ {M['m1_success_rate']:.2f} "
-              f"stable {M['m7_stable']} kept {keep}  ({time.time()-t0:.0f}s)")
+              f"stable {M['m7_stable']} kicks {len(ex.events)} recov {ex.recoveries} unrec {ex.unrecoverable} kept {keep}  ({time.time()-t0:.0f}s)")
     ds.finalize()
     (root / "episode_metrics.json").write_text(json.dumps(metrics_log, indent=1, default=float), encoding="utf-8")
     # the scene spec is recorded so that eval_policy.py / view_demo.py rebuild exactly this task for the policy
