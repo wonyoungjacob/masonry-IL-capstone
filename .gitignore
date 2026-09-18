@@ -19,3 +19,4 @@ data/
 outputs/
 wandb/
 .venv/
+MUJOCO_LOG.TXT
