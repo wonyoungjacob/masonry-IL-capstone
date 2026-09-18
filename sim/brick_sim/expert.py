@@ -42,6 +42,10 @@ class ScriptedExpert:
         self.segments = []
         self.log = []
 
+    def D(self, i):
+        """Design slot pose assigned to brick i (see self.order / self.slot in run_episode)."""
+        return self.env.design[self.slot[i]] if hasattr(self, "slot") else self.env.design[i]
+
     # ---------------------------------------------------------------- planning
     def plan_brick(self, i: int):
         env = self.env
@@ -50,7 +54,7 @@ class ScriptedExpert:
         yaw_b = 2 * np.arctan2(q0[3], q0[0])
         dz_grip = GRASP_DZ + max(0.0, (env.brick.H - 0.016) / 2)   # keep the pads on the upper half
         gx, gy, gz = p0[0], p0[1], p0[2] + dz_grip
-        dx, dy, dz, dyaw = env.design[i][:4]
+        dx, dy, dz, dyaw = self.D(i)[:4]
         if getattr(env, "bed_laid", False) and dz > env.brick.H:
             dz = self.top_target_z()      # rest the top brick on the bed as laid, not on the nominal height
         # A mason butts a brick against its neighbour; our ~2-3 mm placement error would land it on the
@@ -59,8 +63,8 @@ class ScriptedExpert:
         bias = np.array(self.place_bias.get(i, (0.0, 0.0)))
         if dz < env.brick.H:
             for j in range(env.n_bricks):
-                if j != i and env.design[j][2] < env.brick.H and env.brick_in_slot(j, [j]) is not None:
-                    bias[0] += 0.0015 * np.sign(dx - env.design[j][0])
+                if j != i and self.D(j)[2] < env.brick.H and env.brick_in_slot(j, [self.slot[j]]) is not None:
+                    bias[0] += 0.0015 * np.sign(dx - self.D(j)[0])
         dx, dy = dx + bias[0], dy + bias[1]
         self._brick_target = np.array([dx, dy, dz])   # where the brick itself should end up (servo target)
         self._brick_yaw_target = dyaw
@@ -77,7 +81,7 @@ class ScriptedExpert:
         gx, gy = gx + d_off * xg[0], gy + d_off * xg[1]   # toward the fixed jaw (+x of the jaw frame)
         dx, dy = dx + d_off * xp[0], dy + d_off * xp[1]
         clear = PLACE_CLEAR
-        if getattr(env, 'bed_laid', False) and env.design[i][2] > env.brick.H:
+        if getattr(env, 'bed_laid', False) and self.D(i)[2] > env.brick.H:
             # the brick hangs ~10 deg in the jaw; on the soft mortar bed its low corner must not touch before
             # release or the servo pushes it in and rolls the brick over in the hand -> release from higher up
             clear = PLACE_CLEAR_BED
@@ -144,7 +148,7 @@ class ScriptedExpert:
         """Is brick i within tolerance of its design slot?  Returns (ok, reason); details in self.last_err."""
         env = self.env
         p, q = env.brick_pose(i)
-        dx, dy, dz, dyaw = env.design[i][:4]
+        dx, dy, dz, dyaw = self.D(i)[:4]
         if env.bed_laid and dz > env.brick.H:
             dz = self.top_target_z()
         w, x, y, z = q
@@ -194,11 +198,17 @@ class ScriptedExpert:
         self.n_fail = 0
         self.events, self.recoveries, self.unrecoverable = [], 0, []
         self.place_bias = {}
+        # Canonical, observable laying order: bricks are identical, so the policy can only imitate a rule it can
+        # see.  Nearest to the wall (smallest x) first; the k-th picked brick goes to design slot k.  (Picking by
+        # brick id made the same scene demonstrate three different first picks -> multimodal, unlearnable.)
+        self.order = sorted(range(env.n_bricks), key=lambda b: env.brick_pose(b)[0][0])
+        self.slot = {b: k for k, b in enumerate(self.order)}
+
         def may_kick():   # disturbances only on first attempts and at most max_kicks per episode (no cascades)
             return (self.disturb_prob > 0 and len(self.events) < self.max_kicks
                     and self.rng.random() < self.disturb_prob)
 
-        for i in range(env.n_bricks):
+        for i in self.order:
             for attempt in range(1 + self.max_retries):
                 if attempt == 0 and may_kick():
                     self.events.append({"when": "before_pick", **self.kick_brick(i, record_fn, speed=(0.3, 0.45))})
@@ -209,7 +219,7 @@ class ScriptedExpert:
                 segs = self.plan_brick(i)
                 self._run_segments(segs[:4], i, record_fn, max_ik_err)          # pre-grasp .. lift
                 p_b, _ = env.brick_pose(i)
-                if p_b[2] < env.brick.H * 0.9 + (self.top_target_z() - env.brick.H / 2 if i == env.n_bricks - 1 and env.bed_laid else 0.0) * 0:
+                if p_b[2] < env.brick.H * 0.9 + (self.top_target_z() - env.brick.H / 2 if self.slot[i] == env.n_bricks - 1 and env.bed_laid else 0.0) * 0:
                     # the brick did not come up with the hand (missed / knocked grasp): open, back off, try again
                     self._run_segments([(segs[3][0], segs[3][1], JAW_OPEN, 0.3 / self.speed, "lin")], i, record_fn, max_ik_err)
                     self.log.append({"brick": int(i), "attempt": attempt, "ok": False, "why": "grasp", "t": int(env.t)})
@@ -238,10 +248,10 @@ class ScriptedExpert:
                     # learn from the failed placement (pre-kick pose): cancel the xy error (capped); if the brick
                     # rode up on a neighbour ('z' / 'tilt') aim a further 2 mm away from that neighbour
                     b = np.array(self.place_bias.get(i, (0.0, 0.0)))
-                    if why0 in ("z", "tilt") and env.design[i][2] < env.brick.H:
-                        others = [env.design[j][0] for j in range(env.n_bricks) if j != i and env.design[j][2] < env.brick.H]
+                    if why0 in ("z", "tilt") and self.D(i)[2] < env.brick.H:
+                        others = [self.D(j)[0] for j in range(env.n_bricks) if j != i and self.D(j)[2] < env.brick.H]
                         if others:
-                            b[0] += 0.002 * np.sign(env.design[i][0] - min(others, key=lambda x: abs(x - env.design[i][0])))
+                            b[0] += 0.002 * np.sign(self.D(i)[0] - min(others, key=lambda x: abs(x - self.D(i)[0])))
                     elif why0 == "xy":
                         b += np.clip(self._pre_kick_dxy, -0.004, 0.004)
                     self.place_bias[i] = tuple(b)

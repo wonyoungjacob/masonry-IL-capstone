@@ -37,6 +37,12 @@ def compute_metrics(poses, design, brick, wall, tol_frac=0.05, tol_yaw_deg=5.0, 
     Dfull = np.asarray(design)[:N]
     D = Dfull[:, :4]
     Li = Dfull[:, 4] if Dfull.shape[1] > 4 else np.full(N, L)
+    # bricks are identical: pair real bricks and design slots by the minimum-distance assignment (blueprint 4.9.1),
+    # never by brick id (the laying order is a function of the scene, see ScriptedExpert.order)
+    perm = _assign(P, D)
+    P = P[perm]
+    if poses_before_settle is not None:
+        poses_before_settle = np.asarray(poses_before_settle)[:N][perm]
     out = {}
 
     # ---------- 1. per-brick placement error
