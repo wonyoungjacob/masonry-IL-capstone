@@ -22,7 +22,7 @@ from run_expert_eval import KEYS
 from collect import TASK  # the language instruction must match the one recorded in the datasets (VLA policies)
 
 
-def load_policy(ckpt: str, device: str, rename_map: dict | None = None):
+def load_policy(ckpt: str, device: str, rename_map: dict | None = None, n_action_steps: int | None = None):
     """Load a LeRobot (>=0.6) checkpoint together with its pre/post-processor pipelines.
 
     In lerobot 0.6 observation normalisation and action un-normalisation live in the saved
@@ -33,6 +33,10 @@ def load_policy(ckpt: str, device: str, rename_map: dict | None = None):
     from lerobot.configs.policies import PreTrainedConfig
     cfg = PreTrainedConfig.from_pretrained(ckpt)
     cfg.device = device
+    if n_action_steps:
+        # how long the policy runs open loop before it looks again: ACT 100 steps (5 s), SmolVLA 50 (2.5 s),
+        # Diffusion 32 (1.6 s).  Lowering it at inference time costs nothing but compute.
+        cfg.n_action_steps = n_action_steps
     cls = get_policy_class(cfg.type)
     policy = cls.from_pretrained(ckpt, config=cfg)
     policy.eval()
@@ -116,6 +120,8 @@ def main():
     ap.add_argument("--out", default="")
     ap.add_argument("--task", default="wall", help="wall | 2p1 (blueprint 4.3)")
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    ap.add_argument("--n-action-steps", type=int, default=0, help="override how many steps of each predicted chunk are "
+                    "executed before re-observing (0 = the checkpoint's own value)")
     ap.add_argument("--disturb", type=float, default=0.0, help="P(one brick gets knocked during the episode): tests recovery. "
                     "The kick happens at a random step in [40, 400] on a random brick that is not in the hand (planar, no tipping)")
     ap.add_argument("--rename-map", default="", help='JSON {dataset key: policy key}, same as lerobot-train --rename_map, '
@@ -123,9 +129,9 @@ def main():
     a = ap.parse_args()
 
     rename_map = json.loads(a.rename_map) if a.rename_map else None
-    policy, pcfg, pre, post = load_policy(a.ckpt, a.device, rename_map)
+    policy, pcfg, pre, post = load_policy(a.ckpt, a.device, rename_map, a.n_action_steps or None)
     cam_src = camera_sources(pcfg, rename_map)
-    print("policy", pcfg.type, "device", a.device, "inputs", list(pcfg.input_features.keys()), "cameras", cam_src)
+    print("policy", pcfg.type, "device", a.device, "n_action_steps", pcfg.n_action_steps, "inputs", list(pcfg.input_features.keys()), "cameras", cam_src)
     if a.task == "2p1":
         spec = scene_spec_for_ckpt(a.ckpt)
         print("scene spec", spec)
