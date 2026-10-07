@@ -1,0 +1,20 @@
+{
+  "word_pdf_render_pages": 29,
+  "embedded_images": 12,
+  "word_tables": 31,
+  "videos": 12,
+  "video_decode_errors": 0,
+  "benchmark_statistics": "existing completed JSON only",
+  "training_pipeline": "stopped_by_user",
+  "new_training_started": false,
+  "word_render_tool": "LibreOffice 24.2 temporary extraction; 29 pages verified",
+  "pdf_companion": "same content rendered using ReportLab",
+  "checks": [
+    "all required report sections present",
+    "source audit counts recalculated",
+    "complete vs incomplete tests separated",
+    "all 12 videos decoded by ffmpeg",
+    "DOCX zip integrity passed",
+    "Word PDF page count and image/table layout inspected"
+  ]
+}
