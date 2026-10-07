@@ -236,7 +236,7 @@ def brick_corners(center, q, L, W, H):
 def compute_metrics3(poses, design, brick, wall, res=0.0005):
     """Return dict(iou, E_h_mm, E_f_mm, assignment) per blueprint 4.9.
 
-    - IoU: union of the 3 real boxes vs union of the 3 target boxes (voxel grid, default 0.5 mm)
+    - IoU: full rotated-box intersection volume; res retained for caller compatibility.
     - E_h: mean |z_i - z_i*| over the 3 assigned bricks, mm
     - E_f: max over the 12 front-face corners of |y_corner - y*| where y* = origin_y - W/2 (fixed design face), mm
     """
@@ -251,10 +251,21 @@ def compute_metrics3(poses, design, brick, wall, res=0.0005):
     front = []
     for i in range(N):
         cs = brick_corners(Pa[i, :3], Pa[i, 3:7], D[i, 4] if D.shape[1] > 4 else L, W, H)
-        # the 4 corners with the smallest y are the (design) front face; take those
-        front.append(cs[np.argsort(cs[:, 1])[:4]])
+        # A box is 180-degree symmetric. Choose its physical +/- local-y face toward
+        # the design front, rather than mixing corners from different faces after a tilt.
+        R = quat_to_yaw_tilt(Pa[i, 3:7])[2]
+        indices = [0, 1, 4, 5] if R[1, 1] >= 0 else [2, 3, 6, 7]
+        front.append(cs[indices])
     front = np.vstack(front)
     E_f = float(np.max(np.abs(front[:, 1] - y_star)) * 1000)
     Lvec = D[:, 4] if D.shape[1] > 4 else np.full(N, L)
-    iou = float(_voxel_iou(Pa, D[:, :4], Lvec, W, H, res=res))
+    from .volume import box, union_iou
+    actual, target = [], []
+    for i in range(N):
+        half = np.array([Lvec[i], W, H]) / 2
+        actual.append(box(Pa[i, :3], quat_to_yaw_tilt(Pa[i, 3:7])[2], half))
+        yaw = D[i, 3]
+        rotation = np.array([[np.cos(yaw), -np.sin(yaw), 0], [np.sin(yaw), np.cos(yaw), 0], [0, 0, 1]])
+        target.append(box(D[i, :3], rotation, half))
+    iou = union_iou(actual, target)
     return {"iou": iou, "E_h_mm": E_h, "E_f_mm": E_f, "assignment": perm}

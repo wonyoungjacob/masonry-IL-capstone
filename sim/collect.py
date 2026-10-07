@@ -53,6 +53,10 @@ def main():
     ap.add_argument("--repo-id", default="local/bricks")
     ap.add_argument("--seed0", type=int, default=0)
     ap.add_argument("--keep-all", action="store_true", help="keep episodes even if the wall is not stable")
+    ap.add_argument("--clean-single-pass", action="store_true", help="first-attempt grasps, no re-placement, all three must succeed")
+    ap.add_argument("--valid-supply", action="store_true", help="reject overlapping or out-of-reach initial layouts")
+    ap.add_argument("--feasible-supply", action="store_true", help="also reject layouts whose expert grasp self-collides or whose closing jaw hits a neighbour (brick_sim.feasibility)")
+    ap.add_argument("--target-kept", type=int, default=0, help="stop once this many accepted episodes have been collected")
     ap.add_argument("--task", default="wall", help="wall | 2p1 (blueprint 4.3: 3 bricks, 90x42.6x27 mm, 20 Hz)")
     ap.add_argument("--obs-set", default="both", choices=["both", "image", "state"],
                     help="image = vision policy dataset (no brick poses); state = coordinate baseline (no cameras); both")
@@ -66,13 +70,18 @@ def main():
                     "(a 'clean + extra recovery episodes' set: the clean part stays identical to the clean dataset, "
                     "recovery is added on top instead of replacing clean demonstrations)")
     a = ap.parse_args()
+    if a.clean_single_pass and (a.keep_all or a.noise or a.disturb or a.disturb_from >= 0):
+        ap.error("clean-single-pass cannot be combined with keep-all, noise or disturbances")
+    if a.clean_single_pass:
+        a.retries = 0
 
     from lerobot.datasets.lerobot_dataset import LeRobotDataset
 
     cams = a.cams.split(",")
     if a.task == "2p1":
         cfg = blueprint_config(a.mortar, spec=a.spec, size_rand=a.size_rand, pos_rand=a.pos_rand, supply_yaw_deg=a.yaw_rand,
-                               img_h=a.img, img_w=a.img)
+                               img_h=a.img, img_w=a.img, valid_supply=a.valid_supply,
+                               feasible_supply=a.feasible_supply)
         a.fps = int(round(1.0 / cfg.ctrl_dt))   # 20 Hz per blueprint 4.4
     else:
         bed = 0.002 if a.mortar != "dry" else 0.0
@@ -93,12 +102,13 @@ def main():
     for ep in range(a.episodes):
         seed = a.seed0 + ep
         env.reset(seed)
+        initial_poses = env.brick_poses().tolist()
         dprob = a.disturb
         per_ep = a.per_episode_kick
         if a.disturb_from >= 0:
             dprob, per_ep = (1.0 if ep >= a.disturb_from else 0.0), True
         ex = ScriptedExpert(env, noise_std=a.noise, seed=seed, disturb_prob=dprob, max_retries=a.retries, max_kicks=a.max_kicks,
-                            kick_hold=a.kick_hold, per_episode=per_ep)
+                            kick_hold=a.kick_hold, per_episode=per_ep, clean_single_pass=a.clean_single_pass)
 
         def rec(obs, act, info):
             frame = {"task": TASK, "observation.state": obs["observation.state"], "action": act}
@@ -116,24 +126,44 @@ def main():
                   "brick_LWH": [env.brick.L, env.brick.W, env.brick.H], "cured": env.cured.tolist(),
                   "disturbances": ex.events, "recoveries": ex.recoveries, "unrecoverable": ex.unrecoverable,
                   "bed_laid": bool(getattr(env, "bed_laid", False))})
+        M.update({"initial_poses": initial_poses, "expert_log": ex.log,
+                  "supply_sample_attempts": env.supply_sample_attempts, "feasibility_rejects": env.feasibility_rejects})
         if cfg.layout == "2p1":
             from brick_sim.metrics import compute_metrics3
             M.update({f"bp_{k}": v for k, v in compute_metrics3(env.brick_poses(), env.design, env.brick, cfg.wall).items() if k != "assignment"})
         keep = a.keep_all or (M["m7_stable"] and M["m1_success_rate"] >= 0.5)
+        if a.clean_single_pass:
+            keep = bool(M["m1_all_success"] and M["m7_stable"] and not ex.unrecoverable
+                        and not ex.recoveries
+                        and sum(e.get("stage") == "grasp" and e["ok"] for e in ex.log) == env.n_bricks
+                        and sum(e.get("stage") == "release" and e["ok"] for e in ex.log) == env.n_bricks)
         M["kept"] = bool(keep)
+        if a.clean_single_pass:
+            M["rejection_reasons"] = ([] if keep else
+                (["first_grasp_or_carry_or_release_failed"] if ex.unrecoverable else []) +
+                (["final_placement_not_all_success"] if not M["m1_all_success"] else []) +
+                (["unstable"] if not M["m7_stable"] else []))
         metrics_log.append(M)
         if keep:
             ds.save_episode()
             kept += 1
         else:
             ds.clear_episode_buffer()
+        (root / "collection_progress.json").write_text(json.dumps({"attempted": len(metrics_log), "kept": kept,
+                                                                  "target": a.target_kept, "last_seed": seed}))
         print(f"ep {ep:3d} seed {seed} steps {env.t} exy {M['m1_exy_mean_mm']:.2f}mm succ {M['m1_success_rate']:.2f} "
               f"stable {M['m7_stable']} kicks {len(ex.events)} recov {ex.recoveries} unrec {ex.unrecoverable} kept {keep}  ({time.time()-t0:.0f}s)")
-    ds.finalize()
+        if a.target_kept and kept >= a.target_kept:
+            break
     (root / "episode_metrics.json").write_text(json.dumps(metrics_log, indent=1, default=float), encoding="utf-8")
     # the scene spec is recorded so that eval_policy.py / view_demo.py rebuild exactly this task for the policy
     (root / "collect_config.json").write_text(json.dumps({**vars(a), "scene": scene_spec(cfg)}, indent=1), encoding="utf-8")
-    print(f"done: kept {kept}/{a.episodes} episodes -> {root}  ({time.time()-t0:.0f}s)")
+    if kept == 0:
+        raise SystemExit("No accepted episodes; rejection audit saved, dataset is not suitable for training")
+    ds.finalize()
+    print(f"done: kept {kept}/{len(metrics_log)} attempted episodes -> {root}  ({time.time()-t0:.0f}s)")
+    if a.target_kept and kept < a.target_kept:
+        raise SystemExit(f"Insufficient accepted demonstrations: {kept}/{a.target_kept}; do not start training")
 
 
 if __name__ == "__main__":

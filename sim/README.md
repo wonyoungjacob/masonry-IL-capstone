@@ -1,5 +1,22 @@
 # brick_sim — 조적 IK 시연 생성·학습·평가 파이프라인 (MuJoCo + LeRobot)
 
+## 전체 시각화 메뉴 (Ubuntu 데스크톱)
+
+저장소 루트에서 `bash sim/view_all.sh`를 실행한다. `D`는 실제 수집 영상의 데이터셋·에피소드 선택 페이지,
+`E`는 IK 전문가 MuJoCo 실행, 숫자는 해당 체크포인트의 MuJoCo 실행이다. 창을 닫으면 메뉴로 돌아온다.
+마우스로 시점을 회전·확대할 수 있으며, 작업이 끝난 후에도 최종 장면을 유지한다.
+
+- `bash sim/view_all.sh --kick`: 정책에 평가 코드와 같은 방식의 교란 1회 적용.
+- `bash sim/view_all.sh --seed 10001`: 다른 초기 상태 선택. 기본값은 평가 시드 10000.
+- `bash sim/view_all.sh --device cpu`: CUDA를 사용할 수 없을 때 사용(느릴 수 있음).
+- `bash sim/view_all.sh --gallery`: 브라우저를 열지 않고 `sim/outputs/dataset_gallery.html` 생성.
+
+데이터셋 페이지는 저장된 카메라 영상을 에피소드 구간별로 보여 준다. 좌표 전용(state) 세트에는 영상이 없다.
+AV1 영상 재생을 지원하는 브라우저가 필요하다. 카메라별 재생은 함께 시작하지만 프레임 단위 동기화는 보장하지 않는다.
+정책 메뉴는 체크포인트로 **새 rollout**을 실행하며, 과거 평가 결과 JSON의 영상을 재생하는 기능은 아니다.
+확률적 정책은 같은 초기 상태에서도 결과가 달라질 수 있다. 기본 조건은 mortarB, 위치 ±5 mm, yaw ±10°, 크기 고정이다.
+GUI 실행은 화면에 연결된 로컬 터미널에서 수행한다.
+
 설계수행계획서 14조 v2(시연 수집 = 시뮬레이션 내 IK 스크립트 전문가)의 구현이다. 이 PC(Windows, GPU 없음)에서는 구동 확인용이고, 본실험은 Ubuntu GPU 머신에서 같은 코드로 한다.
 
 ## 구성
@@ -14,6 +31,8 @@
 | `collect.py` | LeRobotDataset(v3) 생성. front+wrist 128², `observation.state`(6), `observation.environment_state`(벽돌 절대자세, 좌표기반 정책용), `action`(관절 목표 6). 정착 후 지표로 필터링 |
 | `view_demo.py` | 인터랙티브 MuJoCo 뷰어로 실시간 재생. `--task 2p1 --mortar mortarB --loop` |
 | `eval_policy.py` | 학습된 LeRobot 정책을 환경에서 롤아웃하고 지표 계산 |
+| `brick_sim/feasibility.py` | 스폰 실행가능성 정적 검사(파지 자세 자기충돌, 턱 닫힘 구간 이웃 블록 간섭). `collect.py --feasible-supply`, `eval_policy.py --feasible-supply` |
+| `brick_sim/grasp_gate.py` | 정책 롤아웃용 게이트. 집기: 닫힌 뒤 1.5 cm 들고 멈춰 턱 각도 AND 손목 하중으로 확인(`--gate-force`), 빈손이면 열고 상승·재지도 후 정책 재시도(`--gate-retries 0`이면 무제한). 놓기: 해제 직전 좌표 오차 보정(`--release-gate`), 해제 직후 채점해 실패하면 블록당 1회 재배치(`--gate-replace`), 정책의 재파지는 차단. 결과는 `policy+gate(...)`로 표기 |
 | `tools/gen_final_v2.py` | 팀 최종본 PDF 텍스트에서 4.7절만 바꾼 v2 청사진 생성 |
 
 ## 이 PC에서 확인된 것 (2026-09-17)

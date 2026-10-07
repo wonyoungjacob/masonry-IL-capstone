@@ -19,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from brick_sim.scene import BrickEnv, SceneConfig, WallSpec, blueprint_config
 from brick_sim.metrics import compute_metrics, compute_metrics3
 from run_expert_eval import KEYS
+from brick_sim.grasp_gate import GraspGate
 from collect import TASK  # the language instruction must match the one recorded in the datasets (VLA policies)
 
 
@@ -114,16 +115,44 @@ def main():
     ap.add_argument("--size-rand", type=float, default=0.05)
     ap.add_argument("--pos-rand", type=float, default=0.01)
     ap.add_argument("--yaw-rand", type=float, default=5.0)
+    ap.add_argument("--valid-supply", action="store_true")
+    ap.add_argument("--inference-seed", type=int, default=70000)
     ap.add_argument("--seed0", type=int, default=1000, help="use seeds disjoint from training")
+    ap.add_argument("--seed-list", default="", help="comma-separated layout seeds to run instead of seed0..seed0+episodes-1 "
+                    "(inference seed = --inference-seed + seed - seed0, same as in a contiguous run)")
     ap.add_argument("--max-steps", type=int, default=1800)
     ap.add_argument("--fps", type=int, default=25)
     ap.add_argument("--out", default="")
     ap.add_argument("--task", default="wall", help="wall | 2p1 (blueprint 4.3)")
+    ap.add_argument("--first-course-only", action="store_true", help="2p1: spawn and score only the two lower-course bricks")
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     ap.add_argument("--n-action-steps", type=int, default=0, help="override how many steps of each predicted chunk are "
                     "executed before re-observing (0 = the checkpoint's own value)")
     ap.add_argument("--disturb", type=float, default=0.0, help="P(one brick gets knocked during the episode): tests recovery. "
                     "The kick happens at a random step in [40, 400] on a random brick that is not in the hand (planar, no tipping)")
+    ap.add_argument("--grasp-gate", action="store_true", help="policy + gate: no transport without a verified grasp (jaw angle); "
+                    "an empty close is opened, lifted 4 cm and the policy re-observes (brick_sim.grasp_gate)")
+    ap.add_argument("--gate-retries", type=int, default=3, help="empty grasps allowed before the episode is aborted "
+                    "(0 = no limit: the policy keeps trying until --max-steps)")
+    ap.add_argument("--release-gate", action="store_true", help="with --grasp-gate: intercept the policy's release, measure the held "
+                    "brick's xy/yaw error to its slot (sim brick pose), servo-correct if > 2.5 mm / 3 deg, then release")
+    ap.add_argument("--gate-replace", action="store_true", help="with --release-gate: score the released brick right away against the "
+                    "final tolerances (4.5 mm, 3 mm height, 5 deg yaw, 5 deg tilt) and, if it fails, re-grasp and place it again "
+                    "(once per brick).  The policy itself is never allowed to re-grasp a released brick")
+    ap.add_argument("--gate-force", action="store_true", help="with --grasp-gate: after each close the gate lifts 1.5 cm, holds still "
+                    "and requires jaw angle > 0.2 rad AND wrist load > 0.9 N (simulated force sensor) before the policy may carry")
+    ap.add_argument("--gate-inspect", default="", help="with --release-gate: design slots the release gate inspects, "
+                    "e.g. '0,1' (lower course) or '2' (top); 'none' = no slot; empty = all.  Other bricks are released by the "
+                    "policy unmeasured (KICEM 2026 inspection-scope experiment)")
+    ap.add_argument("--gate-nominal-plan", action="store_true", help="the gate plans placements from the nominal brick size "
+                    "and design (the drawing) instead of the true sampled size (KICEM 2026 size-tolerance study)")
+    ap.add_argument("--gate-pose-noise", type=float, default=0.0, help="std (m) of Gaussian noise on every brick pose the gate "
+                    "measures for its corrections (reguide, pre-release servo, post-release score, re-placement)")
+    ap.add_argument("--gate-recover", default="lift", choices=["lift", "reguide", "expert"],
+                    help="what the gate does after an empty grasp: lift = open+lift where the hand is; reguide = also move to the "
+                         "expert pre-grasp pose above the next unplaced brick (sim brick coordinates); expert = the expert does the pick")
+    ap.add_argument("--feasible-supply", action="store_true", help="test on layouts that pass the static grasp-feasibility check "
+                    "(changes the test distribution: not comparable with earlier results)")
     ap.add_argument("--rename-map", default="", help='JSON {dataset key: policy key}, same as lerobot-train --rename_map, '
                     'e.g. \'{"observation.images.front":"observation.images.camera1"}\'')
     a = ap.parse_args()
@@ -135,15 +164,20 @@ def main():
     if a.task == "2p1":
         spec = scene_spec_for_ckpt(a.ckpt)
         print("scene spec", spec)
-        cfg = blueprint_config(a.mortar, size_rand=a.size_rand, pos_rand=a.pos_rand, supply_yaw_deg=a.yaw_rand, **spec)
+        cfg = blueprint_config(a.mortar, size_rand=a.size_rand, pos_rand=a.pos_rand, supply_yaw_deg=a.yaw_rand,
+                               valid_supply=a.valid_supply, first_course_only=a.first_course_only, **{**spec, 'feasible_supply': spec.get('feasible_supply', False) or a.feasible_supply})
     else:
         bed = 0.002 if a.mortar != "dry" else 0.0
         cfg = SceneConfig(wall=WallSpec(n_courses=a.courses, n_per_course=a.per_course, bed_joint=bed), mortar=a.mortar,
                           size_rand=a.size_rand, pos_rand=a.pos_rand, supply_yaw_deg=a.yaw_rand, ctrl_dt=1.0 / a.fps)
     env = BrickEnv(cfg)
     results = []
-    for ep in range(a.episodes):
-        seed = a.seed0 + ep
+    seeds = [int(x) for x in a.seed_list.split(",")] if a.seed_list else [a.seed0 + k for k in range(a.episodes)]
+    for ep, seed in enumerate(seeds):
+        off = seed - a.seed0   # inference seed follows the layout seed, so a seed list reproduces the contiguous run
+        torch.manual_seed(a.inference_seed + off)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(a.inference_seed + off)
         env.reset(seed)
         policy.reset()
         # the feeder stages bricks in order; the policy must trigger nothing -> we stage brick i when brick i-1 is on the wall
@@ -153,11 +187,32 @@ def main():
         rng = np.random.default_rng(seed + 777)
         kick_t = int(rng.integers(40, 400)) if rng.random() < a.disturb else -1
         kicks = []
+        held_once, released, regrasped = set(), set(), set()
+        gate = GraspGate(env, policy, max_retries=a.gate_retries, recover=a.gate_recover, release_gate=a.release_gate, force=a.gate_force,
+                          replace=a.gate_replace, pose_noise=a.gate_pose_noise, seed=seed, nominal_plan=a.gate_nominal_plan,
+                          inspect_slots=None if not a.gate_inspect else ([] if a.gate_inspect == "none" else
+                                                                         [int(x) for x in a.gate_inspect.split(",")])) if a.grasp_gate else None
         for t in range(a.max_steps):
+            if env.t >= a.max_steps:   # gate recoveries also consume simulated time
+                break
             obs = build_obs(env, cam_src, pcfg)
             with torch.inference_mode():
                 act = post(policy.select_action(pre(obs)))
-            env.step(act.squeeze(0).detach().cpu().numpy())
+            act_np = act.squeeze(0).detach().cpu().numpy()
+            if gate is not None:
+                act_np = gate.before_step(act_np)   # None: the release gate executed this step itself
+                if act_np is None:
+                    continue
+            env.step(act_np)
+            if gate is not None and gate.after_step(act_np) in ("abort", "done"):
+                break
+            for i in range(env.n_bricks):
+                if env.grasped(i):
+                    if i in released:
+                        regrasped.add(i)
+                    held_once.add(i)
+                elif i in held_once and env.data.qpos[env.jaw_qidx] > 0.5:
+                    released.add(i)
             if t == kick_t:
                 tcp = env.tcp_pose()[0]
                 free = [i for i in range(env.n_bricks) if np.linalg.norm(env.brick_pose(i)[0] - tcp) > 0.05
@@ -174,18 +229,31 @@ def main():
                     env.stage_brick(staged); staged += 1
         before = env.brick_poses().copy(); env.settle(50)
         M = compute_metrics(env.brick_poses(), env.design, env.brick, cfg.wall, poses_before_settle=before)
-        if cfg.layout == "2p1":
+        if cfg.layout == "2p1" and not cfg.first_course_only:
             M.update({f"bp_{k}": v for k, v in compute_metrics3(env.brick_poses(), env.design, env.brick, cfg.wall).items() if k != "assignment"})
         M["seed"] = seed; M["staged"] = staged; M["wall_s"] = time.time() - t0; M["kicks"] = kicks
+        M.update(inference_seed=a.inference_seed + off, regrasped_after_release=sorted(regrasped),
+                 final_poses=env.brick_poses().tolist(), metric_version="oriented_polyhedron_v1",
+                 feasibility_rejects=getattr(env, "feasibility_rejects", 0), steps=int(env.t))
+        if gate is not None:
+            M.update(gate.summary())
         results.append(M)
+        if a.out:   # partial results after every episode, so a stopped run keeps its finished episodes
+            Path(a.out + ".partial").write_text(json.dumps({"episodes": results, "config": vars(a)}, default=float), encoding="utf-8")
+        gtxt = (f" gate verified {M['gate_verified_grasps']} lost {M['gate_lost']} retries {M['gate_retries']} abort {M['gate_abort']} done {M['gate_done']}"
+                f" release-corrected {M['release_corrected']}/{len(M['release_events'])} bad-release {M['bad_releases']}"
+                f" replaced {M['replaced_ok']}/{M['replaced']} blocked {M['gate_blocked']}"
+                if gate is not None else "")
         print(f"ep {ep} seed {seed} kicks {len(kicks)} succ {M['m1_success_rate']:.2f} exy {M['m1_exy_mean_mm']:.1f}mm "
-              f"fallen {M['m7_fallen_count']} iou {M['m8_voxel_iou']:.2f}  ({M['wall_s']:.0f}s)")
+              f"fallen {M['m7_fallen_count']} iou {M['m8_voxel_iou']:.2f}{gtxt}  ({M['wall_s']:.0f}s)")
     agg = {k: float(np.mean([r[k] for r in results])) for k in ["m1_success_rate", "m1_exy_mean_mm", "m2_level_range_max_mm",
                                                               "m3_plumb_mm", "m4_straightness_max_mm", "m6_through_joints",
                                                               "m7_fallen_count", "m8_voxel_iou"]}
     print("MEAN:", json.dumps(agg, indent=1))
     if a.out:
-        Path(a.out).write_text(json.dumps({"episodes": results, "mean": agg}, indent=1, default=float), encoding="utf-8")
+        Path(a.out).write_text(json.dumps({"episodes": results, "mean": agg, "config": vars(a),
+                                         "metric_version": "oriented_polyhedron_v1",
+                                         "condition": (f"policy+gate({a.gate_recover}" + (",release" if a.release_gate else "") + (",force" if a.gate_force else "") + (",replace" if a.gate_replace else "") + (f",noise{a.gate_pose_noise*1000:g}mm" if a.gate_pose_noise else "") + (f",inspect={a.gate_inspect}" if a.gate_inspect else "") + (",nominal-plan" if a.gate_nominal_plan else "") + ")") if a.grasp_gate else "policy"}, indent=1, default=float), encoding="utf-8")
 
 
 if __name__ == "__main__":

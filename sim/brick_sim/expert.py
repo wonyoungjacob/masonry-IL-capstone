@@ -19,6 +19,30 @@ PLACE_CLEAR = 0.0015    # release height above the design centre (+ grasp offset
 PLACE_CLEAR_BED = 0.004 # same, for the brick released onto the soft mortar bed
 HOVER = 0.04            # hover height above pick/place
 FIXED_PAD_X = 0.012     # inner face of the fixed-jaw pads from the TCP centre line, +x of the jaw frame (m)
+GRASP_PAD_CLEAR = 0.0015  # extra approach clearance between the fixed pad and the brick face (2026-09-23): with 0 mm the
+                          # tapered tip pad (8.9 mm) sat inside the brick footprint and a 1-3 mm tracking error
+                          # landed it on the brick top (5 first-grasp failures near the base).  1.5 mm chosen by replaying the
+                          # 454 audited first grasps (feasible layouts: 380/382 vs 382/388 at 0 mm, 378/384 at 2.5 mm).  The closing jaw
+                          # pushes the brick back onto the pad, so the in-hand offset at place is unchanged.
+
+
+def grasp_pose(env, i: int):
+    """Where the expert puts the TCP to grasp brick i in its current pose: ((x, y, z), yaw, dz_grip).
+
+    The jaw closes across the brick width, so the jaw axis (site x) is perpendicular to the brick's long axis.
+    The SO-ARM100 fixed jaw does not move: its pads sit ~12 mm from the TCP centre line on the +x side of the
+    jaw frame while the moving jaw swings out to -70 mm.  For a brick wider than 24 mm the TCP is offset toward
+    the fixed jaw (+x) by (W/2 - 12 mm) so the fixed pad meets the brick face.  Shared with the spawn
+    feasibility check (brick_sim.feasibility) so both see the same target pose.
+    """
+    p0, q0 = env.brick_pose(i)
+    yaw_b = 2 * np.arctan2(q0[3], q0[0])
+    dz_grip = GRASP_DZ + max(0.0, (env.brick.H - 0.016) / 2)   # keep the pads on the upper half
+    yaw_grasp = yaw_b + np.pi / 2
+    d_off = max(0.0, env.brick.W / 2 - FIXED_PAD_X) + GRASP_PAD_CLEAR
+    gx = p0[0] + d_off * np.cos(yaw_grasp)
+    gy = p0[1] + d_off * np.sin(yaw_grasp)
+    return (gx, gy, p0[2] + dz_grip), yaw_grasp, dz_grip
 
 
 def smoothstep(s):
@@ -29,8 +53,11 @@ def smoothstep(s):
 class ScriptedExpert:
     def __init__(self, env: BrickEnv, noise_std: float = 0.0, seed: int = 0, speed: float = 1.0,
                  disturb_prob: float = 0.0, max_retries: int = 2, tip_prob: float = 0.15, max_kicks: int = 2,
-                 kick_hold: int = 12, per_episode: bool = False):
+                 kick_hold: int = 12, per_episode: bool = False, clean_single_pass: bool = False):
         self.env = env
+        self.clean_single_pass = clean_single_pass
+        if clean_single_pass and (noise_std or disturb_prob or max_retries):
+            raise ValueError("clean_single_pass requires noise=0, disturb=0, max_retries=0")
         self.rng = np.random.default_rng(seed)
         self.noise_std = noise_std
         self.disturb_prob = disturb_prob      # P(kick) before each pick and again right after each release
@@ -56,10 +83,7 @@ class ScriptedExpert:
     def plan_brick(self, i: int):
         env = self.env
         env.stage_brick(i)   # no-op with scatter supply
-        p0, q0 = env.brick_pose(i)
-        yaw_b = 2 * np.arctan2(q0[3], q0[0])
-        dz_grip = GRASP_DZ + max(0.0, (env.brick.H - 0.016) / 2)   # keep the pads on the upper half
-        gx, gy, gz = p0[0], p0[1], p0[2] + dz_grip
+        (gx, gy, gz), yaw_grasp, dz_grip = grasp_pose(env, i)
         dx, dy, dz, dyaw = self.D(i)[:4]
         if getattr(env, "bed_laid", False) and dz > env.brick.H:
             dz = self.top_target_z()      # rest the top brick on the bed as laid, not on the nominal height
@@ -75,16 +99,10 @@ class ScriptedExpert:
         self._brick_target = np.array([dx, dy, dz])   # where the brick itself should end up (servo target)
         self._brick_yaw_target = dyaw
         # jaw closes across the brick width -> jaw axis (site x) perpendicular to the brick long axis
-        yaw_grasp = yaw_b + np.pi / 2
         yaw_place = dyaw + np.pi / 2
-        # The SO-ARM100 fixed jaw does not move: its pads sit ~12 mm from the TCP centre line on the +x side of
-        # the jaw frame while the moving jaw swings out to -70 mm.  For a brick wider than 24 mm the TCP must be
-        # offset toward the fixed jaw (+x) by (W/2 - 12 mm) so the fixed pad meets the brick face.  The same
-        # offset is applied at place because the brick stays offset in the hand.
+        # the in-hand offset (see grasp_pose) is applied at place too because the brick stays offset in the hand
         d_off = max(0.0, env.brick.W / 2 - FIXED_PAD_X)
-        xg = np.array([np.cos(yaw_grasp), np.sin(yaw_grasp), 0.0])
         xp = np.array([np.cos(yaw_place), np.sin(yaw_place), 0.0])
-        gx, gy = gx + d_off * xg[0], gy + d_off * xg[1]   # toward the fixed jaw (+x of the jaw frame)
         dx, dy = dx + d_off * xp[0], dy + d_off * xp[1]
         clear = PLACE_CLEAR
         if getattr(env, 'bed_laid', False) and self.D(i)[2] > env.brick.H:
@@ -197,11 +215,14 @@ class ScriptedExpert:
         self.n_fail = 0
         self.events, self.recoveries, self.unrecoverable = [], 0, []
         self.place_bias = {}
+        self.log = []
         # Canonical, observable laying order: bricks are identical, so the policy can only imitate a rule it can
         # see.  Nearest to the wall (smallest x) first; the k-th picked brick goes to design slot k.  (Picking by
         # brick id made the same scene demonstrate three different first picks -> multimodal, unlearnable.)
         self.order = sorted(range(env.n_bricks), key=lambda b: env.brick_pose(b)[0][0])
         self.slot = {b: k for k, b in enumerate(self.order)}
+        if self.clean_single_pass:
+            return self._run_clean_single_pass(record_fn, max_ik_err)
 
         n_slots = 2 * env.n_bricks          # one opportunity before each pick and after each release
         if self.per_episode:
@@ -265,6 +286,37 @@ class ScriptedExpert:
                     self.place_bias[i] = tuple(b)
         return self.n_fail
 
+    def _run_clean_single_pass(self, record_fn, max_ik_err):
+        """First-attempt grasps only; abort a failed episode; never re-grasp after release."""
+        env = self.env
+        for i in self.order:
+            segs = self.plan_brick(i)
+            initial_z = env.brick_pose(i)[0][2]
+            self._run_segments(segs[:4], i, record_fn, max_ik_err)
+            lifted = env.brick_pose(i)[0][2] - initial_z >= 0.015
+            grasp_ok = bool(lifted and env.grasped(i))
+            self.log.append({"brick": int(i), "stage": "grasp", "ok": grasp_ok, "t": int(env.t)})
+            if not grasp_ok:
+                self.unrecoverable.append(i)
+                return self.n_fail
+            self._monitor_grasp = True
+            try:
+                self._run_segments(segs[4:8], i, record_fn, max_ik_err)
+            except LostGrasp:
+                self.log.append({"brick": int(i), "stage": "carry", "ok": False, "t": int(env.t)})
+                self.unrecoverable.append(i)
+                return self.n_fail
+            finally:
+                self._monitor_grasp = False
+            self._run_segments(segs[8:], i, record_fn, max_ik_err)
+            ok, why = self.placement_ok(i)
+            self.log.append({"brick": int(i), "stage": "release", "ok": bool(ok), "why": why,
+                             "t": int(env.t), **self.last_err})
+            if not ok:
+                self.unrecoverable.append(i)
+                return self.n_fail
+        return self.n_fail
+
     def _run_segments(self, segs, i, record_fn, max_ik_err):
         env = self.env
         dt = self.dt
@@ -311,6 +363,12 @@ class ScriptedExpert:
                 if record_fn is not None:
                     record_fn(obs, act_clean, {"brick": i, "ik_pos_err": ep, "ik_rot_err": er})
                 env.step(act_exec)
+                if getattr(self, "_monitor_grasp", False) and not env.grasped(i):
+                    raise LostGrasp
                 q_prev = q_clean
             p_prev, yaw_prev, jaw_prev = tp, (yaw_cmd if mode == "servo" else tyaw), tjaw
         self.q_prev, self.p_prev, self.yaw_prev, self.jaw_prev = q_prev, p_prev, yaw_prev, jaw_prev
+
+
+class LostGrasp(Exception):
+    """Abort clean collection when either jaw loses the carried brick."""

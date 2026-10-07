@@ -1,6 +1,6 @@
 """Build the 3-page Korean PDF summary of the 2026-09-18/19 experiments from outputs/eval_*.json.
 
-Usage:  cd sim && python tools/make_report.py [-o ../실험보고서.pdf]
+Usage:  cd sim && python tools/make_report.py [-o ../01_사기설/진행보고/실험보고서.pdf]
 
 The report uses only the three blueprint 4.9 metrics (3D IoU, E_h, E_f) as results; the number of episodes
 with a fallen brick is shown beside them as a diagnostic, because the three metrics alone do not separate
@@ -266,7 +266,7 @@ def build(path):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("-o", "--out", default=str(SIM.parent / "실험보고서.pdf"))
+    ap.add_argument("-o", "--out", default=str(SIM.parent / "01_사기설" / "진행보고" / "실험보고서.pdf"))
     a = ap.parse_args()
     build(a.out)
     print("wrote", a.out)

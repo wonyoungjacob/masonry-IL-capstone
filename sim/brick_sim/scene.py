@@ -67,11 +67,15 @@ class SceneConfig:
     supply_yaw_deg: float = 0.0             # +/- random yaw of supply bricks
     size_rand: float = 0.0                  # +/- fractional randomisation of brick dims
     pos_rand: float = 0.0                   # +/- metres added to supply positions
+    valid_supply: bool = False             # reject overlapping/out-of-reach random supply layouts
+    feasible_supply: bool = False          # also reject layouts whose expert grasp self-collides or whose jaw sweep hits a
+                                            # neighbour (brick_sim.feasibility; 2026-09-23 first-grasp diagnosis)
     img_h: int = 128
     img_w: int = 128
     ctrl_dt: float = 0.04                   # 25 Hz control
     timestep: float = 0.002                 # physics step
     layout: str = "wall"                    # "wall" (running bond, n_courses x n_per_course) | "2p1" (blueprint 4.3)
+    first_course_only: bool = False         # 2p1: only the two lower-course bricks exist (KICEM 2026 size study)
     seed: int = 0
     # --- scene spec (v2, 2026-09-18; see SPEC_V1 / SPEC_V2 and blueprint_config) ---
     mortar_impl: str = "bed"                # "bed": one continuous mortar bed (3 mocap slabs) is laid on top of the lower
@@ -103,7 +107,8 @@ SPEC_KEYS = tuple(SPEC_V2)
 def scene_spec(cfg: SceneConfig) -> dict:
     """The spec fields that change the task geometry / physics / observations (recorded with every dataset)."""
     return dict(head_gap=cfg.wall.head_gap, mortar_impl=cfg.mortar_impl, mortar_visual=cfg.mortar_visual,
-                target_marks=cfg.target_marks, supply=cfg.supply, cure_settle_steps=cfg.cure_settle_steps)
+                target_marks=cfg.target_marks, supply=cfg.supply, cure_settle_steps=cfg.cure_settle_steps,
+                feasible_supply=cfg.feasible_supply)
 
 
 def blueprint_config(mortar: str = "dry", spec: str = "v2", **kw) -> "SceneConfig":
@@ -141,9 +146,10 @@ def design_poses(cfg: SceneConfig, brick: BrickSpec):
         half = pitch / 2
         z0 = brick.H / 2
         z1 = brick.H * 1.5 + w.bed_joint
-        return [(w.origin_x - half, w.origin_y, z0, 0.0, L),
-                (w.origin_x + half, w.origin_y, z0, 0.0, L),
-                (w.origin_x, w.origin_y, z1, 0.0, L)]
+        out = [(w.origin_x - half, w.origin_y, z0, 0.0, L),
+               (w.origin_x + half, w.origin_y, z0, 0.0, L),
+               (w.origin_x, w.origin_y, z1, 0.0, L)]
+        return out[:2] if cfg.first_course_only else out
     for k in range(w.n_courses):
         z = brick.H / 2 + k * (brick.H + w.bed_joint)
         if k % 2 == 0:
@@ -298,17 +304,34 @@ def build_xml(cfg: SceneConfig, brick: BrickSpec, supply_poses, mortar_margin: f
 """
 
 
-def _augment_arm_xml(src: Path, dst: Path):
-    """Write a copy of so_arm100.xml with a TCP site and a wrist camera on Fixed_Jaw."""
+def _augmented_arm_xml(src: Path) -> str:
+    """so_arm100.xml plus a TCP site, a wrist camera and a wrist force/torque sensor on Fixed_Jaw.
+
+    The 'ft' site sits at the Fixed_Jaw body origin (the wrist-roll axis); MuJoCo's force/torque sensors there report the
+    interaction force/torque transmitted from Wrist_Pitch_Roll to the gripper (gripper + anything it holds), in the site
+    frame (2026-09-23; used by brick_sim.grasp_gate for the weight check, simulation only).  Adding a site and sensors
+    does not change the dynamics, so earlier datasets and evaluations stay valid.
+    """
     txt = src.read_text(encoding="utf-8")
     marker = '<geom class="finger_collision" name="fixed_jaw_pad_1"'
     inject = (
         '<site name="tcp" pos="-0.004 -0.097 0" quat="0.7071068 0.7071068 0 0" size="0.003" rgba="0 0 1 0.5"/>'
         '<camera name="wrist" pos="0.0 -0.02 0.045" xyaxes="1 0 0 0 0 -1" fovy="75"/>'
+        '<site name="ft" pos="0 0 0" size="0.002" rgba="1 0 0 0.3"/>'
     )
     assert marker in txt, "unexpected so_arm100.xml layout"
     txt = txt.replace(marker, inject + "\n                " + marker, 1)
-    dst.write_text(txt, encoding="utf-8")
+    sensors = '  <sensor>\n    <force name="wrist_force" site="ft"/>\n    <torque name="wrist_torque" site="ft"/>\n  </sensor>\n</mujoco>'
+    assert txt.rstrip().endswith("</mujoco>")
+    txt = txt.rstrip()[: -len("</mujoco>")] + sensors + "\n"
+    return txt
+
+
+def _augment_arm_xml(src: Path, dst: Path):
+    """Write the augmented arm model next to the original (regenerated whenever the augmentation changes)."""
+    txt = _augmented_arm_xml(src)
+    if not dst.exists() or dst.read_text(encoding="utf-8") != txt:
+        dst.write_text(txt, encoding="utf-8")
 
 
 def _quat_rotmat(q):
@@ -323,8 +346,7 @@ class BrickEnv:
         self.cfg = cfg or SceneConfig()
         self.rng = np.random.default_rng(self.cfg.seed)
         self.arm_xml = MENAGERIE_DIR / "so_arm100_tcp.xml"
-        if not self.arm_xml.exists():
-            _augment_arm_xml(MENAGERIE_DIR / "so_arm100.xml", self.arm_xml)
+        _augment_arm_xml(MENAGERIE_DIR / "so_arm100.xml", self.arm_xml)
         assets = {self.arm_xml.name: self.arm_xml.read_bytes()}
         for stl in (MENAGERIE_DIR / "assets").glob("*.stl"):
             assets[stl.name] = stl.read_bytes()  # MuJoCo keys assets by basename
@@ -336,6 +358,36 @@ class BrickEnv:
 
     # ------------------------------------------------------------------ setup
     def _sample_episode(self):
+        for attempt in range(5000):
+            brick, poses = self._sample_episode_once()
+            if not self.cfg.valid_supply or self._valid_supply_layout(brick, poses):
+                self.supply_sample_attempts = attempt + 1
+                return brick, poses
+        raise ValueError("Cannot sample a valid supply layout; check position/yaw ranges")
+
+    def _valid_supply_layout(self, brick, poses):
+        if self.cfg.supply != "scatter":
+            raise ValueError("valid_supply requires scatter supply")
+        boxes = []
+        for x, y, _, yaw in poses:
+            if not 0.13 <= np.hypot(x, y) <= 0.26:
+                return False
+            axes = np.array([[np.cos(yaw), np.sin(yaw)], [-np.sin(yaw), np.cos(yaw)]])
+            corners = np.array([np.array([x, y]) + sx * brick.L / 2 * axes[0] + sy * brick.W / 2 * axes[1]
+                                for sx in (-1, 1) for sy in (-1, 1)])
+            wall_right = self.cfg.wall.origin_x + (brick.L + self.cfg.wall.head_gap) / 2 + brick.L / 2
+            if corners[:, 0].min() < wall_right + 0.015:
+                return False
+            boxes.append((corners, axes))
+        for i, (a, aa) in enumerate(boxes):
+            for b, ba in boxes[i + 1:]:
+                # Separating-axis test with a 10 mm gap; no intersecting initial bricks.
+                if not any((a @ axis).max() + 0.01 < (b @ axis).min() or
+                           (b @ axis).max() + 0.01 < (a @ axis).min() for axis in np.vstack([aa, ba])):
+                    return False
+        return True
+
+    def _sample_episode_once(self):
         cfg = self.cfg
         b = cfg.brick
         s = cfg.size_rand
@@ -343,7 +395,7 @@ class BrickEnv:
         W = b.W * (1 + self.rng.uniform(-s, s))
         H = b.H * (1 + self.rng.uniform(-s, s))
         brick = BrickSpec(L=L, W=W, H=H, density=b.density)
-        n = n_bricks_for(cfg.wall, cfg.layout)
+        n = 2 if cfg.first_course_only else n_bricks_for(cfg.wall, cfg.layout)
         poses = []
         self.feeder_targets = []
         scatter = cfg.supply == "scatter" and n <= len(cfg.supply_slots)
@@ -371,6 +423,21 @@ class BrickEnv:
     def reset(self, seed: int | None = None):
         if seed is not None:
             self.rng = np.random.default_rng(seed)
+        self.feasibility_rejects = 0
+        for _ in range(500):
+            self._build_episode()
+            if not self.cfg.feasible_supply:
+                break
+            from .feasibility import layout_feasibility   # lazy: feasibility imports expert imports scene
+            self.supply_feasibility = layout_feasibility(self)
+            if all(f["ok"] for f in self.supply_feasibility):
+                break
+            self.feasibility_rejects += 1
+        else:
+            raise ValueError("Cannot sample a feasible supply layout; check position/yaw ranges")
+        return self._finish_reset()
+
+    def _build_episode(self):
         self.brick, self.supply_poses = self._sample_episode()
         self.design = design_poses(self.cfg, self.brick)
         self.brick_L = np.array([d[4] for d in self.design])
@@ -390,6 +457,12 @@ class BrickEnv:
         self.brick_bids = [m.body(f"brick_{i}").id for i in range(self.n_bricks)]
         self.brick_qadr = [m.joint(f"brick_{i}_free").qposadr[0] for i in range(self.n_bricks)]
         self.brick_dofadr = [m.joint(f"brick_{i}_free").dofadr[0] for i in range(self.n_bricks)]
+        d.qpos[self.arm_qidx] = HOME_QPOS[:5]
+        d.qpos[self.jaw_qidx] = JAW_OPEN
+        mujoco.mj_forward(m, d)
+
+    def _finish_reset(self):
+        m, d = self.model, self.data
         self.cured = np.zeros(self.n_bricks, dtype=bool)
         self.settle_count = np.zeros(self.n_bricks, dtype=int)
         # mortar bed (spec v2): laid once the lower course has settled
@@ -459,11 +532,41 @@ class BrickEnv:
         dof = self.brick_dofadr[i]
         return self.data.qvel[dof: dof + 6].copy()
 
+    def grasped(self, i):
+        """Privileged simulation check: brick contacts both jaws and stays near the TCP."""
+        bid = self.brick_bids[i]
+        jaws = {self.model.body(name).id for name in ("Fixed_Jaw", "Moving_Jaw")}
+        touched = set()
+        for contact in self.data.contact:
+            if contact.dist > 0.0005:
+                continue
+            b1, b2 = self.model.geom_bodyid[contact.geom1], self.model.geom_bodyid[contact.geom2]
+            if b1 == bid and b2 in jaws:
+                touched.add(b2)
+            if b2 == bid and b1 in jaws:
+                touched.add(b1)
+        return touched == jaws and np.linalg.norm(self.brick_pose(i)[0] - self.tcp_pose()[0]) < 0.05
+
     def qpos_arm(self):
         return np.r_[self.data.qpos[self.arm_qidx], self.data.qpos[self.jaw_qidx]].astype(np.float32)
 
     def env_state(self):
         return np.r_[self.brick_poses().ravel(), self.brick_L, self.brick.W, self.brick.H].astype(np.float32)
+
+    def wrist_ft(self):
+        """Wrist force/torque sensor (site 'ft' on Fixed_Jaw), rotated into the world frame: (F[3] N, T[3] Nm).
+
+        Simulation-only signal: what the wrist transmits to the gripper, i.e. gripper weight + held load + inertial forces.
+        """
+        m, d = self.model, self.data
+        f = d.sensordata[m.sensor("wrist_force").adr[0]: m.sensor("wrist_force").adr[0] + 3]
+        t = d.sensordata[m.sensor("wrist_torque").adr[0]: m.sensor("wrist_torque").adr[0] + 3]
+        R = d.site_xmat[m.site("ft").id].reshape(3, 3)
+        return R @ f, R @ t
+
+    def gripper_mass(self):
+        """Mass hanging below the wrist-roll axis (Fixed_Jaw subtree: both jaws), kg."""
+        return float(self.model.body_subtreemass[self.model.body("Fixed_Jaw").id])
 
     def tcp_pose(self):
         p = self.data.site_xpos[self.tcp_site].copy()

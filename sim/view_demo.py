@@ -29,11 +29,21 @@ def run_policy(env, cfg, v, pacer, a):
     cam_src = camera_sources(pcfg, rename_map)
     policy.reset()
     env.stage_brick(0); staged = 1
+    rng = np.random.default_rng(a.seed + 777)
+    kick_t = int(rng.integers(40, 400)) if rng.random() < a.disturb else -1
     for t in range(a.max_steps):
         obs = build_obs(env, cam_src, pcfg)
         with torch.inference_mode():
             act = post(policy.select_action(pre(obs)))
         env.step(act.squeeze(0).detach().cpu().numpy())
+        if t == kick_t:
+            tcp = env.tcp_pose()[0]
+            free = [i for i in range(env.n_bricks)
+                    if np.linalg.norm(env.brick_pose(i)[0] - tcp) > 0.05 and not env.cured[i]]
+            if free:
+                print("kick:", env.kick_brick(int(rng.choice(free)), rng, speed=(0.3, 0.5), tip_prob=0.0))
+            else:
+                kick_t += 20
         if staged < env.n_bricks:
             p, _ = env.brick_pose(staged - 1)
             if env.data.qpos[env.jaw_qidx] > 0.5 and abs(p[1] - cfg.wall.origin_y) < 0.03 and p[0] < 0.0:
@@ -52,9 +62,11 @@ def main():
     ap.add_argument("--pos-rand", type=float, default=0.01)
     ap.add_argument("--yaw-rand", type=float, default=10.0)
     ap.add_argument("--loop", action="store_true")
+    ap.add_argument("--clean-single-pass", action="store_true", help="expert: first-attempt grasp, no re-placement")
+    ap.add_argument("--valid-supply", action="store_true", help="expert: sample nonoverlapping supply layouts")
     ap.add_argument("--task", default="2p1", help="2p1 (blueprint 4.3, default) | wall")
     ap.add_argument("--noise", type=float, default=0.0, help="expert only: DART execution noise std (m)")
-    ap.add_argument("--disturb", type=float, default=0.0, help="expert only: P(brick knocked) before pick / after release")
+    ap.add_argument("--disturb", type=float, default=0.0, help="policy: P(one kick per episode), as in eval_policy.py; expert: per-opportunity probability")
     ap.add_argument("--ckpt", default="", help="LeRobot checkpoint dir: roll out the trained policy instead of the expert")
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--rename-map", default="", help="JSON {dataset key: policy key} for pretrained VLAs (see eval_policy.py)")
@@ -70,7 +82,7 @@ def main():
             spec = scene_spec_for_ckpt(a.ckpt)
             print("scene spec from checkpoint dataset:", spec)
         cfg = blueprint_config(a.mortar, spec=a.spec, size_rand=a.size_rand, pos_rand=a.pos_rand, supply_yaw_deg=a.yaw_rand,
-                               **spec)
+                               valid_supply=a.valid_supply, **spec)
     else:
         bed = 0.002 if a.mortar != "dry" else 0.0
         cfg = SceneConfig(wall=WallSpec(n_courses=a.courses, n_per_course=a.per_course, bed_joint=bed), mortar=a.mortar,
@@ -79,8 +91,10 @@ def main():
     seed = a.seed
     who = f"policy {Path(a.ckpt).parts[-4] if a.ckpt else ''}" if a.ckpt else f"expert noise={a.noise} disturb={a.disturb}"
     while True:
+        a.seed = seed
         env.reset(seed)
-        ex = ScriptedExpert(env, noise_std=a.noise, seed=seed, disturb_prob=a.disturb)
+        ex = ScriptedExpert(env, noise_std=a.noise, seed=seed, disturb_prob=a.disturb,
+                            max_retries=0 if a.clean_single_pass else 2, clean_single_pass=a.clean_single_pass)
         with mujoco.viewer.launch_passive(env.model, env.data) as v:
             v.cam.lookat[:] = [-0.03, -0.18, 0.05]
             v.cam.distance = 0.75
