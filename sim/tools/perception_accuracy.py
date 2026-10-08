@@ -55,10 +55,11 @@ class _P:
         pass
 
 
-def episode(env, seed, source):
+def episode(env, seed, source, nbr_bias=0.0015):
     env.reset(seed)
     ex = ScriptedExpert(env, seed=seed, max_retries=0, clean_single_pass=True)
-    gate = GraspGate(env, _P(), max_retries=0, recover="reguide", release_gate=True, force=True, replace=True, pose_source=source)
+    gate = GraspGate(env, _P(), max_retries=0, recover="reguide", release_gate=True, force=True, replace=True, pose_source=source,
+                     nbr_bias=nbr_bias)
     orig = env.step; busy = [False]
 
     def step(act):
@@ -106,6 +107,7 @@ def main():
     ap.add_argument("--spawn", nargs="*", default=["40000:40"], help="seed ranges start:count for the spawn accuracy")
     ap.add_argument("--episodes", nargs="*", default=["40000:40"], help="seed ranges for expert + gate episodes")
     ap.add_argument("--sources", nargs="*", default=["sim", "camera"])
+    ap.add_argument("--nbr-bias", type=float, default=0.0015, help="m, see GraspGate(nbr_bias)")
     ap.add_argument("--out", default="")
     a = ap.parse_args()
     env = BrickEnv(cfg_paper())
@@ -121,7 +123,7 @@ def main():
     eps = []
     for s in parse_ranges(a.episodes):
         for src in a.sources:
-            r = episode(env, s, src); eps.append(r)
+            r = episode(env, s, src, a.nbr_bias); eps.append(r)
             fmt = lambda v: "n/a" if v is None else f"{v:.2f}"
             extra = (f" cam xy p95 {fmt(r['cam_err_xy_mm_p95'])} max {fmt(r['cam_err_xy_mm_max'])} held p95 {fmt(r['cam_err_xy_mm_held_p95'])}"
                      f" stats {r['cam_stats']}" if src == "camera" else "")

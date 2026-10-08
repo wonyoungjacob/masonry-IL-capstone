@@ -118,13 +118,18 @@ def _closer(yaw, ref):
 class GraspGate:
     def __init__(self, env, policy=None, max_retries: int = 3, held_min: float = HELD_MIN, recover: str = "lift",
                  release_gate: bool = False, force: bool = False, replace: bool = False, pose_noise: float = 0.0,
-                 seed: int = 0, inspect_slots=None, nominal_plan: bool = False, pose_source: str = "sim"):
+                 seed: int = 0, inspect_slots=None, nominal_plan: bool = False, pose_source: str = "sim",
+                 nbr_bias: float = REL_NBR_BIAS):
         assert recover in RECOVER_MODES, recover
         assert not replace or release_gate, "replace needs the release gate"
         assert pose_source in ("sim", "camera"), pose_source
         assert not (pose_source == "camera" and pose_noise > 0), "pose_noise applies to the simulator pose only"
         self.env, self.policy, self.held_min, self.recover = env, policy, held_min, recover
         self.pose_source = pose_source
+        # how far beyond (neighbour + L + head joint) the lower-course second brick is aimed.  1.5 mm (default, every
+        # result so far) keeps the brick off the neighbour's end but leaves the final 4.5 mm tolerance only ~0.3 mm of
+        # margin at that slot (2026-10-08, RQ4: a 1 mm measurement error there flips the result).
+        self.nbr_bias = float(nbr_bias)
         self.cam = None
         if pose_source == "camera":
             from .perception import BrickPoseEstimator   # lazy: needs cv2
@@ -394,7 +399,7 @@ class GraspGate:
                 nb = [j for j in range(env.n_bricks) if j != held and env.brick_in_slot(j, [kk]) is not None]
                 if nb:
                     sgn = np.sign(dx - D[kk][0])
-                    dx = self.pose(nb[0])[0][0] + sgn * (B.L + env.cfg.wall.head_gap + REL_NBR_BIAS)
+                    dx = self.pose(nb[0])[0][0] + sgn * (B.L + env.cfg.wall.head_gap + self.nbr_bias)
         if getattr(env, "bed_laid", False) and dz > B.H:
             zs = self.cam.surface_z(dx, dy) if self.cam is not None else None
             if zs is None:
@@ -647,7 +652,7 @@ class GraspGate:
         ev, rel = self.events, self.release_events
         return {"gate_events": ev, "gate_retries": self.retries, "gate_abort": self.aborted, "gate_done": self.done,
                 "release_gate": self.release_gate, "force_gate": self.force, "replace_gate": self.replace,
-                "pose_noise_m": self.pose_noise, "pose_source": self.pose_source, **self._cam_summary(),
+                "pose_noise_m": self.pose_noise, "pose_source": self.pose_source, "nbr_bias_m": self.nbr_bias, **self._cam_summary(),
                 "release_events": rel, "gate_recover_mode": self.recover,
                 "gate_lost": sum(e["action"] == "lost" for e in ev),
                 "gate_lost_by_load": sum(e.get("why") == "load" for e in ev),
