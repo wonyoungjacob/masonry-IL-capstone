@@ -30,6 +30,14 @@ This gate watches the rollout from *outside* the policy and takes over at three 
 
 The simulator's privileged env.grasped() is logged next to every decision for auditing only; it never drives it.
 Results obtained with the gate are "policy + gate", not "policy": report them separately.
+
+Where the gate's brick poses come from (pose_source, 2026-10-08, RQ4):
+  "sim"    : the simulator's true pose (+ optional Gaussian noise, pose_noise) - the oracle condition used so far.
+  "camera" : brick_sim.perception - the scene's own top RGB-D camera, so the robot measures what it corrects with.  The
+             true pose is then used only as an identity label (which detection is brick i, as a tracker would keep it)
+             and for the audit error written next to every measurement (cam_log / summary()).  A fragment that cannot
+             tell which way the brick runs is resolved with a prior the robot legitimately has: the jaw's own yaw for the
+             brick it holds, the design slot for a brick it has laid, else the last unoccluded measurement.
 """
 from __future__ import annotations
 
@@ -110,10 +118,21 @@ def _closer(yaw, ref):
 class GraspGate:
     def __init__(self, env, policy=None, max_retries: int = 3, held_min: float = HELD_MIN, recover: str = "lift",
                  release_gate: bool = False, force: bool = False, replace: bool = False, pose_noise: float = 0.0,
-                 seed: int = 0, inspect_slots=None, nominal_plan: bool = False):
+                 seed: int = 0, inspect_slots=None, nominal_plan: bool = False, pose_source: str = "sim"):
         assert recover in RECOVER_MODES, recover
         assert not replace or release_gate, "replace needs the release gate"
+        assert pose_source in ("sim", "camera"), pose_source
+        assert not (pose_source == "camera" and pose_noise > 0), "pose_noise applies to the simulator pose only"
         self.env, self.policy, self.held_min, self.recover = env, policy, held_min, recover
+        self.pose_source = pose_source
+        self.cam = None
+        if pose_source == "camera":
+            from .perception import BrickPoseEstimator   # lazy: needs cv2
+            self.cam = BrickPoseEstimator(env)
+        self._cam_last, self._cam_last_full, self._cam_seen = {}, {}, set()
+        self.cam_log = []
+        self.cam_stats = {"measurements": 0, "missed": 0, "fallback_truth": 0, "ambiguous": 0, "cached_full": 0, "partial": 0,
+                          "surface_fallback": 0}
         self.max_retries = max_retries if max_retries > 0 else 10 ** 9
         self.release_gate, self.force, self.replace = release_gate, force, replace
         # measurement noise on every brick pose the gate uses for correction (sensitivity to the oracle pose):
@@ -143,7 +162,10 @@ class GraspGate:
         return float(F[2] - self._g_weight)
 
     def pose(self, i):
-        """Brick i's pose as the gate measures it (true pose + optional noise): (xyz, quat wxyz)."""
+        """Brick i's pose as the gate measures it: the camera estimate (pose_source="camera") or the true pose plus
+        optional noise.  Returns (xyz, quat wxyz)."""
+        if self.cam is not None:
+            return self._cam_pose(i)
         p, q = self.env.brick_pose(i)
         if self.pose_noise <= 0:
             return p, q
@@ -374,8 +396,13 @@ class GraspGate:
                     sgn = np.sign(dx - D[kk][0])
                     dx = self.pose(nb[0])[0][0] + sgn * (B.L + env.cfg.wall.head_gap + REL_NBR_BIAS)
         if getattr(env, "bed_laid", False) and dz > B.H:
-            tops = [env.data.mocap_pos[env.bed_mocap[kk]][2] + env.cfg.wall.bed_joint / 2 for kk in range(2)]
-            dz = float(np.mean(tops)) + B.H / 2
+            zs = self.cam.surface_z(dx, dy) if self.cam is not None else None
+            if zs is None:
+                if self.cam is not None:
+                    self.cam_stats["surface_fallback"] += 1
+                tops = [env.data.mocap_pos[env.bed_mocap[kk]][2] + env.cfg.wall.bed_joint / 2 for kk in range(2)]
+                zs = float(np.mean(tops))
+            dz = zs + B.H / 2
         return np.array([dx, dy, dz]), float(dyaw)
 
     def _brick_err(self, i, target, dyaw):
@@ -520,12 +547,76 @@ class GraspGate:
         ev2 = self._release(i, k, act)
         return {"result": "ok" if ev2["post_release"]["ok"] else "still_bad", "grasps": verdicts, "second_release": ev2}
 
+    # ------------------------------------------------------------------ camera measurement (pose_source="camera")
+    def _cam_pose(self, i):
+        env = self.env
+        p_true, q_true = env.brick_pose(i)
+        held = self._carrying and self._held_brick == i
+        d = self.cam.match(p_true[:2])                    # identity only: which detection is brick i
+        src = "camera"
+        if d is None:
+            self.cam_stats["missed"] += 1
+            if i in self._cam_last:
+                p, q = self._cam_last[i]; src = "cached"
+            else:
+                self.cam_stats["fallback_truth"] += 1
+                p, q = p_true.copy(), q_true.copy(); src = "truth"
+        else:
+            if d["ambiguous"]:
+                self.cam_stats["ambiguous"] += 1
+                prior = None
+                if held:
+                    _, R = env.tcp_pose(); prior = float(np.arctan2(R[1, 0], R[0, 0])) - np.pi / 2   # jaw closes across W
+                elif i in self._released and env.brick_in_slot(i) is not None:
+                    prior = float(env.design[env.brick_in_slot(i)][3])
+                elif i in self._cam_last:
+                    prior = _yaw(self._cam_last[i][1])
+                if prior is not None and abs(_fold(d["alt"]["yaw"] - prior)) < abs(_fold(d["yaw"] - prior)):
+                    d = d["alt"]
+            if not d["full"] and not held and i not in self._released and i in self._cam_last_full:
+                # the brick lies where it was and the hand above it hides part of it: keep the last unoccluded measurement
+                self.cam_stats["cached_full"] += 1
+                p, q = self._cam_last_full[i]; src = "cached_full"
+            else:
+                p, q = d["pos"].copy(), d["quat"].copy()
+                if not d["full"]:
+                    self.cam_stats["partial"] += 1
+                if d["full"]:
+                    self._cam_last_full[i] = (p, q)
+            self._cam_last[i] = (p, q)
+        self.cam_stats["measurements"] += 1
+        key = (int(i), int(env.t), src)
+        if key not in self._cam_seen:                      # one audit line per brick and control step
+            self._cam_seen.add(key)
+            self.cam_log.append({"t": int(env.t), "brick": int(i), "src": src, "held": bool(held),
+                                 "err_xy_mm": round(1000 * float(np.hypot(*(p[:2] - p_true[:2]))), 2),
+                                 "err_z_mm": round(1000 * float(p[2] - p_true[2]), 2),
+                                 "err_yaw_deg": round(float(np.degrees(_fold(_yaw(q) - _yaw(q_true)))), 2),
+                                 "err_tilt_deg": round(_tilt_deg(q) - _tilt_deg(q_true), 2)})
+        return p, q
+
+    def _cam_summary(self):
+        if self.cam is None:
+            return {}
+        L = self.cam_log
+        used = [e for e in L if e["src"] in ("camera", "cached_full", "cached")]
+        exy = np.array([e["err_xy_mm"] for e in used]) if used else np.zeros(0)
+        eyaw = np.array([abs(e["err_yaw_deg"]) for e in used]) if used else np.zeros(0)
+        ez = np.array([abs(e["err_z_mm"]) for e in used]) if used else np.zeros(0)
+        pct = lambda a, q: float(np.percentile(a, q)) if len(a) else None
+        return {"cam_stats": dict(self.cam_stats), "cam_renders": self.cam.n_renders, "cam_log": L,
+                "cam_err_xy_mm_mean": float(exy.mean()) if len(exy) else None, "cam_err_xy_mm_p95": pct(exy, 95),
+                "cam_err_xy_mm_max": float(exy.max()) if len(exy) else None,
+                "cam_err_yaw_deg_mean": float(eyaw.mean()) if len(eyaw) else None, "cam_err_yaw_deg_p95": pct(eyaw, 95),
+                "cam_err_z_mm_mean": float(ez.mean()) if len(ez) else None, "cam_err_z_mm_p95": pct(ez, 95),
+                "cam_err_xy_mm_held_p95": pct(np.array([e["err_xy_mm"] for e in used if e["held"]]), 95)}
+
     # ------------------------------------------------------------------ report
     def summary(self):
         ev, rel = self.events, self.release_events
         return {"gate_events": ev, "gate_retries": self.retries, "gate_abort": self.aborted, "gate_done": self.done,
                 "release_gate": self.release_gate, "force_gate": self.force, "replace_gate": self.replace,
-                "pose_noise_m": self.pose_noise,
+                "pose_noise_m": self.pose_noise, "pose_source": self.pose_source, **self._cam_summary(),
                 "release_events": rel, "gate_recover_mode": self.recover,
                 "gate_lost": sum(e["action"] == "lost" for e in ev),
                 "gate_lost_by_load": sum(e.get("why") == "load" for e in ev),

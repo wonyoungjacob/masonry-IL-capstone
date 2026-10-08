@@ -37,7 +37,12 @@ except ImportError as e:  # pragma: no cover - opencv-python is in setup_ubuntu.
 # of them, while the floor checker, the arm (white/black) and the mortar bed (0.55,0.53,0.49 -> R-B = 15) are grey.
 CHROMA_MIN = 40         # R - B
 MIN_PX = 40
-OCCLUDER_DZ = 0.008     # m above the blob's top face: a pixel this much higher next to the blob is the arm, not floor
+OCCLUDER_DZ = 0.003     # m above the blob's top face: a non-brick pixel this much higher next to the blob is the arm (the jaw
+                        # pads stand only a few mm above the top face of the brick they hold)
+FLAT_MAX = 0.45         # max |d height / d pixel| (m per px * 1e3 -> mm/px) for a pixel to count as a brick top face: the side
+                        # faces of a lifted brick, seen from above, are steep bands and would stretch the footprint
+MERGE_L = 0.015         # m: margin on L when testing whether two pieces together still fit one brick footprint
+MERGE_W = 0.012         # m: margin on W
 EDGE_BAND_PX = 3        # how far outside an edge we look for occluder pixels
 EDGE_OCC_FRAC = 0.25    # fraction of edge samples next to an occluder -> that edge is not trusted
 PLANE_INLIER = 0.003    # m: second-pass plane fit keeps points this close to the first plane
@@ -148,7 +153,11 @@ class BrickPoseEstimator:
         rgb, hgt = self.render()
         B = self.env.brick
         r, g, b = rgb[..., 0].astype(np.int16), rgb[..., 1].astype(np.int16), rgb[..., 2].astype(np.int16)
-        brick = (r - b >= CHROMA_MIN) & (r >= g) & (g >= b - 10) & (hgt < 0.2)
+        colour = (r - b >= CHROMA_MIN) & (r >= g) & (g >= b - 10) & (hgt < 0.2)
+        gy, gx = np.gradient(hgt * 1000.0)                                 # mm per pixel
+        flat = np.hypot(gx, gy) < FLAT_MAX
+        self._colour = colour
+        brick = colour & flat
         mask = cv2.morphologyEx(brick.astype(np.uint8), cv2.MORPH_CLOSE, np.ones((3, 3), np.uint8))
         n, lab = cv2.connectedComponents(mask, connectivity=8)
         pieces = []
@@ -181,7 +190,7 @@ class BrickPoseEstimator:
                         continue
                     pts = np.concatenate([a["pts"], b["pts"]])
                     c2, ex, lo, sh = _rect(pts[:, :2])
-                    if lo <= B.L + 0.010 and sh <= B.W + 0.010:
+                    if lo <= B.L + MERGE_L and sh <= B.W + MERGE_W:
                         ys = np.concatenate([a["ys"], b["ys"]]); xs = np.concatenate([a["xs"], b["xs"]])
                         pieces[i] = {"ys": ys, "xs": xs, "pts": pts, "c": c2, "ex": ex, "long": lo, "short": sh}
                         del pieces[j]
@@ -216,23 +225,35 @@ class BrickPoseEstimator:
             pts, ys, xs = pts[inl], ys[inl], xs[inl]               # the top face only: a side face seen at a grazing
         tilt = float(np.degrees(np.arccos(np.clip(nrm[2], -1, 1))))  # angle would stretch the extents by a few mm
         z_top = float(np.percentile(pts[:, 2], 90))
-        # in-plane frame: ex along the long side (from the rectangle), ey = nrm x ex
+        # occluder pixels (the arm) only matter within a band around this blob: crop before dilating
+        y0, y1, x0, x1 = max(ys.min() - 8, 0), ys.max() + 9, max(xs.min() - 8, 0), xs.max() + 9
+        z_ref = float(np.median(pts[:, 2]))                               # a brick hanging tilted in the jaw: its own high
+        occ = ((hgt[y0:y1, x0:x1] > z_ref + OCCLUDER_DZ)                   # end must not count as an occluder, so only
+               & ~self._colour[y0:y1, x0:x1]).astype(np.uint8)             # non-brick-coloured pixels can
+        occ_d = cv2.dilate(occ, np.ones((2 * EDGE_BAND_PX + 1,) * 2, np.uint8)).astype(bool)
+        # in-plane frame: ex along the rectangle's long side, ey = nrm x ex
         ex3 = np.array([pc["ex"][0], pc["ex"][1], 0.0]); ex3 -= (ex3 @ nrm) * nrm; ex3 /= np.linalg.norm(ex3)
         ey3 = np.cross(nrm, ex3)
+        frame = dict(pts=pts, ys=ys - y0, xs=xs - x0, cen=cen, nrm=nrm, tilt=tilt, z_top=z_top, occ_d=occ_d, n_px=n_px, B=B)
+        dets = self._reconstruct(ex3, ey3, **frame)
+        d0 = dets[0]
+        # A fragment no longer than W in either direction (an end of the brick sticking out beside the gripper) does
+        # not tell which way the brick runs: report it as ambiguous, with the alternative (axes swapped) attached.
+        # The gate resolves it with a prior the robot legitimately has (the jaw's own yaw for a held brick, the slot
+        # for a laid one, else its last unoccluded measurement).
+        if d0["k"] == 1 and d0["long"] <= B.W + SIDE_TOL:
+            alt = self._reconstruct(ey3, -ex3, **frame)[0]
+            d0["ambiguous"], d0["alt"] = True, alt
+            alt["ambiguous"], alt["alt"] = True, None
+        return dets
+
+    def _reconstruct(self, ex3, ey3, pts, ys, xs, cen, nrm, tilt, z_top, occ_d, n_px, B):
+        """Brick centre(s) in the frame (ex3 along the bricks, ey3 across) from the visible top-face points, the
+        occluded-edge flags and the known L x W; a run of k butted bricks is split into k."""
         rel = pts - cen
         u, v = rel @ ex3, rel @ ey3
         u_ext, v_ext = (float(u.min()), float(u.max())), (float(v.min()), float(v.max()))
-        if (u_ext[1] - u_ext[0]) < B.L - 0.02 and abs((u_ext[1] - u_ext[0]) - B.W) < SIDE_TOL                 and (v_ext[1] - v_ext[0]) < B.W - SIDE_TOL:
-            # a fragment (an end of a brick beyond the fingers): its full width is the brick's W, so the brick's
-            # long axis runs across the fragment's rectangle
-            ex3, ey3 = ey3, -ex3
-            u, v = rel @ ex3, rel @ ey3
-            u_ext, v_ext = (float(u.min()), float(u.max())), (float(v.min()), float(v.max()))
-        # occluder pixels (the arm) only matter within a band around this blob: crop before dilating
-        y0, y1, x0, x1 = max(ys.min() - 8, 0), ys.max() + 9, max(xs.min() - 8, 0), xs.max() + 9
-        occ = (hgt[y0:y1, x0:x1] > z_top + OCCLUDER_DZ).astype(np.uint8)
-        occ_d = cv2.dilate(occ, np.ones((2 * EDGE_BAND_PX + 1,) * 2, np.uint8)).astype(bool)
-        edges = self._edge_occluded(ys - y0, xs - x0, u, v, u_ext, v_ext, occ_d)
+        edges = self._edge_occluded(ys, xs, u, v, u_ext, v_ext, occ_d)
         long_m, short_m = u_ext[1] - u_ext[0], v_ext[1] - v_ext[0]
         toppled = abs(short_m - B.H) < SIDE_TOL and abs(z_top - B.W) < SIDE_TOL and short_m < B.W - SIDE_TOL
         W_use = B.H if toppled else B.W
@@ -256,6 +277,7 @@ class BrickPoseEstimator:
             u0 = u_ext[0]
         else:
             u0 = (u_ext[0] + u_ext[1]) / 2 - total / 2
+        full = k == 1 and abs(long_m - B.L) < SIDE_TOL and abs(short_m - W_use) < SIDE_TOL and not any(edges.values())
         dets = []
         for i in range(k):
             top_c = cen + (u0 + i * pitch + B.L / 2) * ex3 + vc * ey3
@@ -265,7 +287,8 @@ class BrickPoseEstimator:
             quat = _quat_from_axes(ex3, ey3) if toppled else _quat_from_axes(ex3, nrm)
             dets.append({"pos": pos, "quat": quat, "yaw": float(np.arctan2(ex3[1], ex3[0])),
                          "tilt_deg": 90.0 if toppled else tilt, "long": float(long_m), "short": float(short_m),
-                         "n_px": n_px, "edges": edges, "toppled": bool(toppled), "k": int(k)})
+                         "n_px": n_px, "edges": edges, "toppled": bool(toppled), "k": int(k), "full": bool(full),
+                         "ambiguous": False, "alt": None})
         return dets
 
     # ------------------------------------------------------------------ queries the gate uses

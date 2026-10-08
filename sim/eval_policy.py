@@ -148,6 +148,9 @@ def main():
                     "and design (the drawing) instead of the true sampled size (KICEM 2026 size-tolerance study)")
     ap.add_argument("--gate-pose-noise", type=float, default=0.0, help="std (m) of Gaussian noise on every brick pose the gate "
                     "measures for its corrections (reguide, pre-release servo, post-release score, re-placement)")
+    ap.add_argument("--gate-pose-source", default="sim", choices=["sim", "camera"], help="where the gate gets the brick poses it "
+                    "corrects with: sim = the simulator's true pose (oracle; + --gate-pose-noise), camera = the scene's own top "
+                    "RGB-D camera (brick_sim.perception; the true pose is used only to label detections and for the audit error)")
     ap.add_argument("--gate-recover", default="lift", choices=["lift", "reguide", "expert"],
                     help="what the gate does after an empty grasp: lift = open+lift where the hand is; reguide = also move to the "
                          "expert pre-grasp pose above the next unplaced brick (sim brick coordinates); expert = the expert does the pick")
@@ -190,6 +193,7 @@ def main():
         held_once, released, regrasped = set(), set(), set()
         gate = GraspGate(env, policy, max_retries=a.gate_retries, recover=a.gate_recover, release_gate=a.release_gate, force=a.gate_force,
                           replace=a.gate_replace, pose_noise=a.gate_pose_noise, seed=seed, nominal_plan=a.gate_nominal_plan,
+                          pose_source=a.gate_pose_source,
                           inspect_slots=None if not a.gate_inspect else ([] if a.gate_inspect == "none" else
                                                                          [int(x) for x in a.gate_inspect.split(",")])) if a.grasp_gate else None
         for t in range(a.max_steps):
@@ -253,7 +257,7 @@ def main():
     if a.out:
         Path(a.out).write_text(json.dumps({"episodes": results, "mean": agg, "config": vars(a),
                                          "metric_version": "oriented_polyhedron_v1",
-                                         "condition": (f"policy+gate({a.gate_recover}" + (",release" if a.release_gate else "") + (",force" if a.gate_force else "") + (",replace" if a.gate_replace else "") + (f",noise{a.gate_pose_noise*1000:g}mm" if a.gate_pose_noise else "") + (f",inspect={a.gate_inspect}" if a.gate_inspect else "") + (",nominal-plan" if a.gate_nominal_plan else "") + ")") if a.grasp_gate else "policy"}, indent=1, default=float), encoding="utf-8")
+                                         "condition": (f"policy+gate({a.gate_recover}" + (",release" if a.release_gate else "") + (",force" if a.gate_force else "") + (",replace" if a.gate_replace else "") + (f",noise{a.gate_pose_noise*1000:g}mm" if a.gate_pose_noise else "") + (",camera" if a.gate_pose_source == "camera" else "") +(f",inspect={a.gate_inspect}" if a.gate_inspect else "") + (",nominal-plan" if a.gate_nominal_plan else "") + ")") if a.grasp_gate else "policy"}, indent=1, default=float), encoding="utf-8")
 
 
 if __name__ == "__main__":

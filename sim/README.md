@@ -32,7 +32,8 @@ GUI 실행은 화면에 연결된 로컬 터미널에서 수행한다.
 | `view_demo.py` | 인터랙티브 MuJoCo 뷰어로 실시간 재생. `--task 2p1 --mortar mortarB --loop` |
 | `eval_policy.py` | 학습된 LeRobot 정책을 환경에서 롤아웃하고 지표 계산 |
 | `brick_sim/feasibility.py` | 스폰 실행가능성 정적 검사(파지 자세 자기충돌, 턱 닫힘 구간 이웃 블록 간섭). `collect.py --feasible-supply`, `eval_policy.py --feasible-supply` |
-| `brick_sim/grasp_gate.py` | 정책 롤아웃용 게이트. 집기: 닫힌 뒤 1.5 cm 들고 멈춰 턱 각도 AND 손목 하중으로 확인(`--gate-force`), 빈손이면 열고 상승·재지도 후 정책 재시도(`--gate-retries 0`이면 무제한). 놓기: 해제 직전 좌표 오차 보정(`--release-gate`), 해제 직후 채점해 실패하면 블록당 1회 재배치(`--gate-replace`), 정책의 재파지는 차단. 결과는 `policy+gate(...)`로 표기 |
+| `brick_sim/grasp_gate.py` | 정책 롤아웃용 게이트. 집기: 닫힌 뒤 1.5 cm 들고 멈춰 턱 각도 AND 손목 하중으로 확인(`--gate-force`), 빈손이면 열고 상승·재지도 후 정책 재시도(`--gate-retries 0`이면 무제한). 놓기: 해제 직전 좌표 오차 보정(`--release-gate`), 해제 직후 채점해 실패하면 블록당 1회 재배치(`--gate-replace`), 정책의 재파지는 차단. 결과는 `policy+gate(...)`로 표기. 게이트가 쓰는 벽돌 좌표의 출처는 `--gate-pose-source sim`(시뮬 정답, 오라클; `--gate-pose-noise`로 잡음) 또는 `camera`(아래 인식 모듈; 정답 좌표는 검출 식별과 감사 오차 기록에만 사용) |
+| `brick_sim/perception.py` | 탑재 윗면 RGB-D 카메라(씬의 `top` 카메라를 1280×960으로 렌더)에서 벽돌 자세 추정(2026-10-08, RQ4). 색 분할 → 깊이 역투영 → 평면·사각형 맞춤 → 가려진 모서리는 공칭 치수 L×W로 복원, 맞댄 벽돌은 분할. 정확도·게이트 연동 검사는 `tools/perception_accuracy.py`, 정책 실행 명령은 `tools/rq4_jobs.py` |
 | `tools/gen_final_v2.py` | 팀 최종본 PDF 텍스트에서 4.7절만 바꾼 v2 청사진 생성 |
 
 ## 이 PC에서 확인된 것 (2026-09-17)
