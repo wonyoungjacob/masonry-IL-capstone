@@ -271,7 +271,7 @@ def build_xml(cfg: SceneConfig, brick: BrickSpec, supply_poses, mortar_margin: f
   <option timestep="{cfg.timestep}" cone="elliptic" impratio="10" noslip_iterations="3"/>
   <visual>
     <headlight diffuse="0.7 0.7 0.7" ambient="0.35 0.35 0.35" specular="0.1 0.1 0.1"/>
-    <global offwidth="640" offheight="480"/>
+    <global offwidth="1280" offheight="960"/>
     <quality shadowsize="2048"/>
   </visual>
   <asset>
