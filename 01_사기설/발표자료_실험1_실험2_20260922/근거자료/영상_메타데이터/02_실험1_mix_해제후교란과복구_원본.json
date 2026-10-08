@@ -1,0 +1,102 @@
+{
+  "name": "02_실험1_mix_해제후교란과복구_원본",
+  "kind": "dataset_original",
+  "dataset": "v2_2p1_joint_image_mix",
+  "episode_index": 2,
+  "seed": 2,
+  "frames": 500,
+  "notes": "12.2초 교란 / 재파지 구간 확인",
+  "audit": {
+    "m1_success_rate": 1.0,
+    "m1_all_success": true,
+    "m1_exy_mean_mm": 2.8325003615692883,
+    "m1_exy_max_mm": 3.1344515220300706,
+    "m1_ez_mean_mm": 0.10874262626581488,
+    "m1_eyaw_mean_deg": 0.3275754931291096,
+    "m1_exy_norm_mean": 0.03147222623965876,
+    "m1_exy_by_course_mm": [
+      2.8519206221917677,
+      2.7936598403243296
+    ],
+    "m2_course_level": [
+      {
+        "course": 0,
+        "range_mm": 0.0003693282503887396,
+        "slope_mm_per_m": -0.0040568850923521985
+      },
+      {
+        "course": 1,
+        "range_mm": 0.0,
+        "slope_mm_per_m": 0.0
+      }
+    ],
+    "m2_level_range_max_mm": 0.0003693282503887396,
+    "m3_plumb_mm": 0.2066795167801061,
+    "m3_plumb_mm_per_m": 3.2561287579182987,
+    "m3_max_tilt_deg": 0.000896145969944352,
+    "m4_straightness_max_mm": 0.0,
+    "m4_bow_mm": 0.0,
+    "m5_head_gap_mean_mm": 1.0373949412444823,
+    "m5_head_gap_std_mm": 0.0,
+    "m5_head_gap_dev_from_nominal_mm": 0.03739494124448215,
+    "m5_bed_gap_mean_mm": 4.735009842495867,
+    "m5_bed_gap_dev_from_nominal_mm": 0.0019901575041333247,
+    "m6_min_overlap_mm": NaN,
+    "m6_overlap_ok_frac": 1.0,
+    "m6_through_joints": 0,
+    "m7_fallen_count": 0,
+    "m7_settle_drift_mean_mm": 0.0002660615989837279,
+    "m7_settle_drift_max_mm": 0.0007880629941049945,
+    "m7_stable": true,
+    "m8_voxel_iou": 0.8931693104564583,
+    "m_pass": {
+      "placement": true,
+      "level": true,
+      "plumb": true,
+      "straight": true,
+      "joints": true,
+      "bond": true,
+      "stable": true
+    },
+    "episode_seed": 2,
+    "steps": 550,
+    "ik_fail_steps": 8,
+    "n_bricks": 3,
+    "brick_LWH": [
+      0.09,
+      0.042632,
+      0.027
+    ],
+    "cured": [
+      true,
+      true,
+      false
+    ],
+    "disturbances": [
+      {
+        "when": "after_place",
+        "brick": 1,
+        "t": 244,
+        "speed": 0.5185681580435384,
+        "tip": true
+      }
+    ],
+    "recoveries": 1,
+    "unrecoverable": [],
+    "bed_laid": true,
+    "bp_iou": 0.8828787531515012,
+    "bp_E_h_mm": 0.10874262626581488,
+    "bp_E_f_mm": 2.121885441390331,
+    "kept": true
+  },
+  "source_intervals": {
+    "front": [
+      37.8,
+      62.8
+    ],
+    "wrist": [
+      37.8,
+      62.8
+    ]
+  }
+}

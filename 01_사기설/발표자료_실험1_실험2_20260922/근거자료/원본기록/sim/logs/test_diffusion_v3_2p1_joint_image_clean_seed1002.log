@@ -1,0 +1,8 @@
+Loading weights from local directory
+policy diffusion device cuda n_action_steps 10 inputs ['observation.images.front', 'observation.images.wrist', 'observation.images.top', 'observation.state'] cameras {'observation.images.front': 'front', 'observation.images.wrist': 'wrist', 'observation.images.top': 'top'}
+scene spec {'head_gap': 0.001, 'mortar_impl': 'bed', 'mortar_visual': True, 'target_marks': True, 'supply': 'scatter', 'cure_settle_steps': 40}
+/home/won/masonry/sim/brick_sim/metrics.py:142: RuntimeWarning: All-NaN slice encountered
+  out["m6_min_overlap_mm"] = float(np.nanmin(overlaps) * 1000)
+ep 0 seed 50000 kicks 0 succ 0.00 exy 217.4mm fallen 1 iou 0.00  (66s)
+ep 1 seed 50001 kicks 0 succ 0.00 exy 95.5mm fallen 1 iou 0.38  (72s)
+ep 2 seed 50002 kicks 0 succ 1.00 exy 1.5mm fallen 0 iou 0.91  (72s)

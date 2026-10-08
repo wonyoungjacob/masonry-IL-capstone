@@ -1,0 +1,130 @@
+{
+  "name": "09_실험1_Diffusion_plus2_정밀도확인_seed10000",
+  "kind": "policy_checkpoint_replay",
+  "seed": 10000,
+  "experiment": 1,
+  "notes": "확률 정책 재실행 예시 / 당시 경로와 다를 수 있음",
+  "initial_poses": [
+    [
+      0.0866991,
+      -0.222137,
+      0.014,
+      0.9998679892877943,
+      0.0,
+      0.0,
+      -0.016248199825922963
+    ],
+    [
+      0.0643153,
+      -0.142399,
+      0.014,
+      0.9988145148857763,
+      0.0,
+      0.0,
+      -0.048678176357496425
+    ],
+    [
+      0.168038,
+      -0.141215,
+      0.014,
+      0.9993441375121412,
+      0.0,
+      0.0,
+      -0.03621180498283089
+    ]
+  ],
+  "final_poses": [
+    [
+      -0.05024709613908303,
+      -0.16793186358265982,
+      0.013391865908686157,
+      0.9999867729853477,
+      1.2865731489996569e-08,
+      -3.9218486905408234e-06,
+      -0.005143329560711896
+    ],
+    [
+      -0.14172439900375833,
+      -0.16879570613423292,
+      0.01339202361199359,
+      0.9999552954601012,
+      3.714541354811694e-06,
+      4.565883270093386e-06,
+      -0.009455529951071729
+    ],
+    [
+      -0.10567707748349818,
+      -0.16929466289026018,
+      0.04512696583677633,
+      0.9999984410965509,
+      -2.909018154098583e-05,
+      -4.168404672151702e-05,
+      0.0017649987736544398
+    ]
+  ],
+  "metrics": {
+    "m1_success_rate": 0.3333333333333333,
+    "m1_all_success": false,
+    "m1_exy_mean_mm": 4.804280114996353,
+    "m1_exy_max_mm": 5.720726281864751,
+    "m1_ez_mean_mm": 0.10871488084797491,
+    "m1_eyaw_mean_deg": 0.6250596733829739,
+    "m1_exy_norm_mean": 0.05338089016662615,
+    "m1_exy_by_course_mm": [
+      4.346057031562155,
+      5.720726281864751
+    ],
+    "m2_course_level": [
+      {
+        "course": 0,
+        "range_mm": 0.00015770330743375416,
+        "slope_mm_per_m": -0.0017239610536884217
+      },
+      {
+        "course": 1,
+        "range_mm": 0.0,
+        "slope_mm_per_m": 0.0
+      }
+    ],
+    "m2_level_range_max_mm": 0.00015770330743375416,
+    "m3_plumb_mm": 0.9308780318137977,
+    "m3_plumb_mm_per_m": 14.665501336197462,
+    "m3_max_tilt_deg": 0.005824812372475609,
+    "m4_straightness_max_mm": 0.0,
+    "m4_bow_mm": 0.0,
+    "m5_head_gap_mean_mm": 1.4773028646753033,
+    "m5_head_gap_std_mm": 0.0,
+    "m5_head_gap_dev_from_nominal_mm": 0.47730286467530336,
+    "m5_bed_gap_mean_mm": 4.735021076436457,
+    "m5_bed_gap_dev_from_nominal_mm": 0.001978923563543053,
+    "m6_min_overlap_mm": NaN,
+    "m6_overlap_ok_frac": 1.0,
+    "m6_through_joints": 0,
+    "m7_fallen_count": 0,
+    "m7_settle_drift_mean_mm": 2.1912359476544316e-06,
+    "m7_settle_drift_max_mm": 6.216969329938957e-06,
+    "m7_stable": true,
+    "m8_voxel_iou": 0.850538315389487,
+    "m_pass": {
+      "placement": false,
+      "level": true,
+      "plumb": true,
+      "straight": true,
+      "joints": true,
+      "bond": true,
+      "stable": true
+    },
+    "bp_iou": 0.8616221203646854,
+    "bp_E_h_mm": 0.10871488084797491,
+    "bp_E_f_mm": 2.5321579323477614
+  },
+  "comparison": {
+    "original_success": false,
+    "original_xy_mm": 5.2509457745785,
+    "replay_success": false
+  },
+  "source": "eval_diffusion_v2_2p1_joint_image_plus2_mortarB.json",
+  "run": "diffusion_v2_2p1_joint_image_plus2",
+  "inference_seed": 70000,
+  "n_action_steps": 32
+}

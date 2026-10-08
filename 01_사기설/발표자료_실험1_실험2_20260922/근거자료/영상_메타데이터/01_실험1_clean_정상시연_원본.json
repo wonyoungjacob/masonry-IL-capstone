@@ -1,0 +1,94 @@
+{
+  "name": "01_실험1_clean_정상시연_원본",
+  "kind": "dataset_original",
+  "dataset": "v2_2p1_joint_image_clean",
+  "episode_index": 0,
+  "seed": 0,
+  "frames": 366,
+  "notes": "외부 교란 없음",
+  "audit": {
+    "m1_success_rate": 1.0,
+    "m1_all_success": true,
+    "m1_exy_mean_mm": 2.5985666749984344,
+    "m1_exy_max_mm": 3.5369201384095983,
+    "m1_ez_mean_mm": 0.10856279395869116,
+    "m1_eyaw_mean_deg": 0.29328249025698266,
+    "m1_exy_norm_mean": 0.028872963055538162,
+    "m1_exy_by_course_mm": [
+      2.6681980256138615,
+      2.459303973767581
+    ],
+    "m2_course_level": [
+      {
+        "course": 0,
+        "range_mm": 0.00019380349540465414,
+        "slope_mm_per_m": 0.002098336847983464
+      },
+      {
+        "course": 1,
+        "range_mm": 0.0,
+        "slope_mm_per_m": 0.0
+      }
+    ],
+    "m2_level_range_max_mm": 0.00019380349540465414,
+    "m3_plumb_mm": 0.32573132231558666,
+    "m3_plumb_mm_per_m": 5.131728303172742,
+    "m3_max_tilt_deg": 0.0002252927311274443,
+    "m4_straightness_max_mm": 0.0,
+    "m4_bow_mm": 0.0,
+    "m5_head_gap_mean_mm": 2.3605261873946985,
+    "m5_head_gap_std_mm": 0.0,
+    "m5_head_gap_dev_from_nominal_mm": 1.3605261873946985,
+    "m5_bed_gap_mean_mm": 4.734897662997828,
+    "m5_bed_gap_dev_from_nominal_mm": 0.0021023370021713145,
+    "m6_min_overlap_mm": NaN,
+    "m6_overlap_ok_frac": 1.0,
+    "m6_through_joints": 0,
+    "m7_fallen_count": 0,
+    "m7_settle_drift_mean_mm": 6.630143125761913e-06,
+    "m7_settle_drift_max_mm": 1.8976711484941254e-05,
+    "m7_stable": true,
+    "m8_voxel_iou": 0.9005847953216376,
+    "m_pass": {
+      "placement": true,
+      "level": true,
+      "plumb": true,
+      "straight": true,
+      "joints": true,
+      "bond": true,
+      "stable": true
+    },
+    "episode_seed": 0,
+    "steps": 416,
+    "ik_fail_steps": 8,
+    "n_bricks": 3,
+    "brick_LWH": [
+      0.09,
+      0.042632,
+      0.027
+    ],
+    "cured": [
+      true,
+      true,
+      false
+    ],
+    "disturbances": [],
+    "recoveries": 0,
+    "unrecoverable": [],
+    "bed_laid": true,
+    "bp_iou": 0.8888671003340409,
+    "bp_E_h_mm": 0.10856279395869116,
+    "bp_E_f_mm": 2.0461516639324326,
+    "kept": true
+  },
+  "source_intervals": {
+    "front": [
+      0.0,
+      18.3
+    ],
+    "wrist": [
+      0.0,
+      18.3
+    ]
+  }
+}

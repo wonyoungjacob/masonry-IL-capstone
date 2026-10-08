@@ -1,0 +1,178 @@
+{
+  "name": "07_실험2_수집제외_최종정밀도_seed1004",
+  "kind": "expert_reconstruction",
+  "seed": 1004,
+  "experiment": 2,
+  "notes": "단계 검사와 최종 성공 기준 차이",
+  "initial_poses": [
+    [
+      0.0940838,
+      -0.140735,
+      0.014,
+      0.8694716682648861,
+      0.0,
+      0.0,
+      -0.4939828115275629
+    ],
+    [
+      0.077479,
+      -0.228543,
+      0.014,
+      0.9977946830001807,
+      0.0,
+      0.0,
+      0.06637597891232166
+    ],
+    [
+      0.186862,
+      -0.117325,
+      0.014,
+      0.9859002575388707,
+      0.0,
+      0.0,
+      0.16733404371133928
+    ]
+  ],
+  "final_poses": [
+    [
+      -0.05005449040975202,
+      -0.16803443870112947,
+      0.013392212265547829,
+      0.9999959837317856,
+      7.287075192946376e-08,
+      -1.557595811428184e-07,
+      -0.002834170119983946
+    ],
+    [
+      -0.14484182181555944,
+      -0.16947698387739057,
+      0.013391907340773432,
+      0.9999998916058476,
+      3.404881861684776e-06,
+      2.4828140423546617e-06,
+      0.00046558622873826524
+    ],
+    [
+      -0.09785688682077825,
+      -0.1690239793812228,
+      0.04512685679505801,
+      0.999997166321766,
+      1.8612529369880386e-06,
+      -1.0336554420950774e-06,
+      -0.0023806183869380074
+    ]
+  ],
+  "metrics": {
+    "m1_success_rate": 0.6666666666666666,
+    "m1_all_success": false,
+    "m1_exy_mean_mm": 2.6854123854398533,
+    "m1_exy_max_mm": 4.860657027255113,
+    "m1_ez_mean_mm": 0.10867453287357529,
+    "m1_eyaw_mean_deg": 0.2169745641320636,
+    "m1_exy_norm_mean": 0.029837915393776143,
+    "m1_exy_by_course_mm": [
+      2.850668967005206,
+      2.3548992223091463
+    ],
+    "m2_course_level": [
+      {
+        "course": 0,
+        "range_mm": 0.00030492477439900134,
+        "slope_mm_per_m": 0.0032169359541898896
+      },
+      {
+        "course": 1,
+        "range_mm": 0.0,
+        "slope_mm_per_m": 0.0
+      }
+    ],
+    "m2_level_range_max_mm": 0.00030492477439900134,
+    "m3_plumb_mm": 0.2682680919627589,
+    "m3_plumb_mm_per_m": 4.226424866287911,
+    "m3_max_tilt_deg": 0.00048288580028073096,
+    "m4_straightness_max_mm": 0.0,
+    "m4_bow_mm": 0.0,
+    "m5_head_gap_mean_mm": 4.7873314058074214,
+    "m5_head_gap_std_mm": 0.0,
+    "m5_head_gap_dev_from_nominal_mm": 3.787331405807421,
+    "m5_bed_gap_mean_mm": 4.73479699189738,
+    "m5_bed_gap_dev_from_nominal_mm": 0.002203008102620238,
+    "m6_min_overlap_mm": NaN,
+    "m6_overlap_ok_frac": 1.0,
+    "m6_through_joints": 0,
+    "m7_fallen_count": 0,
+    "m7_settle_drift_mean_mm": 5.4746107955660545e-05,
+    "m7_settle_drift_max_mm": 0.0001629171192999521,
+    "m7_stable": true,
+    "m8_voxel_iou": 0.8828654404646661,
+    "m_pass": {
+      "placement": false,
+      "level": true,
+      "plumb": true,
+      "straight": true,
+      "joints": true,
+      "bond": true,
+      "stable": true
+    },
+    "bp_iou": 0.8923821844834507,
+    "bp_E_h_mm": 0.10867453287357529,
+    "bp_E_f_mm": 2.220979983206861
+  },
+  "comparison": {},
+  "source": null,
+  "expert_log": [
+    {
+      "brick": 1,
+      "stage": "grasp",
+      "ok": true,
+      "t": 50
+    },
+    {
+      "brick": 1,
+      "stage": "release",
+      "ok": true,
+      "why": "ok",
+      "t": 122,
+      "exy_mm": 0.84,
+      "ez_mm": -0.11,
+      "eyaw_deg": 0.1,
+      "tilt_deg": 0.0
+    },
+    {
+      "brick": 0,
+      "stage": "grasp",
+      "ok": true,
+      "t": 172
+    },
+    {
+      "brick": 0,
+      "stage": "release",
+      "ok": true,
+      "why": "ok",
+      "t": 244,
+      "exy_mm": 4.86,
+      "ez_mm": -0.11,
+      "eyaw_deg": 0.3,
+      "tilt_deg": 0.0
+    },
+    {
+      "brick": 2,
+      "stage": "grasp",
+      "ok": true,
+      "t": 294
+    },
+    {
+      "brick": 2,
+      "stage": "release",
+      "ok": true,
+      "why": "ok",
+      "t": 366,
+      "exy_mm": 2.35,
+      "ez_mm": -0.0,
+      "eyaw_deg": 0.3,
+      "tilt_deg": 0.0
+    }
+  ],
+  "unrecoverable": [],
+  "recoveries": 0
+}

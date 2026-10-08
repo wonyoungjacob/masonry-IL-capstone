@@ -1,0 +1,131 @@
+{
+  "name": "10_실험2_ACT_진행실패_seed50000",
+  "kind": "policy_checkpoint_replay",
+  "seed": 50000,
+  "experiment": 2,
+  "notes": "학습 seed1000 / 10스텝 실행",
+  "initial_poses": [
+    [
+      0.0706419,
+      -0.243205,
+      0.014,
+      0.9704421092135611,
+      0.0,
+      0.0,
+      -0.24133402715973293
+    ],
+    [
+      0.185461,
+      -0.131303,
+      0.014,
+      0.9985914893505874,
+      0.0,
+      0.0,
+      -0.053056926000059255
+    ],
+    [
+      0.0775141,
+      -0.145705,
+      0.014,
+      0.9009961540951329,
+      0.0,
+      0.0,
+      -0.4338270741963663
+    ]
+  ],
+  "final_poses": [
+    [
+      0.07064189979753377,
+      -0.2432049999480691,
+      0.013392244579783809,
+      0.970442109213599,
+      -1.1024246063777692e-10,
+      -4.433024689370389e-10,
+      -0.24133402715957863
+    ],
+    [
+      0.18561974208386828,
+      -0.1311955001442202,
+      0.013392244579783826,
+      0.9984975870565223,
+      2.501418631651695e-11,
+      4.5581135861408795e-10,
+      -0.05479569912229762
+    ],
+    [
+      0.11154187524599335,
+      -0.11334531675932674,
+      0.013392244579783804,
+      0.6215096611508318,
+      3.5988467331725386e-10,
+      2.855116626424254e-10,
+      -0.7834064979920555
+    ]
+  ],
+  "metrics": {
+    "m1_success_rate": 0.0,
+    "m1_all_success": false,
+    "m1_exy_mean_mm": 230.1448033456679,
+    "m1_exy_max_mm": 243.2350298527756,
+    "m1_ez_mean_mm": 10.686755420216187,
+    "m1_eyaw_mean_deg": 45.78664180923957,
+    "m1_exy_norm_mean": 2.557164481618532,
+    "m1_exy_by_course_mm": [
+      235.7186683665305,
+      218.99707330394267
+    ],
+    "m2_course_level": [
+      {
+        "course": 0,
+        "range_mm": 2.0816681711721685e-14,
+        "slope_mm_per_m": 1.8590570041732976e-13
+      },
+      {
+        "course": 1,
+        "range_mm": 0.0,
+        "slope_mm_per_m": 0.0
+      }
+    ],
+    "m2_level_range_max_mm": 2.0816681711721685e-14,
+    "m3_plumb_mm": 73.85493328681791,
+    "m3_plumb_mm_per_m": 1163.5462281692962,
+    "m3_max_tilt_deg": 0.0,
+    "m4_straightness_max_mm": 0.0,
+    "m4_bow_mm": 0.0,
+    "m5_head_gap_mean_mm": 24.977842286334525,
+    "m5_head_gap_std_mm": 0.0,
+    "m5_head_gap_dev_from_nominal_mm": 23.977842286334525,
+    "m5_bed_gap_mean_mm": -27.000000000000014,
+    "m5_bed_gap_dev_from_nominal_mm": 31.737000000000016,
+    "m6_min_overlap_mm": NaN,
+    "m6_overlap_ok_frac": 1.0,
+    "m6_through_joints": 0,
+    "m7_fallen_count": 1,
+    "m7_settle_drift_mean_mm": 2.160888677743225e-10,
+    "m7_settle_drift_max_mm": 3.2800641298203555e-10,
+    "m7_stable": false,
+    "m8_voxel_iou": 0.0,
+    "m_pass": {
+      "placement": false,
+      "level": true,
+      "plumb": false,
+      "straight": true,
+      "joints": false,
+      "bond": true,
+      "stable": false
+    },
+    "bp_iou": 0.0,
+    "bp_E_h_mm": 10.686755420216187,
+    "bp_E_f_mm": 116.94285109827555
+  },
+  "comparison": {
+    "original_success": false,
+    "original_xy_mm": 230.1448033456679,
+    "replay_success": false,
+    "max_abs_final_pose_difference": 0.0
+  },
+  "source": "test_act_v3_2p1_joint_image_clean_seed1000.json",
+  "run": "act_v3_2p1_joint_image_clean_seed1000",
+  "inference_seed": 70000,
+  "n_action_steps": 10
+}
