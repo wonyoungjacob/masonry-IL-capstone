@@ -122,7 +122,8 @@ def main():
     for s in parse_ranges(a.episodes):
         for src in a.sources:
             r = episode(env, s, src); eps.append(r)
-            extra = (f" cam xy p95 {r['cam_err_xy_mm_p95']:.2f} max {r['cam_err_xy_mm_max']:.2f} held p95 {r['cam_err_xy_mm_held_p95']}"
+            fmt = lambda v: "n/a" if v is None else f"{v:.2f}"
+            extra = (f" cam xy p95 {fmt(r['cam_err_xy_mm_p95'])} max {fmt(r['cam_err_xy_mm_max'])} held p95 {fmt(r['cam_err_xy_mm_held_p95'])}"
                      f" stats {r['cam_stats']}" if src == "camera" else "")
             print(f"seed {s} {src:6s} full {r['full']} succ {r['succ']:.2f} corrected {r['corrected']}/{r['releases']} bad {r['bad']} "
                   f"replaced {r['replaced_ok']}/{r['replaced']} retries {r['retries']} ({r['wall_s']:.0f}s){extra}", flush=True)
@@ -142,7 +143,7 @@ def main():
             logs = [e for r in rs for e in r["cam_log"]]
             table[src]["cam"] = {"measurements": len(logs), "xy": summarize(logs), "z": summarize(logs, "err_z_mm"), "yaw": summarize(logs, "err_yaw_deg"),
                                  "held_xy": summarize([e for e in logs if e["held"]]),
-                                 "src_counts": {k: sum(e["src"] == k for e in logs) for k in ("camera", "cached_full", "cached", "truth")}}
+                                 "src_counts": {k: sum(e["src"] == k for e in logs) for k in ("camera", "cached_full", "cached", "in_hand", "truth")}}
     res["table"] = table
     print("TABLE:", json.dumps(table, indent=1, default=float))
     if a.out:

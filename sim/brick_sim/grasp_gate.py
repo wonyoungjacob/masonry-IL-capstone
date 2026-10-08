@@ -129,10 +129,10 @@ class GraspGate:
         if pose_source == "camera":
             from .perception import BrickPoseEstimator   # lazy: needs cv2
             self.cam = BrickPoseEstimator(env)
-        self._cam_last, self._cam_last_full, self._cam_seen = {}, {}, set()
+        self._cam_last, self._cam_last_full, self._cam_seen, self._cam_in_hand = {}, {}, set(), {}
         self.cam_log = []
         self.cam_stats = {"measurements": 0, "missed": 0, "fallback_truth": 0, "ambiguous": 0, "cached_full": 0, "partial": 0,
-                          "surface_fallback": 0}
+                          "in_hand": 0, "surface_fallback": 0}
         self.max_retries = max_retries if max_retries > 0 else 10 ** 9
         self.release_gate, self.force, self.replace = release_gate, force, replace
         # measurement noise on every brick pose the gate uses for correction (sensitivity to the oracle pose):
@@ -556,7 +556,11 @@ class GraspGate:
         src = "camera"
         if d is None:
             self.cam_stats["missed"] += 1
-            if i in self._cam_last:
+            if held and i in self._cam_in_hand:
+                # the brick is in the jaw and moves with it: carry the last measurement along with the hand (FK from
+                # the joint encoders), which a real robot can do as long as the brick does not slip
+                p, q = self._propagate_in_hand(i); src = "in_hand"; self.cam_stats["in_hand"] += 1
+            elif i in self._cam_last:
                 p, q = self._cam_last[i]; src = "cached"
             else:
                 self.cam_stats["fallback_truth"] += 1
@@ -584,6 +588,10 @@ class GraspGate:
                 if d["full"]:
                     self._cam_last_full[i] = (p, q)
             self._cam_last[i] = (p, q)
+            if held:
+                self._cam_in_hand[i] = self._tcp_relative(p, q)
+        if not held:
+            self._cam_in_hand.pop(i, None)
         self.cam_stats["measurements"] += 1
         key = (int(i), int(env.t), src)
         if key not in self._cam_seen:                      # one audit line per brick and control step
@@ -595,11 +603,34 @@ class GraspGate:
                                  "err_tilt_deg": round(_tilt_deg(q) - _tilt_deg(q_true), 2)})
         return p, q
 
+    def _tcp_relative(self, p, q):
+        """Brick pose expressed in the TCP frame (planar: offset in the TCP's horizontal frame, height, yaw offset)."""
+        tcp, R = self.env.tcp_pose()
+        yaw_t = float(np.arctan2(R[1, 0], R[0, 0]))
+        c, s = np.cos(-yaw_t), np.sin(-yaw_t)
+        dxy = p[:2] - tcp[:2]
+        return (np.array([c * dxy[0] - s * dxy[1], s * dxy[0] + c * dxy[1]]), float(p[2] - tcp[2]), _wrap(_yaw(q) - yaw_t), q.copy())
+
+    def _propagate_in_hand(self, i):
+        off, dz, dyaw, q0 = self._cam_in_hand[i]
+        tcp, R = self.env.tcp_pose()
+        yaw_t = float(np.arctan2(R[1, 0], R[0, 0]))
+        c, s = np.cos(yaw_t), np.sin(yaw_t)
+        p = np.array([tcp[0] + c * off[0] - s * off[1], tcp[1] + s * off[0] + c * off[1], tcp[2] + dz])
+        yaw = yaw_t + dyaw
+        tilt = _tilt_deg(q0)                                 # keep the measured tilt, turn the yaw with the hand
+        qy = np.array([np.cos(yaw / 2), 0.0, 0.0, np.sin(yaw / 2)])
+        t = np.deg2rad(tilt); qt = np.array([np.cos(t / 2), np.sin(t / 2), 0.0, 0.0])
+        w1, x1, y1, z1 = qy; w2, x2, y2, z2 = qt
+        q = np.array([w1*w2 - x1*x2 - y1*y2 - z1*z2, w1*x2 + x1*w2 + y1*z2 - z1*y2,
+                      w1*y2 - x1*z2 + y1*w2 + z1*x2, w1*z2 + x1*y2 - y1*x2 + z1*w2])
+        return p, q
+
     def _cam_summary(self):
         if self.cam is None:
             return {}
         L = self.cam_log
-        used = [e for e in L if e["src"] in ("camera", "cached_full", "cached")]
+        used = [e for e in L if e["src"] in ("camera", "cached_full", "cached", "in_hand")]
         exy = np.array([e["err_xy_mm"] for e in used]) if used else np.zeros(0)
         eyaw = np.array([abs(e["err_yaw_deg"]) for e in used]) if used else np.zeros(0)
         ez = np.array([abs(e["err_z_mm"]) for e in used]) if used else np.zeros(0)

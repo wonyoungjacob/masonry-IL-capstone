@@ -227,9 +227,10 @@ class BrickPoseEstimator:
         z_top = float(np.percentile(pts[:, 2], 90))
         # occluder pixels (the arm) only matter within a band around this blob: crop before dilating
         y0, y1, x0, x1 = max(ys.min() - 8, 0), ys.max() + 9, max(xs.min() - 8, 0), xs.max() + 9
-        z_ref = float(np.median(pts[:, 2]))                               # a brick hanging tilted in the jaw: its own high
-        occ = ((hgt[y0:y1, x0:x1] > z_ref + OCCLUDER_DZ)                   # end must not count as an occluder, so only
-               & ~self._colour[y0:y1, x0:x1]).astype(np.uint8)             # non-brick-coloured pixels can
+        z_ref = float(np.median(pts[:, 2]))
+        own = np.zeros((y1 - y0, x1 - x0), np.uint8); own[ys - y0, xs - x0] = 1   # this blob's own pixels (a brick hanging
+        own = cv2.dilate(own, np.ones((5, 5), np.uint8)).astype(bool)             # tilted in the jaw: its high end is not
+        occ = ((hgt[y0:y1, x0:x1] > z_ref + OCCLUDER_DZ) & ~own).astype(np.uint8)  # an occluder; anything else above is)
         occ_d = cv2.dilate(occ, np.ones((2 * EDGE_BAND_PX + 1,) * 2, np.uint8)).astype(bool)
         # in-plane frame: ex along the rectangle's long side, ey = nrm x ex
         ex3 = np.array([pc["ex"][0], pc["ex"][1], 0.0]); ex3 -= (ex3 @ nrm) * nrm; ex3 /= np.linalg.norm(ex3)
