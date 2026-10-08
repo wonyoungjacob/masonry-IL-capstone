@@ -12,7 +12,7 @@ pip install -U pip wheel
 
 # RTX 5090 = sm_120 -> torch >= 2.7 built for CUDA 12.8
 pip install --index-url https://download.pytorch.org/whl/cu128 torch torchvision torchcodec
-pip install "lerobot>=0.6" mujoco av numpy pillow
+pip install "lerobot>=0.6" mujoco av numpy pillow opencv-python   # opencv: brick_sim/perception.py (RQ4 camera gate)
 
 # system libs for EGL headless rendering (skip if already present)
 if command -v apt-get >/dev/null 2>&1; then
