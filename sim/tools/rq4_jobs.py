@@ -9,7 +9,8 @@ outputs/final_test/jobs.py, plus --gate-pose-source camera.  One shell command p
 Before the policy runs, the CPU-only check (expert + gates, sim vs camera; spawn accuracy) takes ~15 min:
     python tools/perception_accuracy.py --spawn 40000:40 --episodes 40000:40 50000:50 --out outputs/rq4/perception_accuracy.json
 Compare with outputs/final_test/test_{policy}_E_replace_*.json (oracle) and val40_{policy}_E_noise{1,2,4}mm.json (noise sweep):
-the camera result should land where the noise curve predicts for the measured estimator error.
+the camera result should land where the noise curve predicts for the measured estimator error.  The *_bias05_* jobs repeat
+seed1000 on the test batch with the lower-course neighbour bias 0.5 mm (oracle and camera) - see 실험일지 2026-10-08.
 """
 import sys
 
@@ -29,5 +30,14 @@ for pol in ("diffusion", "act"):
     out = f"outputs/rq4/val40_{pol}_s1000_D_camera.json"
     cmd = BASE.format(ck=CK.format(p=pol, seed=1000), n=40, s0=40000, out=out) + " " + D + " --gate-pose-source camera"
     jobs.append(f"{cmd} > logs/rq4/val40_{pol}_s1000_D_camera.log 2>&1")
+    # neighbour bias 0.5 mm (2026-10-08 CPU finding: with 1.5 mm the lower-course second brick sits 4.1-4.2 mm from its design
+    # slot, so a 1 mm camera error breaks the 4.5 mm tolerance; 0.5 mm restored the expert+gate completion): seed1000, test 50,
+    # both the oracle and the camera, so the bias effect is separated from the camera effect
+    for src in ("sim", "camera"):
+        for k in range(2):
+            s0 = 50000 + 25 * k
+            out = f"outputs/rq4/test_{pol}_s1000_D_{src}_bias05_{s0}.json"
+            cmd = BASE.format(ck=CK.format(p=pol, seed=1000), n=25, s0=s0, out=out) + " " + D + f" --gate-pose-source {src} --gate-nbr-bias 0.0005"
+            jobs.append(f"{cmd} > logs/rq4/test_{pol}_s1000_D_{src}_bias05_{s0}.log 2>&1")
 print("\n".join(jobs))
 print(f"# {len(jobs)} jobs", file=sys.stderr)
