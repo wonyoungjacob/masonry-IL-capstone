@@ -1,0 +1,525 @@
+# -*- coding: utf-8 -*-
+"""중간발표 1 PPT 초안 v6 (2026-10-10). 사진·영상은 넣지 않고 점선 박스로 자리만 잡는다."""
+import re, sys
+from pptx import Presentation
+from pptx.util import Inches, Pt
+from pptx.dml.color import RGBColor
+from pptx.enum.shapes import MSO_SHAPE
+from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from pptx.enum.dml import MSO_LINE_DASH_STYLE
+
+OUT = sys.argv[1]
+FONT = "맑은 고딕"
+NAVY = RGBColor(0x14, 0x3A, 0x50); TEAL = RGBColor(0x14, 0x7C, 0x85); INK = RGBColor(0x24, 0x35, 0x49)
+GREY = RGBColor(0x5B, 0x69, 0x73); HEAD = RGBColor(0x15, 0x3E, 0x52); LINE = RGBColor(0xD9, 0xE4, 0xE9)
+BOXBG = RGBColor(0xED, 0xF5, 0xF6); WARNBG = RGBColor(0xFF, 0xF5, 0xE9); WARNLN = RGBColor(0xC7, 0x80, 0x2A)
+PHBG = RGBColor(0xF4, 0xF6, 0xF8); PHLN = RGBColor(0xB0, 0x41, 0x2A); VIDLN = RGBColor(0x2A, 0x5F, 0xB0); DIAGLN = RGBColor(0x1D, 0x7A, 0x3E)
+OK = RGBColor(0x1D, 0x7A, 0x3E); NO = RGBColor(0xB0, 0x41, 0x2A); WHITE = RGBColor(0xFF, 0xFF, 0xFF)
+
+prs = Presentation()
+prs.slide_width, prs.slide_height = Inches(13.333), Inches(7.5)
+BLANK = prs.slide_layouts[6]
+W, H = 13.333, 7.5
+M = 0.5
+page = [0]
+
+
+def runs(par, text, size, color=INK, bold=False, align=None):
+    """'**굵게**' 와 '{ok:..}' '{no:..}' 마크업 지원."""
+    if align is not None:
+        par.alignment = align
+    for tok in re.split(r"(\*\*.+?\*\*|\{ok:.+?\}|\{no:.+?\})", text):
+        if not tok:
+            continue
+        r = par.add_run()
+        b, c = bold, color
+        if tok.startswith("**"):
+            tok, b = tok[2:-2], True
+        elif tok.startswith("{ok:"):
+            tok, b, c = tok[4:-1], True, OK
+        elif tok.startswith("{no:"):
+            tok, b, c = tok[4:-1], True, NO
+        r.text = tok
+        r.font.name = FONT; r.font.size = Pt(size); r.font.bold = b; r.font.color.rgb = c
+
+
+def text(slide, x, y, w, h, lines, size=12, color=INK, bold=False, align=None, anchor=MSO_ANCHOR.TOP, bullet=False, space=2):
+    tb = slide.shapes.add_textbox(Inches(x), Inches(y), Inches(w), Inches(h))
+    tf = tb.text_frame; tf.word_wrap = True; tf.vertical_anchor = anchor
+    tf.margin_left = tf.margin_right = Inches(0.05); tf.margin_top = tf.margin_bottom = Inches(0.03)
+    if isinstance(lines, str):
+        lines = [lines]
+    for i, ln in enumerate(lines):
+        p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
+        p.space_after = Pt(space)
+        runs(p, ("• " if bullet else "") + ln, size, color, bold, align)
+    return tb
+
+
+def header(slide, eyebrow, title, sub=None):
+    page[0] += 1
+    text(slide, M, 0.28, W - 2 * M, 0.3, eyebrow, 10, TEAL, True)
+    text(slide, M, 0.52, W - 2 * M, 0.75, title, 24, NAVY, True, anchor=MSO_ANCHOR.TOP)
+    if sub:
+        text(slide, M, 1.18, W - 2 * M, 0.35, sub, 12, GREY)
+    ln = slide.shapes.add_connector(1, Inches(M), Inches(1.5), Inches(W - M), Inches(1.5))
+    ln.line.color.rgb = LINE; ln.line.width = Pt(1)
+    text(slide, M, 7.08, 6, 0.3, "14조 · 사회기반시스템종합설계 중간발표 1 · 초안 v6 (2026-10-10)", 9, GREY)
+    text(slide, W - M - 1, 7.08, 1, 0.3, str(page[0]), 9, GREY, align=PP_ALIGN.RIGHT)
+
+
+def table(slide, x, y, w, rows, widths, size=10.5, head_size=None, row_h=0.32, align_c=()):
+    """rows[0] = 헤더. widths는 비율. align_c = 가운데 정렬할 열 번호."""
+    n, m = len(rows), len(rows[0])
+    sh = slide.shapes.add_table(n, m, Inches(x), Inches(y), Inches(w), Inches(row_h * n))
+    tbl = sh.table
+    tot = sum(widths)
+    for j, wd in enumerate(widths):
+        tbl.columns[j].width = Inches(w * wd / tot)
+    for i in range(n):
+        tbl.rows[i].height = Inches(min(row_h, 0.36) if i == 0 else row_h)
+        for j in range(m):
+            c = tbl.cell(i, j)
+            c.margin_left = c.margin_right = Inches(0.06); c.margin_top = c.margin_bottom = Inches(0.03)
+            c.vertical_anchor = MSO_ANCHOR.MIDDLE if i == 0 else MSO_ANCHOR.TOP
+            tf = c.text_frame; tf.word_wrap = True
+            val = rows[i][j]
+            segs = val.split("\n") if isinstance(val, str) else val
+            for k, s in enumerate(segs):
+                p = tf.paragraphs[0] if k == 0 else tf.add_paragraph()
+                al = PP_ALIGN.CENTER if (j in align_c or i == 0 and j in align_c) else None
+                if i == 0:
+                    runs(p, s, head_size or size, WHITE, True, al)
+                else:
+                    runs(p, s, size, INK, False, al)
+            c.fill.solid()
+            c.fill.fore_color.rgb = HEAD if i == 0 else (WHITE if i % 2 else RGBColor(0xF7, 0xFA, 0xFB))
+    return sh
+
+
+def box(slide, x, y, w, h, lines, size=11, bg=BOXBG, ln=TEAL, title=None):
+    sh = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(h))
+    sh.fill.solid(); sh.fill.fore_color.rgb = bg; sh.line.color.rgb = ln; sh.line.width = Pt(1.5)
+    sh.shadow.inherit = False
+    tf = sh.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.TOP
+    tf.margin_left = tf.margin_right = Inches(0.12); tf.margin_top = tf.margin_bottom = Inches(0.08)
+    if isinstance(lines, str):
+        lines = [lines]
+    first = True
+    if title:
+        runs(tf.paragraphs[0], title, size + 1, NAVY, True, PP_ALIGN.LEFT); first = False
+    for s in lines:
+        p = tf.paragraphs[0] if first else tf.add_paragraph(); first = False
+        p.space_after = Pt(2)
+        runs(p, s, size, INK, align=PP_ALIGN.LEFT)
+    return sh
+
+
+def media(slide, x, y, w, h, kind, what, src="", status="", size=10):
+    """사진/영상/도식 자리 박스. kind: 사진 | 영상 | 도식."""
+    col = {"사진": PHLN, "영상": VIDLN, "도식": DIAGLN}[kind]
+    sh = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(h))
+    sh.fill.solid(); sh.fill.fore_color.rgb = PHBG
+    sh.line.color.rgb = col; sh.line.width = Pt(1.75); sh.line.dash_style = MSO_LINE_DASH_STYLE.DASH
+    sh.shadow.inherit = False
+    tf = sh.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.TOP
+    tf.margin_left = tf.margin_right = Inches(0.12); tf.margin_top = tf.margin_bottom = Inches(0.1)
+    L = PP_ALIGN.LEFT
+    runs(tf.paragraphs[0], f"[{kind}]  {what.splitlines()[0]}", size + 1, col, True, L)
+    for s in what.splitlines()[1:]:
+        p = tf.add_paragraph(); runs(p, s, size, INK, align=L)
+    if src:
+        p = tf.add_paragraph(); p.space_before = Pt(4); runs(p, "후보 파일: " + src, size - 1, GREY, align=L)
+    if status:
+        p = tf.add_paragraph(); runs(p, "상태: " + status, size - 1, GREY, True, L)
+    return sh
+
+
+def note(slide, lines, y=6.62, size=9):
+    text(slide, M, y, W - 2 * M, 0.45, lines, size, GREY)
+
+
+def new():
+    return prs.slides.add_slide(BLANK)
+
+
+VID = "01_사기설/발표자료_실험1_실험2_20260922/발표용_영상/"
+IMG = "01_사기설/발표자료_실험1_실험2_20260922/이미지/"
+AST = "중간발표_진행정리_20261007/assets/"
+
+# ───────────────────────────── 1 표지
+s = new(); page[0] += 1
+bg = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, prs.slide_width, prs.slide_height)
+bg.fill.solid(); bg.fill.fore_color.rgb = NAVY; bg.line.fill.background()
+text(s, 0.8, 0.9, 7.6, 0.4, "사회기반시스템종합설계 · 14조 · 중간발표 1 · 2026-10-13", 13, RGBColor(0xA9, 0xD6, 0xDB), True)
+text(s, 0.8, 1.5, 7.6, 2.6, "카메라와 관절값만 쓰는 조적 로봇은\n어디까지 쌓고, 실패를 무엇으로 알아채는가", 32, WHITE, True)
+text(s, 0.8, 4.2, 7.6, 1.2, ["모방학습 조적 정책의 실패 분류와 탑재 검측 설계 (MuJoCo 시뮬레이션)",
+                             "팀원: ○○○ · ○○○ · ○○○ · ○○○   지도교수: ○○○"], 14, RGBColor(0xDD, 0xE8, 0xEC))
+media(s, 8.8, 1.2, 4.0, 5.0, "사진",
+      "표지 대표 이미지\n완성된 2+1 적층(모르타르층 보이게) + 로봇 팔이 윗 벽돌을 놓는 순간. 배경 어둡게, 벽돌 윤곽이 또렷한 앞 카메라 렌더.",
+      AST + "task.png (b) 또는 새 고해상 렌더(1280×960)", "있음(task.png) / 고해상은 제작 권장")
+text(s, 0.8, 6.7, 7.6, 0.4, "저장소 github.com/wonyoungjacob/masonry-IL-capstone · 모든 실험은 시뮬레이션", 10, RGBColor(0xA9, 0xD6, 0xDB))
+
+# ───────────────────────────── 2 한 장 요약 / 흐름
+s = new(); header(s, "00 / 한 장 요약", "오늘 발표의 흐름: 왜 → 무엇을 물었나 → 무엇을 알아냈나 → 다음")
+steps = [("① 왜", "조적 로봇은 외부 계측 좌표에 의존\n→ 영상 기반 모방학습이면 재설정 부담 없음\n→ 그러나 실패를 못 알아챔"),
+         ("② 질문", "RQ1 어디서 실패하나\nRQ2 자체 감각만으로 충분한가\nRQ3 위치 정보면 얼마나·어느 정확도로\nRQ4 카메라로 되는가 · RQ5 벽체로"),
+         ("③ 알아낸 것", "넓은 배치에서 21%/0%\n자체 감각만으론 안 오름\n위치 정보(오라클) 있으면 63%/60%\n2 mm 오차면 효과 절반"),
+         ("④ 지금·다음", "탑재 카메라 추정 p95 1 mm 달성\n스크립트+검측 90% 회복\n학습 정책+카메라 검측(중간 2)\n산업용 팔·벽체(최종)")]
+for i, (t, body) in enumerate(steps):
+    x = M + i * 3.1
+    box(s, x, 1.75, 2.95, 2.55, body.split("\n"), 11, title=t)
+media(s, M, 4.5, W - 2 * M, 2.0, "도식",
+      "연구 전체 파이프라인 한 장 그림\n왼쪽: 정답 좌표를 아는 IK 스크립트 교사 → 시연 240개 → ACT·Diffusion 학습(카메라 3대 + 관절값만) / 오른쪽: 실행 중 로봇 = 정책(집기·운반) + 탑재 검측 G1·G2·G3(집게 각도·손목 하중·탑재 카메라) / 맨 아래: 채점만 정답 좌표. 색으로 '로봇이 아는 것(파랑)'과 '연구자만 아는 것(빨강)'을 구분.",
+      "", "제작 필요 (draw.io 또는 PPT 도형)")
+
+# ───────────────────────────── 3 문제의식 ①
+s = new(); header(s, "01 / 문제 정의", "조적 로봇은 벽돌을 놓을 때마다 외부 계측 좌표에 다시 맞춘다")
+text(s, M, 1.7, 7.2, 3.6, [
+    "조적은 중량물을 하루 수백 회 반복 취급하는 공종. 기능인력 2026년 약 **30만 명 부족** 전망 [1]",
+    "기존 조적 로봇(In situ Fabricator, Hadrian 등)은 **레이저 트래커 같은 외부 계측값을 기준 좌표에 재정합**해 정밀도를 확보 [2,3]",
+    "그래서 벽돌 규격·적재 조건이 바뀌면 **사람이 계측 기준과 경로를 다시 설정**해야 한다",
+    "시연을 보고 영상에서 바로 동작을 내는 **모방학습 정책**[4,5]은 카메라와 관절값만 쓰므로 이 재설정 부담을 없앨 수 있다"], 13, bullet=True, space=8)
+media(s, 7.95, 1.7, 4.9, 2.3, "사진", "실제 조적 현장 사진\n작업자가 벽돌을 들어 모르타르 위에 놓는 장면(반복·중량 작업이 보이게). 저작권 확인된 사진 또는 팀 촬영.", "외부(Unsplash/KS 자료) — 출처 표기", "제작/수집 필요")
+media(s, 7.95, 4.15, 4.9, 2.3, "사진", "기존 조적 로봇 2종 나란히\n(좌) In situ Fabricator — 레이저 트래커로 위치 보정 [2]  (우) Hadrian X 또는 SAM100 — 외부 계측 기반. 캡션에 '외부 계측 → 기준 좌표 재정합' 화살표.", "논문 [2] Fig., FBR·Construction Robotics 공개 이미지", "수집 필요 (출처 표기)")
+note(s, "[1] 건설근로자공제회 2025 · [2] Giftthaler et al. 2017 · [3] Gao & Adel 2026 · [4] Zhao et al. 2023 (ACT) · [5] Chi et al. 2023 (Diffusion Policy)")
+
+# ───────────────────────────── 4 문제의식 ②③
+s = new(); header(s, "01 / 문제 정의", "모방학습 정책은 실패한 상태를 본 적이 없다. 그 실패를 어떤 정보로 잡을지는 아무도 안 쟀다")
+text(s, M, 1.7, 6.4, 2.2, [
+    "성공한 시연만 보고 배우므로 **헛집고도 운반하고, 어긋나게 놓고도 다음 벽돌로** 간다 [6,7]",
+    "조적에서는 모르타르 위 벽돌을 다시 들면 부착이 손상 → 실패는 곧 **품질 결함**"], 13, bullet=True, space=8)
+text(s, M, 3.95, 6.4, 2.4, [
+    "실패를 정책 밖에서 감지·보정하는 연구 [8,9,10]는 확인과 보정을 묶어 **전체 성공률만** 보고",
+    "→ 어느 단계의 확인이 어떤 실패를 얼마나 줄이는지 모른다",
+    "→ 그 확인에 **로봇 자신의 감각만으로 충분한지, 외부 위치 정보가 필요한지** 모른다",
+    "→ 학습 기반 조적 로봇에 **어떤 센서·검측 절차를 붙일지 설계할 수 없다**"], 13, bullet=True, space=6)
+media(s, 7.15, 1.7, 5.7, 2.25, "영상", "실패 3종 짧은 클립(각 3~5초, 나란히 또는 순차)\n(a) 헛집기 후 빈손 운반  (b) 둘째 벽돌이 이웃 끝에 걸침  (c) 어긋나게 놓고도 다음 벽돌로 진행", VID + "05, 06, 10 (실험 2 실패)", "있음 — 발표용으로 3~5초 컷 편집 필요")
+media(s, 7.15, 4.1, 5.7, 2.25, "사진", "실패 3컷 정지 이미지(영상 못 틀 때 대비)\n실험 2 관찰 실패 (a)(b)(c) — 빨간 화살표로 문제 지점 표시", AST + "exp2_failures.png", "있음")
+note(s, "[6] de Haan et al. 2019 · [7] Yang et al. 2025 · [8] Zheng et al. 2026 (Rewind-IL) · [9] Ibrahimov et al. 2026 · [10] Yu et al. 2026 (BrickCraft)")
+
+# ───────────────────────────── 5 연구 목적
+s = new(); header(s, "02 / 연구 목적", "로봇 탑재 감각만으로 충분한가, 벽돌 위치 정보가 필요한가, 필요하다면 어느 정확도여야 하는가")
+box(s, M, 1.75, W - 2 * M, 1.5, [
+    "카메라 영상과 관절값만 쓰는 모방학습 조적 정책이 공급 배치가 달라질 때 **어느 정확도로 쌓는지** 측정하고, **실패를 단계별로 분류**하며, 그 실패를 복구하는 데 **로봇 탑재 감각만으로 충분한지, 아니면 벽돌 위치 정보가 필요하고 어느 정확도여야 하는지**를 밝힌다."], 14, title="연구 목적 (한 문장)")
+text(s, M, 3.45, 6.0, 0.4, "이 목적에서 나오는 설계 지식 두 가지", 14, NAVY, True)
+box(s, M, 3.9, 6.0, 1.1, ["학습 정책에 맡길 단계와 검측으로 확보할 단계의 **경계**"], 13, title="① 분담의 경계")
+box(s, M, 5.15, 6.0, 1.1, ["검측에 필요한 **계측 수단**과 그 **정확도 요구치**(몇 mm)"], 13, title="② 계측 요구치")
+media(s, 6.85, 3.45, 6.0, 2.8, "도식", "정책 vs 검측 분담 도식\n조적 한 사이클(접근→파지→운반→놓기→확인)을 가로축으로, 위에 '학습 정책(카메라+관절)' 띠, 아래에 '탑재 검측 G1·G2·G3' 띠. 각 검측이 어떤 센서를 쓰는지 아이콘(집게 각도·손목 하중·탑재 카메라).", "", "제작 필요")
+note(s, "원칙: 시뮬레이터의 정답 좌표는 시연 생성·학습 라벨·채점에만 쓴다. 실행 중인 로봇은 탑재 감각(카메라 영상, 관절값, 집게 각도, 손목 하중)만 쓴다.")
+
+# ───────────────────────────── 6 연구 질문
+s = new(); header(s, "02 / 연구 질문", "RQ1~RQ5와 답하는 실험")
+table(s, M, 1.7, 8.4, [
+    ["RQ", "질문", "실험", "상태"],
+    ["RQ1", "넓은 초기 배치(±30 mm, ±60°)에서 정책 단독의 완성률은 얼마이고 실패는 어느 단계에서 어떻게 일어나는가?", "실험 2 + 첫 파지 실패 70건 진단", "{ok:완료}"],
+    ["RQ2", "로봇 자체 감각(집게 각도·손목 하중)만으로 하는 파지 검사가 완성률을 올리는가?", "실험 3 조건 B", "{ok:완료}"],
+    ["RQ3", "벽돌 위치 정보가 있으면 얼마나 오르고, 그 정보는 어느 정확도여야 하는가?", "실험 3 조건 C·D(정답 좌표 = 오라클) + 좌표 오차 0/2/4 mm", "{ok:완료}"],
+    ["RQ4", "로봇 탑재 카메라로 추정한 벽돌 위치로 RQ3의 효과를 얻을 수 있는가?", "카메라 인식 모듈 → 조건 D 재실행", "**진행 중**"],
+    ["RQ5", "벽돌 수와 단수를 늘린 벽체에서도 같은 분담이 유지되는가? 단별 오차는 어떻게 쌓이는가?", "대형 로봇·다단 벽체", "최종발표"]],
+    [0.7, 4.6, 2.3, 0.9], 10.5, row_h=0.62, align_c=(0, 3))
+media(s, 9.15, 1.7, 3.7, 4.5, "도식", "'정답 좌표를 누가 쓰나' 도식\n세로로 4칸: 시연 생성(스크립트) / 학습 라벨 / 채점 / 검출 식별·감사 → 모두 '연구자' 쪽(빨강). 실행 중 로봇 칸은 '카메라·관절·집게·하중'만(파랑). 조건 C·D의 오라클은 점선으로 '진단용'이라 표시.", "", "제작 필요")
+note(s, "RQ 형식은 Tao et al.(2026)[11]의 RQ1~4를 따름. 조건 C·D는 로봇 시스템의 일부가 아니라 '복구에 어떤 정보가 필요한가'를 알아내는 오라클(진단) 조건.", 6.35)
+
+# ───────────────────────────── 7 왜 이렇게 했는가 (1)
+s = new(); header(s, "03 / 왜 이렇게 했는가", "설계 선택마다의 이유 (1/2): 방법·환경·교사·모델")
+table(s, M, 1.7, W - 2 * M, [
+    ["선택", "왜 이것인가", "다른 선택지는 왜 아닌가"],
+    ["**모방학습**", "보상 함수 대신 시연을 직접 재현 → 설계 부담 작고 표본 효율 높음 [12,13]. 교사가 안정된 제어기면 그 성질이 정책에 옮겨짐 [11]", "강화학습: 기대를 정확히 담은 보상 설계가 필요하고, 잘못되면 보상 악용·위험한 지름길 [12]. 접촉 많고 단계 긴 조적에서 특히 어려움"],
+    ["**시뮬레이션**", "같은 초기 배치에서 조건만 바꿔 수백 회 반복, 실패를 그대로 재현해 원인 분리 [14,15]. 실패 70건 전수 재현(9/23)이 그 예", "실기: 반복·리셋 비용과 안전. 주장 범위는 시뮬레이션 안으로 한정 [11], 실기와의 차이는 센서 잡음 민감도로 정량화"],
+    ["**스크립트 교사**", "시뮬레이터는 좌표를 알므로 IK 스크립트가 시연을 얼마든지 만들고 성공을 자동 판정 [12,11]. 조작자 습관 편차 없음. 스크립트 시연이 사람 시연보다 잘 배운 선례(86% vs 50%) [4]", "사람 원격조작: 시연마다 숙련자가 필요해 확장 안 됨 [12]. 교사(정답 좌표)와 학생(카메라만)의 행동 공간이 같아 불일치 없음 [11]"],
+    ["**ACT · Diffusion**", "영상→관절 동작 모방학습의 두 대표 계열(행동 청크 트랜스포머, 확산 생성) [4,5]. 공개 구현(LeRobot)으로 재현 가능", "SmolVLA는 실험 1·2에서 0~2%라 제외. π0는 시간 대비 우선순위로 보류"]],
+    [1.5, 5.6, 5.2], 10, row_h=0.82)
+media(s, M, 5.75, W - 2 * M, 0.85, "도식", "교사→학생 구조 한 줄 도식\n'정답 좌표 아는 IK 스크립트(교사)' → 시연 240개 → 'ACT·Diffusion(학생): 카메라 3대 128×128 + 관절 6' → 관절 목표 6. 오른쪽에 Tao 2026·Huang 2026의 같은 구조 그림을 작게 인용.", "Tao 2026 Fig. / Huang 2026 Fig.", "제작 필요")
+
+# ───────────────────────────── 8 왜 이렇게 했는가 (2)
+s = new(); header(s, "03 / 왜 이렇게 했는가", "설계 선택마다의 이유 (2/2): 로봇·과제, 검측 위치, 오라클 순서")
+table(s, M, 1.7, W - 2 * M, [
+    ["선택", "왜 이것인가", "다른 선택지는 왜 아닌가"],
+    ["**SO-ARM101 + 2+1 적층**", "LeRobot 표준 저가 팔로 MuJoCo 모델·학습 파이프라인이 갖춰짐. 2+1은 집기·운반·정렬·단 위 쌓기를 모두 포함하는 최소 과제", "가반하중·작업 반경이 작아 실척 벽돌·벽체 불가 → 중간 2 이후 산업용 팔로 교체"],
+    ["**검측은 정책 밖에**", "실패를 본 적 없는 정책에 실패 인지를 기대하지 않음. 실험 1에서 복구 시연을 섞자 90%→1~33%. 학습 정책 밖의 규칙 기반 안전·보정 층은 선례 다수 [16,17,18]. 모든 조건에서 정책 가중치가 같아 완성률 차이 = 검측 효과", "복구를 데이터로 가르치기: 정확도를 떨어뜨렸고(실험 1) 데이터셋을 쪼개게 됨"],
+    ["**좌표 오라클로 먼저**", "'복구에 어떤 정보가 필요한가'를 알려면 정보를 완벽히 준 상한값이 먼저 필요. Huang et al.(2026)[12]도 성공 판정에 시뮬레이터 상태를 쓰고 '실기에서는 RGB-D로 대체' 명시", "처음부터 카메라 추정이면 인식 오차와 정책 오차가 섞여 어느 쪽 문제인지 알 수 없음. 오라클 → 잡음 → 실제 카메라(RQ4) 순서"]],
+    [1.7, 5.6, 5.0], 10.5, row_h=0.95)
+media(s, M, 5.4, 6.0, 1.15, "사진", "SO-ARM101 실물 + MuJoCo 모델 나란히\n왼쪽 실물 사진(LeRobot 공개), 오른쪽 우리 씬 렌더(앞 카메라).", "LeRobot 저장소 사진 / 씬 렌더 신규", "수집·제작 필요")
+media(s, 6.75, 5.4, 6.1, 1.15, "영상", "실험 1 '복구 시연 섞음' 실패 클립\n복구 시연을 섞은 정책이 해제 후 교란에 흔들리는 장면 3~5초 (검측을 정책 밖에 두는 이유).", VID + "02, 03", "있음 — 컷 편집")
+note(s, "[11] Tao 2026 · [12] Huang 2026 · [14] Liang 2022 · [15] Huang 2023 · [16] Lin 2026 · [17] Yoon 2025 · [18] Xu 2026: 시뮬레이션에서만 검증한 건설 로봇 논문(부록 C)", 6.62)
+
+# ───────────────────────────── 9 연구 범위와 환경
+s = new(); header(s, "04 / 연구 범위와 환경", "다루는 것: 공급된 벽돌 집기 → 운반 → 놓기 → 목표대로 놓였는지 확인")
+flow = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(M), Inches(1.7), Inches(W - 2 * M), Inches(0.55))
+flow.fill.solid(); flow.fill.fore_color.rgb = NAVY; flow.line.fill.background(); flow.shadow.inherit = False
+runs(flow.text_frame.paragraphs[0], "공급된 벽돌 집기  →  운반  →  놓기  →  목표대로 놓였는지 확인   (이 구간만 다룸)", 14, WHITE, True, PP_ALIGN.CENTER)
+media(s, M, 2.45, 6.3, 3.3, "사진", "과제 정의 2컷\n(a) 초기 배치: 공급 벽돌 3개, 목표 윤곽과 먹선  (b) 완성: 아래 2개 + 위 1개, 모르타르층. 벽돌 90×42.6×27 mm(KS 표준형 190×90×57 축소 [19]).", AST + "task.png", "있음")
+media(s, 6.95, 2.45, 5.9, 3.3, "영상", "스크립트 교사의 정상 시연 1회(18 s → 10초로 배속)\n집기→운반→놓기 3회가 한눈에 보이게. 왼쪽 위에 앞·손목·위 카메라 3개 관측 128×128을 작게 오버레이하면 '정책이 보는 것'까지 설명 가능.", VID + "04_실험2_clean_단회배치_원본.mp4", "있음 — 배속·오버레이 편집")
+table(s, M, 5.9, W - 2 * M, [["범위 밖", "왜 뺐는가"],
+    ["자재 공급, 모르타르 도포, 줄눈 마감, 로봇 이동", "배치 정확도가 벽체 품질을 결정하는 단계만 다룸. You et al.(2026)[20]이 항법·정위치는 기존 시스템에 맡기고 '마지막 1 m'만 다룬 것과 같은 논리. 다른 조적 작업은 이 단계의 성공을 전제 [15]"]],
+    [2.6, 9.7], 10.5, row_h=0.4)
+
+# ───────────────────────────── 10 모르타르 가정 + 검측의 뜻
+s = new(); header(s, "04 / 연구 범위와 환경", "모르타르: 재현한 것과 생략한 것 · 검측의 뜻")
+table(s, M, 1.7, 7.6, [["재현 (코드에 있음)", "생략 (한계로 명시)"],
+    ["아래 단 2개 정착(2초) 뒤 윗면에 **연속 모르타르층** 생성(두께 4.7 mm, 2 mm 넘침, 흘러내림)\n윗 벽돌은 이 층 위에 순응 접촉(마찰 0.75 [21], 자중 침하 0.5 mm)\n놓인 벽돌은 안정 2초 뒤 고정(경화 대신)",
+     "유동·배합·경화 시간·부착 강도\n도포·재도포, 세로줄눈(1 mm 맞댐으로 대체)\n재배치 시 부착 손상\n**모든 조건이 같은 단순화를 받으므로 조건 간 비교는 공정** [11]"]],
+    [1, 1], 10.5, row_h=1.5)
+media(s, 8.35, 1.7, 4.5, 2.7, "사진", "모르타르층 클로즈업 렌더\n아래 단 2개 위에 생성된 연속 모르타르층(넘침·흘러내림)과 그 위에 놓인 윗 벽돌을 비스듬히 확대. 두께 4.7 mm 치수선.", "씬 렌더 신규 (scene.py mortarB)", "제작 필요")
+table(s, M, 4.35, 7.6, [["검측", "언제", "무엇을 보고", "불합격이면"],
+    ["G1 잡기", "집게 닫고 1.5 cm 든 뒤", "집게 각도 · 손목 하중", "열고 올라가 재접근"],
+    ["G2 놓기 전", "집게를 열려는 순간", "쥔 벽돌 위치·높이·방향", "목표 쪽으로 이동 수정"],
+    ["G3 놓은 뒤", "놓은 직후", "놓인 결과 vs 허용오차", "1회 재배치"]],
+    [1.3, 1.9, 2.2, 2.2], 10.5, row_h=0.36)
+media(s, 8.35, 4.6, 4.5, 1.9, "사진", "G1·G2·G3 순간 3컷(작게)\n들어 올려 판정 / 집게 열기 직전 / 놓은 직후 채점. 각 컷 위에 어느 센서를 읽는지 아이콘.", AST + "feedback_episode.jpg에서 추출", "있음(부분) — 컷 편집")
+note(s, "현행 검측 지침의 자체 점검 → 검측 → 보완시공 → 재검측 절차에 대응 [22]. 2초 고정은 프로그램 규칙이며 실제 경화 시간이 아님(부록 A).")
+
+# ───────────────────────────── 11 RQ1 실험 1→2→진단
+s = new(); header(s, "05 / RQ1 — 실험 1 → 실험 2 → 원인 진단", "좁은 배치에서는 되고, 넓히자 실패가 드러났다")
+table(s, M, 1.7, W - 2 * M, [["실험", "조건", "벽돌 3개 모두 기준 통과", "배운 것"],
+    ["**실험 1** (9/18–19)", "위치 ±5 mm, 방향 ±10°. 정상 시연 119개", "Diffusion **90%** · ACT **63%** · SmolVLA 2% (각 100회)", "좁은 범위에선 됨. 복구 시연을 섞으면 1~33%로 하락"],
+    ["**실험 2** (9/21–22)", "위치 ±30 mm, 방향 ±60°. 성공 시연 240개(학습 200, 검증 40)", "Diffusion **21%**(41/200) · ACT **0%**(0/300) · SmolVLA 0%(0/200)", "헛집기, 빈손 운반, 잘못 놓고도 진행"],
+    ["**진단** (9/23)", "첫 파지 실패 70건을 재현해 접촉·관절·위치 기록", "64건이 기하 충돌(몸통 35, 옆 블록 29)", "못 집는 배치가 섞여 있었음 → 실행가능성 필터"]],
+    [1.6, 3.4, 3.9, 3.4], 10.5, row_h=0.62)
+media(s, M, 4.2, 4.0, 2.3, "사진", "실험 1 결과 막대 그래프\nDiffusion 90 / ACT 63 / SmolVLA 2 (+ 복구 시연 섞은 변형 1~33).", AST + "exp1.png", "있음")
+media(s, 4.65, 4.2, 4.0, 2.3, "영상", "실험 1 성공 vs 실험 2 실패 나란히(각 5초)\n좌: 실험 1 ACT 성공(좁은 배치) / 우: 실험 2 ACT 진행 실패(넓은 배치). 같은 정책 계열이 배치 범위에 따라 갈리는 것을 보여줌.", VID + "08 (실험1 ACT 성공) + 10 (실험2 ACT 실패)", "있음 — 2분할 편집")
+media(s, 8.8, 4.2, 4.05, 2.3, "사진", "실험 2 초기 배치 예시 4컷\n±30 mm·±60°가 얼마나 넓은지 보이게: 공급 벽돌이 매번 다른 위치·방향.", AST + "exp2_shots.jpg", "있음")
+note(s, "실험 1과 2는 카메라·데이터·실행 설정도 함께 바뀌어 위치 확대만을 원인으로 단정하지 않음. 분모는 부록 B.")
+
+# ───────────────────────────── 12 RQ1 실패 사진·진단
+s = new(); header(s, "05 / RQ1 — 실패는 어디서 어떻게", "세 가지 실패와 첫 파지 실패의 분포")
+media(s, M, 1.7, 7.6, 3.1, "사진", "실험 2에서 관찰한 세 실패 (크게)\n(a) 집게가 로봇 몸통에 걸려 못 내려감  (b) 둘째 벽돌이 이웃 끝에 걸침(+13 mm)  (c) 벽돌은 그대로인데 손은 벽 위치로(빈손 운반). 각 컷에 빨간 원·치수.", AST + "exp2_failures.png", "있음")
+media(s, 8.3, 1.7, 4.55, 3.1, "영상", "실패 (b) 걸침 클립 10초\n둘째 벽돌이 이웃 끝에 걸치는 순간 슬로모션 + 높이 오차 13 mm 자막.", VID + "06_실험2_수집실패_두번째배치높이_seed1009.mp4", "있음 — 슬로모션·자막")
+media(s, M, 5.0, 5.2, 1.55, "사진", "첫 파지 실패 70건 분포도\n로봇 중심 거리 120~140 mm에 몸통 충돌(빨강) 집중. 필터 뒤 스크립트 첫 파지 380/382.", AST + "diagnosis.png", "있음")
+text(s, 5.95, 5.0, 6.9, 1.6, [
+    "70건 중 **64건이 기하 충돌**(몸통 35, 옆 블록 29) → 정책 문제가 아니라 **못 집는 배치**가 섞여 있었음",
+    "→ 잡기 자세의 자기·이웃 충돌을 미리 거르는 **실행가능성 필터** 도입 (실험 3부터)",
+    "→ 나머지 실패(빈손 운반, 걸침, 오배치)는 정책이 **실패 상태를 인지하지 못해** 생김 → RQ2·RQ3"], 12, bullet=True, space=5)
+
+# ───────────────────────────── 13 모델
+s = new(); header(s, "06 / 모델·데이터·평가 조건", "재현에 필요한 정보 (1/3): 학습 정책")
+table(s, M, 1.7, 8.2, [["항목", "ACT [4]", "Diffusion Policy [5]"],
+    ["구조", "트랜스포머 인코더–디코더, 행동 청크 100스텝, 시간 앙상블 없음", "조건부 확산 모델(1D U-Net), horizon 64, 관측 2프레임"],
+    ["입력", "카메라 3대(앞·손목·위) 128×128 RGB + 관절값 6(팔 5 + 집게). 벽돌 좌표·접촉력은 입력하지 않음", ""],
+    ["출력", "관절 목표값 6 (20 Hz). 실행 길이 10스텝(0.5 s)마다 재관측", ""],
+    ["학습", "40k 갱신, 배치 32, LeRobot 0.6.1 기본", "60k 갱신, 배치 32, LeRobot 0.6.1 기본"],
+    ["하이퍼파라미터", "원논문·LeRobot 기본값 그대로(격자 탐색 없음). 학습 seed 1000·1001·1002로 3회 반복", ""],
+    ["계산 환경", "Ubuntu, RTX 5090 1장, PyTorch 2.11.0+cu128, MuJoCo 3.13.0", ""]],
+    [1.3, 3.5, 3.4], 10.5, row_h=0.5)
+_t = s.shapes[-1].table
+for _i in (2, 3, 5, 6):
+    _t.cell(_i, 1).merge(_t.cell(_i, 2))
+media(s, 8.95, 1.7, 3.9, 2.4, "사진", "정책이 보는 관측 3장\n앞·손목·위 카메라 128×128 실제 입력 프레임을 같은 시각에 나란히. '벽돌 좌표는 없다'를 눈으로.", "sim 렌더 신규(eval_policy 관측 덤프)", "제작 필요")
+media(s, 8.95, 4.3, 3.9, 2.25, "도식", "ACT / Diffusion 구조 그림(원논문)\n각 논문 Fig. 2를 작게 인용 + 우리 입력·출력 치수 표기.", "Zhao 2023 Fig.2, Chi 2023 Fig.3", "수집 필요 (인용 표기)")
+note(s, "설정 파일: sim/data/v3_2p1_joint_image_clean/collect_config.json, 체크포인트 train_config.json")
+
+# ───────────────────────────── 14 데이터·환경·성공 기준
+s = new(); header(s, "06 / 모델·데이터·평가 조건", "재현에 필요한 정보 (2/3): 데이터·환경·성공 기준·평가 배치")
+table(s, M, 1.7, 7.9, [["항목", "값"],
+    ["시연", "IK 스크립트 454회 시도 → 첫 시도에 세 벽돌을 모두 허용오차 안에 놓은 **240개** 채택(학습 200, 검증 40). 366프레임 = 18.3 s, 총 87,840프레임. 초기 배치 ±30 mm·±60°, 실행가능성 필터"],
+    ["양의 근거", "같은 과제군 선례: ACT 50개 [4], Huang et al. 80개 [12]. 240개는 그보다 많음. 시연 수 곡선(60/120/240)은 중간 2까지"],
+    ["환경", "MuJoCo, SO-ARM100(팔 5관절 + 집게 1), 물리 1 ms, 제어 20 Hz. 벽돌 90×42.632×27 mm, 1,800 kg/m³(186.5 g) [19,23]. 모르타르층 4.737 mm, 머리줄눈 1 mm"],
+    ["성공 기준", "벽돌 3개 모두: 위치 4.5 mm(실척 9.5 mm; 세로줄눈 +9.5 mm [24], 벽면 직진도 ±10 mm [25]), 높이 4.5 mm, 방향 5°, 기울기 10°. 보조 3D IoU"],
+    ["평가 배치", "검증 40000~40039(문턱값 결정), 시험 50000~50049(성능 측정). 조건 비교는 같은 배치끼리 짝지음(Diffusion 40, ACT 48). 1회 90 s. 95% CI Wilson"]],
+    [1.3, 6.6], 10.5, row_h=0.72)
+media(s, 8.65, 1.7, 4.2, 2.3, "사진", "시연 데이터셋 한눈에\n240개 시연의 초기 벽돌 위치·방향 산점도(±30 mm·±60° 범위, 필터로 걸러진 영역 회색).", "sim 데이터에서 신규 생성", "제작 필요")
+media(s, 8.65, 4.2, 4.2, 2.35, "도식", "성공 기준 치수 그림\n벽돌 평면도에 위치 4.5 mm 원, 방향 5° 부채꼴, 높이 4.5 mm, 기울기 10° 표시 + 실척 환산(9.5 mm)과 규격 근거 [24,25].", "", "제작 필요")
+
+# ───────────────────────────── 15 검측 문턱값
+s = new(); header(s, "06 / 모델·데이터·평가 조건", "재현에 필요한 정보 (3/3): 검측 단계 문턱값과 근거")
+table(s, M, 1.7, 8.0, [["단계", "언제", "기준 (근거)"],
+    ["G1", "집게 닫힌 뒤 1.5 cm 들고 0.25 s 정지", "집게 각도 > 0.2 rad(벽돌 물면 0.31, 빈손 −0.12의 중간) AND 손목 하중 ≥ 0.9 N(벽돌 1.83 N의 절반). 횟수 무제한"],
+    ["G2", "정책이 집게를 열려는 순간", "위치 2.5 mm, 방향 3°, 높이 3 mm 초과 시 보정(이득 0.6/step, 최대 1 s). 최종 4.5 mm보다 작게 둔 것은 놓을 때 ~1 mm 밀리기 때문"],
+    ["G3", "놓은 직후", "위치 4.5 mm, 높이 3 mm, 방향 5°, 기울기 5° 초과 시 블록당 1회 재배치. 45° 넘게 넘어진 벽돌은 기록만"]],
+    [0.8, 2.6, 4.6], 10.5, row_h=0.85)
+media(s, 8.75, 1.7, 4.1, 2.5, "사진", "G1 문턱값 근거 그래프\n집게 각도 분포: 벽돌 물었을 때 0.31 vs 빈손 −0.12, 문턱 0.2 rad 선. 손목 하중 1.83 N vs 0.9 N 선.", "gate_val40_v2 로그에서 신규 생성", "제작 필요")
+media(s, 8.75, 4.35, 4.1, 2.2, "영상", "G1 작동 클립 5초\n집게 닫고 1.5 cm 들어 멈춤 → 빈손 판정 → 열고 재접근. 자막에 각도·하중 값 실시간.", "조건 D 에피소드 렌더 신규", "제작 필요")
+note(s, "코드: sim/brick_sim/grasp_gate.py, metrics.py · 저장소 github.com/wonyoungjacob/masonry-IL-capstone", 6.4)
+
+# ───────────────────────────── 16 검측 작동 방식
+s = new(); header(s, "07 / RQ2·RQ3 — 검측 제어의 작동 방식", "잡기 확인 → 놓기 전 수정 → 놓은 뒤 재배치: 정책은 다시 학습하지 않고 바깥에 더한다")
+box(s, M, 1.7, 4.0, 1.55, ["집게 닫은 뒤 1.5 cm 들어 멈춤 → 각도·하중 확인. 빈손이면 열고 올라가 재접근. 하중 단독 기각 0/1,456회 → 효과는 센서가 아니라 **들어 올린 뒤 판정하는 절차**"], 10.5, title="① G1 잡기 확인 — {ok:자체 감각만}")
+box(s, 4.65, 1.7, 4.0, 1.55, ["열려는 순간 쥔 벽돌의 위치·높이·방향을 목표와 비교 → 차이 크면 조금 이동 → 재측정 → 반복. 둘째 벽돌 목표는 설계 좌표가 아니라 **먼저 놓인 이웃의 실제 위치** 기준"], 10.5, title="② G2 놓기 전 보정 — {no:위치 정보 필요}")
+box(s, 8.8, 1.7, 4.05, 1.55, ["놓인 벽돌을 최종 허용오차로 채점, 불합격이면 다시 집어(G1 재검사) **한 번만** 다시 놓음. 모르타르 굳기 전 보완시공에 대응"], 10.5, title="③ G3 놓은 뒤 재배치 — {no:위치 정보 필요}")
+media(s, M, 3.4, 7.4, 3.15, "사진", "검측이 작동한 순서 (같은 초기 배치, ACT, 50018)\n① 빈손 확인 후 재접근(10.4 s) ② 놓기 전 검사에서 걸침 발견(35.2 s, 높이 13 mm, 보정 불가) ③ 놓은 뒤 기울기 19° 불합격 ④ 1회 재배치(42.4 s, 위치 1.1 mm) ⑤ 3개 모두 합격. 비교: 정책 단독은 걸친 채 90초 종료.", AST + "feedback_episode.jpg", "있음")
+media(s, 8.1, 3.4, 4.75, 3.15, "영상", "같은 에피소드(50018) 2분할 영상 30초\n좌: 정책 단독(A) — 걸친 채 종료 / 우: 검측 D — ①~⑤ 자막. 검측이 개입하는 순간 화면 테두리를 색으로 깜빡임.", "final_test 50018 A vs D 렌더 신규", "제작 필요 (우분투)")
+note(s, "실험 3에서 ②③과 재접근 안내가 쓴 위치 정보는 시뮬레이터 정답 좌표(오라클)였다. 이를 '필요한 정보'의 상한으로 읽고, 카메라 추정으로 바꾸는 것이 RQ4.", 6.62)
+
+# ───────────────────────────── 17 RQ2·RQ3 결과
+s = new(); header(s, "08 / RQ2·RQ3 — 결과", "자체 감각만으로는 오르지 않고, 위치 정보가 있으면 오른다")
+table(s, M, 1.7, 7.6, [["조건", "로봇이 쓰는 정보", "현장 가능?", "Diffusion", "ACT"],
+    ["A", "카메라 + 관절 (정책 단독)", "{ok:예}", "35% (14/40)", "0% (0/48)"],
+    ["B", "+ G1 (집게 각도·하중)", "{ok:예}", "30% (12/40)", "0% (0/48)"],
+    ["C", "+ 재접근 안내 + G2 (**정답 벽돌 좌표**)", "{no:오라클}", "73% (29/40)", "29% (14/48)"],
+    ["D", "+ G3 (정답 벽돌 좌표)", "{no:오라클}", "**75% (30/40)**", "**54% (26/48)**"],
+    ["D", "학습 seed 3개 합산 (A → D)", "{no:오라클}", "28% → **63%** (33→75/120)", "0% → **60%** (0→77/128)"],
+    ["기준선", "좌표 아는 스크립트 단독 → + G1~G3 (50개)", "{no:오라클}", "62% (31/50) → 88% (44/50)", ""]],
+    [0.7, 3.0, 1.0, 1.6, 1.6], 10.5, row_h=0.42, align_c=(0, 2, 3, 4))
+media(s, 8.35, 1.7, 4.5, 4.85, "사진", "단계별 완성률 그래프\n(a) 검측을 한 단계씩 더함(seed 1000, 같은 배치) (b) seed 3개 합산과 스크립트 비교. 오라클 조건은 빗금으로 구분하면 '현장 가능/오라클' 메시지가 그래프에서도 보임.", AST + "stages.png (빗금 추가 권장)", "있음 — 수정 권장")
+box(s, M, 4.85, 7.6, 1.7, [
+    "① 자체 감각만으로는 안 된다(B): 빈손은 막지만 **어디로 가야 할지** 모른다",
+    "② 벽돌 위치를 알면 크게 오른다(C·D): 효과는 파지가 아니라 **놓기 전후**",
+    "③ 좌표 아는 스크립트도 62→88%: 검측 효과는 **동작 생성 방식과 무관**",
+    "④ 실험 3은 '우리 시스템 성능'이 아니라 **복구에 필요한 정보의 종류를 알아낸 진단 실험**"], 10.5, title="읽는 법")
+note(s, "시험 배치 50000~50049 중 모든 조건이 끝낸 같은 번호끼리 짝지음. B·C는 seed 1000만. 백분율 0.5 올림. 원자료 sim/outputs/final_test/, 집계 sim/tools/paper_results.py", 6.62)
+
+# ───────────────────────────── 18 좌표 오차 곡선
+s = new(); header(s, "09 / RQ3 — 위치 정보는 어느 정확도여야 하는가", "2 mm 오차면 효과가 반으로 준다")
+table(s, M, 1.7, 6.2, [["조건 D, 검증 배치, 좌표 오차 σ", "0 mm", "2 mm", "4 mm"],
+    ["Diffusion (n=27)", "85% (23)", "63% (17)", "15% (4)"],
+    ["ACT (n=20)", "60% (12)", "30% (6)", "15% (3)"]],
+    [2.6, 1.2, 1.2, 1.2], 11, row_h=0.42, align_c=(1, 2, 3))
+text(s, M, 3.1, 6.2, 1.7, [
+    "검측이 읽는 위치에 평균 0, 표준편차 σ의 정규 잡음(방향은 σ/(L/2) rad 연동)",
+    "로봇은 **틀린 좌표로 움직이고** 채점은 **실제 좌표로**",
+    "→ **검측이 쓸 위치 추정은 2 mm보다 정확해야 한다**"], 12.5, bullet=True, space=6)
+box(s, M, 4.9, 6.2, 1.6, ["실기 센서는 오차·가림·지연이 있다. 이 곡선이 '우리 조건 ↔ 현장' 차이를 **수치로 잇는 다리**. 다음 질문: 탑재 카메라로 2 mm보다 정확한 추정이 나오는가 → RQ4"], 11, title="왜 이 실험이 필요했나", bg=WARNBG, ln=WARNLN)
+media(s, 6.95, 1.7, 5.9, 4.85, "사진", "좌표 오차 σ vs 완성률 곡선\nx축 σ(0/2/4 mm), y축 완성률, Diffusion·ACT 두 선 + Wilson 95% CI. 오른쪽에 '카메라 실측 p95 1 mm' 세로 점선을 미리 그려 두면 다음 장과 연결됨.", AST + "noise.png (카메라 점선 추가 권장)", "있음 — 수정 권장")
+
+# ───────────────────────────── 19 RQ4 카메라 추정
+s = new(); header(s, "10 / RQ4 — 탑재 카메라로 벽돌 위치 추정", "정답 좌표를 카메라 추정으로 바꿨다 (10/8 구현)")
+media(s, M, 1.7, 7.9, 3.0, "사진", "카메라 인식 결과 3컷 (노랑 = 추정 윤곽, 빨강 = 실제 중심: 채점용, 로봇은 모름)\n(a) 초기 배치 (b) 운반 중: 팔 아래 보이는 끝 부분 + 공칭 L×W로 중심 복원 (c) 놓기 직전.", AST + "perception_demo.png", "있음")
+media(s, 8.65, 1.7, 4.2, 3.0, "영상", "인식 오버레이 영상 15초\n윗면 카메라 1280×960 RGB에 추정 윤곽(노랑)·실제 중심(빨강)·오차 mm 자막을 실시간으로. 팔이 가릴 때 복원되는 장면 포함.", "perception.py로 렌더 신규", "제작 필요")
+text(s, M, 4.85, 7.9, 0.35, "방법: 윗면 RGB-D 카메라(0.70 m, fovy 45°) 1280×960 → 벽돌색 분할 → 깊이 역투영 → 평면·사각형 맞춤 → 가려진 모서리는 공칭 L×W로 복원", 10.5, GREY)
+table(s, M, 5.2, 7.9, [["측정 상황", "위치 오차 (평균 / p95)", "방향 오차", "높이 오차"],
+    ["초기 배치, 벽돌 120개(검증 40 배치)", "0.21 / 0.58 mm", "0.02° / 0.06°", "0.00 mm"],
+    ["스크립트 + G1~G3 실행 중(쥔 상태·놓기 직전 포함)", "0.43 / 0.96 mm (최대 1.1)", "0.24° / 0.70°", "0.26 / 0.81 mm"]],
+    [3.2, 2.0, 1.3, 1.4], 10.5, row_h=0.4, align_c=(1, 2, 3))
+media(s, 8.65, 4.85, 4.2, 1.7, "도식", "인식 파이프라인 5단계 도식\nRGB → 색 분할 → 깊이 점군 → 평면·사각형 → 가림 복원. 각 단계 작은 썸네일.", "", "제작 필요")
+note(s, "정답 좌표는 '어느 검출이 어느 벽돌인지' 식별과 감사 오차 기록에만 사용. 측정 1,963회, 정답 좌표 대체 0회. 구현 sim/brick_sim/perception.py", 6.62)
+
+# ───────────────────────────── 20 RQ4 결과
+s = new(); header(s, "10 / RQ4 — 결과", "카메라 추정으로 오라클 효과를 거의 회복했다. 병목은 카메라가 아니라 배치 규칙이었다")
+table(s, M, 1.7, 7.6, [["스크립트 + G1~G3", "둘째 벽돌 간격 여유", "검증 40 배치", "시험 50 배치", "해제 후 불합격"],
+    ["오라클 좌표", "1.5 mm (실험 3과 같음)", "37/40 (93%)", "46/50 (92%)", "3"],
+    ["**카메라 추정**", "1.5 mm", "30/40 (75%)", "33/50 (66%)", "16"],
+    ["오라클 좌표", "0.5 mm", "38/40 (95%)", "48/50 (96%)", "4"],
+    ["**카메라 추정**", "**0.5 mm**", "**35/40 (88%)**", "**45/50 (90%)**", "**1**"]],
+    [1.6, 1.9, 1.4, 1.4, 1.3], 10.5, row_h=0.4, align_c=(2, 3, 4))
+box(s, M, 3.85, 7.6, 2.7, [
+    "추정 오차 p95 1 mm는 2 mm 문턱의 절반인데도 처음엔 완성이 7~13회 줄었다. 실패는 **모두 아래 단 둘째 벽돌**",
+    "원인: 이웃에 맞대어 1.5 mm 떨어뜨리는 규칙 때문에 오라클에서도 설계 위치 오차 4.1~4.2 mm(허용 4.5) → 여유 0.3 mm뿐. 1 mm 측정 오차가 그 여유를 넘김",
+    "여유를 0.5 mm로 줄이자 카메라가 오라클의 3회 안으로 회복, 이웃 걸침도 늘지 않음(16 → 1)",
+    "**좌표 오차 곡선이 예측한 '1 mm 수준이면 효과 유지'가 맞았다.** 설계 지식 추가: 배치 여유는 검측의 측정 오차에 맞춰 정해야 한다"], 10.5, title="읽는 법")
+media(s, 8.35, 1.7, 4.5, 2.4, "사진", "둘째 벽돌 걸침 vs 회복 비교 2컷\n좌: 여유 1.5 mm + 카메라 → 이웃 끝에 걸침(위치 오차 4.6 mm 자막) / 우: 여유 0.5 mm + 카메라 → 합격(1.1 mm). 같은 배치 번호.", "perception_accuracy 실패 seed 렌더 신규", "제작 필요")
+media(s, 8.35, 4.25, 4.5, 2.3, "영상", "카메라 검측 조건 D 성공 에피소드 20초\n학습 정책 + 카메라 검측(우분투 결과 나오면). 그 전엔 스크립트 + 카메라 검측 에피소드로 대체.", "outputs/rq4/*.json 에피소드 렌더 (우분투)", "제작 필요 (우분투 결과 후)")
+note(s, "학습 정책 + 카메라 검측 조건 D는 Ubuntu에서 두 여유값으로 실행 중(sim/tools/rq4_jobs.py, 22개 작업) → 중간발표 2. 원자료 01_사기설/중간발표1/근거_rq4/", 6.62)
+
+# ───────────────────────────── 21 현장 차이
+s = new(); header(s, "11 / 교수님 피드백 — 실제 적용 현장과의 차이", "우리 조건과 현장 조건을 나란히")
+table(s, M, 1.7, 8.4, [["구분", "우리 시뮬레이션", "실제 현장", "대응"],
+    ["정책 입력", "카메라 영상 + 관절값으로 집기·운반", "같음(카메라·센서)", "차이 없음"],
+    ["검측이 쓰는 위치", "실험 3: 시뮬 정답 좌표 → **10/8부터 탑재 카메라 추정**", "카메라·센서 추정. 오차·가림·지연", "RQ4"],
+    ["결과 채점", "실제 좌표로 직접 계산", "계측값으로 확인, 장비 정확도 영향", "채점은 연구자 몫"],
+    ["모르타르", "연속 순응층, 안정 2초 뒤 고정", "눌림·부착·굳음, 재료 편차", "가정 명시, RQ5 재검토"],
+    ["잘못 놓은 벽돌", "한 번 다시 집어 배치", "부착 손상, 제거·새 모르타르 [26]", "굳기 전 1회로 제한"],
+    ["규모·장비", "축소 벽돌 3개, 소형 팔", "실척 190×90×57, 벽체, 공급·마감·간섭", "중간 2 이후 실척·벽체"],
+    ["센서", "이상적 힘 센서(잡음 없음)", "잡음 있는 실제 센서", "하중 단독 기각 0건 → 각도만으로 가능"],
+    ["자재", "같은 치수의 강체", "치수 편차(KS ±5/±3/±2.5 mm) [19], 파손", "별도 실험(KICEM)에서 영향 작음"]],
+    [1.4, 2.8, 2.4, 1.8], 10, row_h=0.47)
+media(s, 9.15, 1.7, 3.7, 3.4, "사진", "현장 vs 시뮬 나란히 2컷\n위: 실제 조적 현장(모르타르·벽체·공급) / 아래: 우리 씬 같은 구도 렌더. 차이 항목(모르타르·규모·센서)에 번호 태그.", "현장 사진 수집 + 씬 렌더", "제작 필요")
+box(s, 9.15, 5.25, 3.7, 1.3, ["가장 큰 차이는 **'위치를 어떻게 아는가'**였고, 수치(2 mm → 효과 절반)로 보인 뒤 카메라 추정으로 메웠다. 나머지는 가정으로 명시(모르타르), 다음 단계 과제(규모·자재)"], 10, bg=WARNBG, ln=WARNLN)
+note(s, "시뮬레이션 전용 선행 연구 [11,12,14,16]도 같은 형식으로 한계를 적는다: 어떤 정보를 시뮬레이터에서 얻었는지, 실기에서 무엇으로 대체할지, 검증 순서.", 6.62)
+
+# ───────────────────────────── 22 이후 계획 일정
+s = new(); header(s, "12 / 이후 계획", "카메라 검측을 끝내고, 큰 로봇으로 벽체를 쌓는다")
+table(s, M, 1.7, 7.9, [["기간", "할 일", "산출물"],
+    ["**~10/24**", "**RQ4 (소형).** ACT·Diffusion + 카메라 검측 D(seed 3, 시험 50, 검증 40). 추정 오차 → 좌표 오차 곡선 예측 vs 실측. 시연 수 곡선 60/120/240", "카메라 D 완성률, 예측 대 실측"],
+    ["**10/14~11/3 (병행)**", "**대형 환경 구축.** 산업용 팔(Menagerie: UR5e·Franka·KUKA 중 가반하중·반경으로 선정) + 평행 집게, 실척 벽돌 190×90×57(1.8 kg), 3단×4~5개(12~15개)부터, 줄눈 10 mm [27]. 스크립트 교사 확장, 시연 수집", "스크립트가 벽체 쌓는 영상, 시연 데이터셋"],
+    ["**11/10 중간발표 2**", "RQ4 결과 + 대형 환경 시연", "발표 자료"],
+    ["**11/11~12/1**", "**RQ5.** 벽체에서 학습·평가 + 카메라 검측. **벽돌 1개 = 에피소드 1개**(현재 벽 상태를 관측으로). 벽돌별·단별 합격, 단별 누적 오차, 3D IoU", "벽체 결과, 단별 오차 곡선"],
+    ["**12/8 최종발표**", "RQ1~5 종합: 정책에 맡길 단계와 탑재 검측으로 확보할 단계의 경계, 필요한 계측 정확도", "최종 보고서·발표"]],
+    [1.5, 4.6, 1.8], 10, row_h=0.72)
+media(s, 8.65, 1.7, 4.2, 2.6, "사진", "대형 환경 콘셉트 렌더\nMenagerie 산업용 팔(UR5e 등) + 평행 집게 + 실척 벽돌 3단×4~5개 벽체. 아직 없으면 Menagerie 팔 스크린샷 + 벽체 도면 합성.", "우분투에서 신규 씬 렌더 / Menagerie 공개 이미지", "제작 필요")
+media(s, 8.65, 4.5, 4.2, 2.05, "도식", "일정 간트 차트\n10/13 중간 1 → 10/24 RQ4 → 11/3 대형 환경 → 11/10 중간 2 → 12/1 RQ5 → 12/8 최종. 병행 구간을 두 줄로.", "", "제작 필요")
+
+# ───────────────────────────── 23 왜 RQ4 먼저 + 예상 결론
+s = new(); header(s, "12 / 이후 계획", "왜 바로 큰 로봇으로 가지 않는가 · 예상 결론")
+box(s, M, 1.7, 6.0, 2.5, [
+    "정답 좌표 검측을 그대로 들고 가면 **같은 지적을 큰 규모에서 반복**",
+    "카메라만 쓰는 정책으로 가면 벽돌 10개 과제에서 **완성률 0에 수렴** → 배우는 것 없음",
+    "벽체 실험이 의미를 가지려면 **카메라 검측이 먼저** 있어야 하고, 평가 파이프라인이 갖춰진 3개 벽돌 환경에서 만드는 것이 가장 빠름(10/8 하루에 구현·검증)",
+    "대형 환경 구축은 코드 작업이라 **병행**"], 11, title="왜 RQ4를 먼저 끝내는가")
+box(s, M, 4.35, 6.0, 2.2, ["실제 로봇·벽돌·모르타르를 이용한 현실 재현 검증은 이번 과제에서 수행하지 않음", "π0·건식 비교는 보류", "모든 학습·평가는 Ubuntu PC(RTX 5090), 저장소 masonry-IL-capstone으로 공유"], 11, title="범위와 조건", bg=WARNBG, ln=WARNLN)
+table(s, 6.75, 1.7, 6.1, [["#", "예상 결론", "확정"],
+    ["1", "카메라만 쓰는 정책은 좁은 배치에서는 되지만 넓은 배치에서 파지·배치 단계에서 실패", "{ok:확정}"],
+    ["2", "자체 감각 검사만으로는 오르지 않고, 2 mm보다 정확한 벽돌 위치가 있으면 크게 오름", "{ok:확정}"],
+    ["3", "탑재 카메라 추정이 그 정확도를 만족해 오라클 효과의 대부분을 회복(스크립트에서 확인, 학습 정책은 중간 2)", "진행 중"],
+    ["4", "벽체에서는 아래 단 오차가 위로 전달되어 놓기 전 보정의 가치가 커지고, 완성률은 벽돌·단 단위로 보고", "최종"],
+    ["5", "설계 지식: 접근·파지·운반은 학습 정책에, 배치 품질은 탑재 감각 기반 검측에 맡기는 분담이 로봇 크기와 무관하게 성립", "최종"]],
+    [0.4, 4.9, 0.8], 10, row_h=0.72, align_c=(0, 2))
+
+# ───────────────────────────── 24 마무리
+s = new(); header(s, "13 / 마무리", "한 장으로: 무엇을 알아냈고, 무엇이 남았나")
+box(s, M, 1.7, 6.0, 4.85, [
+    "**RQ1** 넓은 배치에서 정책 단독 21%/0%. 실패 = 헛집기·빈손 운반·걸침·오배치",
+    "**RQ2** 자체 감각(집게 각도·하중)만으로는 완성률이 오르지 않음",
+    "**RQ3** 벽돌 위치 정보(오라클)로 63%/60%. 2 mm 오차면 효과 절반 → 요구 정확도 < 2 mm",
+    "**RQ4** 탑재 카메라 추정 p95 1 mm. 스크립트+검측 90%(오라클 96%) 회복. 병목은 배치 여유 규칙",
+    "**설계 지식** 정책 = 접근·파지·운반 / 탑재 검측 = 배치 품질. 검측 효과는 동작 생성 방식과 무관"], 12, title="알아낸 것")
+box(s, 6.75, 1.7, 6.1, 2.3, ["학습 정책 + 카메라 검측 조건 D (우분투 실행 중, 22개 작업)", "시연 수 곡선 60/120/240", "산업용 팔 + 실척 벽돌 벽체 환경 구축 (병행)"], 12, title="중간발표 2까지 (11/10)")
+box(s, 6.75, 4.2, 6.1, 2.35, ["RQ5: 벽체(3단×4~5개)에서 정책 + 카메라 검측, 단별 누적 오차", "벽돌 1개 = 에피소드 1개", "RQ1~5 종합: 분담의 경계와 필요한 계측 정확도"], 12, title="최종발표까지 (12/8)")
+
+# ───────────────────────────── 25 부록 A
+s = new(); header(s, "APPENDIX A / 세부 설정", "본문에서 생략한 조건과 판정 기준")
+table(s, M, 1.65, W - 2 * M, [["항목", "실제 설정·주의"],
+    ["로봇·벽돌", "MuJoCo SO-ARM100(팔 5관절＋집게). 블록 90×42.632×27 mm, 1,800 kg/m³, 약 186.5 g. 190:90:57 비율 축소, 동역학적 상사는 미검증"],
+    ["배치·관측", "실험 1: ±5 mm·±10°, 앞/손목 카메라. 실험 2: ±30 mm·±60°, 앞/손목/상방 + 관절. 크기 변동 없음. 실험 3은 잡기 자세의 자기·이웃 충돌 필터 추가"],
+    ["시연·학습", "수집 454회 중 240개 채택(학습 200＋검증 40). 실험 3은 ACT·Diffusion 기존 가중치 사용"],
+    ["접촉층·줄눈", "mortarB: 등가 접촉층＋정착 후 world 고정(weld). 수평층 4.737 mm, 머리줄눈 1 mm. 도포·흡수·접착파괴·재도포 미구현"],
+    ["고정까지 2초", "cure_settle_steps=40, 제어 0.05 s. 벽 영역·속도(<0.01 m/s, <0.2 rad/s)·집게 이격이 연속 충족될 때 40회 누적. 실제 재료 시험값 아님"],
+    ["G1 / G2 / G3", "G1: 1.5 cm 들고 각도 >0.2 rad AND 하중 ≥0.9 N, 횟수 무제한. G2: 2.5 mm/3°/3 mm 보정. G3: 4.5 mm/3 mm/5°/5°, 블록당 1회 재배치, >45°는 기록만"],
+    ["카메라 위치 추정", "top 카메라(0.70 m, fovy 45°) 1280×960(0.58 mm/px). 색 분할(R−B ≥ 40) → 깊이 역투영 → 평면 → 사각형 → 가려진 모서리 L×W 복원, 맞댄 벽돌 분할. 방향 모호 시 쥔 벽돌은 집게 yaw−90°, 놓은 벽돌은 슬롯 설계 방향. 정답 좌표는 검출 식별(30 mm 최근접)과 감사 오차에만"],
+    ["성공 판정·품질", "모든 벽돌 평면 <4.5 mm, 높이 <4.5 mm, 방향 <5°, 기울기 <10° (G3 개입 기준과 다름). 품질: 3D IoU, 평균 높이 오차, 앞면 최대 이격"]],
+    [1.6, 10.7], 9.5, row_h=0.56)
+
+# ───────────────────────────── 26 부록 B
+s = new(); header(s, "APPENDIX B / 수치 근거", "결과 숫자를 읽는 기준과 원자료")
+table(s, M, 1.65, W - 2 * M, [["실험·조건", "성공 수 / 평가 수", "비교 시 주의"],
+    ["실험 1 정상 시연", "Diffusion 90/100 · ACT 63/100 · SmolVLA 2/100", "정상 시연 119개. 초기 조건이 쉬워 실험 2·3과 직접 증감 비교 불가"],
+    ["실험 2 정책 단독", "Diffusion 41/200 · ACT 0/300 · SmolVLA 0/200", "당시 완료된 시험만 합산. 여러 조건이 함께 변경"],
+    ["실험 3 정책만 → 전체 검측", "Diffusion 33/120 → 75/120 · ACT 0/128 → 77/128", "seed 1000/1001/1002 합산. 같은 배치에서 전후 비교. 정책 간 분모 다름"],
+    ["단계별, seed1000", "Diffusion 14→12→29→30 /40 · ACT 0→0→14→26 /48", "A 정책만 / B G1 / C 재접근＋G2 / D C＋G3"],
+    ["좌표 스크립트 기준선", "단독 31/50 → 검측 44/50 (짝: 26/40→35/40, 30/48→42/48)", "학습 정책 3회 합산과 표본 규모 다름"],
+    ["좌표 잡음, 검증 배치", "Diffusion 23/27→17/27→4/27 · ACT 12/20→6/20→3/20", "σ 0→2→4 mm. 카메라 실측 오차가 아님"],
+    ["RQ4 카메라 추정 (10/8)", "측정 1,963회: 위치 평균 0.43·p95 0.96·최대 1.12 mm, 방향 p95 0.70°, 높이 p95 0.81 mm. 스크립트+G1~G3(검증 40·시험 50): 오라클 37·46 → 카메라 30·33 (여유 1.5 mm); 오라클 38·48 → 카메라 35·45 (0.5 mm)", "9/28 프로토콜 그대로, 검측 좌표만 교체. 정답 좌표 대체 0회. 원자료 01_사기설/중간발표1/근거_rq4/"]],
+    [2.0, 5.3, 5.0], 9.5, row_h=0.58)
+note(s, "백분율 0.5 올림. 10/6 학회용 재실행 88회 중 5회에서 완성 여부가 달라짐(GPU 비결정성). 9/28 시험 집계와 10/1 진행보고 수치 유지. 원자료: 실험일지.md, sim/outputs/{final_test, gate_val40_v2, rq4}/", 6.55)
+
+# ───────────────────────────── 27~28 부록 C 참고문헌
+refs = [
+    "[1] 건설근로자공제회 (2025). 2026년 건설근로자 수급전망.",
+    "[2] Giftthaler et al. (2017). Mobile Robotic Fabrication at 1:1 Scale: the In situ Fabricator. Construction Robotics, 1.",
+    "[3] Gao, J. and Adel, A. (2026). Adaptive Human-Robot Collaboration for Masonry Construction Under Material and Assembly Uncertainty. ISARC.",
+    "[4] Zhao, T. Z. et al. (2023). Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware (ACT). RSS.",
+    "[5] Chi, C. et al. (2023). Diffusion Policy: Visuomotor Policy Learning via Action Diffusion. RSS.",
+    "[6] de Haan, P. et al. (2019). Causal Confusion in Imitation Learning. NeurIPS.",
+    "[7] Yang, Y. et al. (2025). Disambiguate Gripper State in Grasp-Based Tasks: Pseudo-Tactile as Feedback Enables Pure Simulation Learning. IROS.",
+    "[8] Zheng, G. et al. (2026). Rewind-IL: Online Failure Detection and State Respawning for Imitation Learning. arXiv:2604.16683.",
+    "[9] Ibrahimov, R. et al. (2026). Contact-Rich Robotic Manipulation in Construction via Zero-Shot Learning. arXiv:2608.22100.",
+    "[10] Yu, J. et al. (2026). BrickCraft: Visuomotor Skill Composition with Situated Manual Guidance for Long-Horizon Interlocking Brick Assembly. arXiv:2605.07605.",
+    "[11] Tao, X. et al. (2026). Vision-driven state-space imitation learning for quadrotor navigation in infrastructure inspection. CACAIE, 46.",
+    "[12] Huang, L. et al. (2026). Vision-Language Model-Based Demonstrators for Imitation Learning in Construction Robotic Timber Assembly. J. Comput. Civ. Eng., 41(1).",
+    "[13] Mandlekar, A. et al. (2022). What Matters in Learning from Offline Human Demonstrations for Robot Manipulation. PMLR 164.",
+    "[14] Liang, C.-J. et al. (2022). Trajectory-Based Skill Learning for Overhead Construction Robots. J. Comput. Civ. Eng., 36(2).",
+]
+refs2 = [
+    "[15] Huang, L. et al. (2023). Dexterous manipulation of construction tools using anthropomorphic robotic hand. Automation in Construction, 156.",
+    "[16] Lin, X. et al. (2026). Safety-aware behavioral decision-making for construction robots. Automation in Construction, 189.",
+    "[17] Yoon, S. et al. (2025). Learning viewpoint control from human-initiated transitions for teleoperation in construction. Adv. Eng. Informatics, 68.",
+    "[18] Xu, Y. et al. (2026). A hierarchical trajectory planning framework based on diffusion models for autonomous vehicles. Adv. Eng. Informatics, 73.",
+    "[19] 국가기술표준원 (2022). KS L 4201 점토 벽돌.",
+    "[20] You, H. et al. (2026). Force-aware imitation learning for subsea robotic jumper pipe installation. Automation in Construction, 188.",
+    "[21] Lourenço, P. B. (1996). Computational strategies for masonry structures. PhD thesis, TU Delft.",
+    "[22] 국토교통부 (2026). 건설공사 사업관리방식 검토기준 및 업무수행지침, 고시 제2026-360호.",
+    "[23] Wienerberger (2026). Telford Brindle Product Data.",
+    "[24] Porter, G. (2017). The Acceptability of Masonry, Masonry Advisory Council.",
+    "[25] LABC Warranty (2021). Technical Manual v10, Section 1 Tolerances.",
+    "[26] Brick Industry Association (2017). Technical Note 7B.",
+    "[27] 국토교통부 (2021). KCS 41 34 02 벽돌공사.",
+    "Todorov et al. (2012) MuJoCo, IROS · Xu, C. et al. (2026) The Curse of Precision, ICRA · Zeng et al. (2025) RL-assisted dry-stacking, CMS · Sun et al. (2026) Rebar cage assembly via IL, Automation in Construction, 181.",
+]
+for k, rr in enumerate((refs, refs2)):
+    s = new(); header(s, "APPENDIX C / 참고문헌", f"인용 문헌 ({k + 1}/2)")
+    text(s, M, 1.65, W - 2 * M, 5.2, rr, 10, INK, space=3)
+    if k == 1:
+        note(s, "서지는 각 PDF 첫 쪽과 기존 원고의 참고문헌을 옮김. 제출 전 재확인.", 6.75)
+
+prs.save(OUT)
+print("saved", OUT, "slides", len(prs.slides))
