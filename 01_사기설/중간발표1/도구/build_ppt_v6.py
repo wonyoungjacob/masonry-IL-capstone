@@ -64,7 +64,7 @@ def header(slide, eyebrow, title, sub=None):
         text(slide, M, 1.18, W - 2 * M, 0.35, sub, 12, GREY)
     ln = slide.shapes.add_connector(1, Inches(M), Inches(1.5), Inches(W - M), Inches(1.5))
     ln.line.color.rgb = LINE; ln.line.width = Pt(1)
-    text(slide, M, 7.08, 6, 0.3, "14조 · 사회기반시스템종합설계 중간발표 1 · 초안 v6 (2026-10-10)", 9, GREY)
+    text(slide, M, 7.08, 6, 0.3, "14조 · 사회기반시스템종합설계 중간발표 1 · 초안 v6.1 (2026-10-10, 사진·영상 파일 확보)", 9, GREY)
     text(slide, W - M - 1, 7.08, 1, 0.3, str(page[0]), 9, GREY, align=PP_ALIGN.RIGHT)
 
 
@@ -125,11 +125,14 @@ def media(slide, x, y, w, h, kind, what, src="", status="", size=10):
     tf = sh.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.TOP
     tf.margin_left = tf.margin_right = Inches(0.12); tf.margin_top = tf.margin_bottom = Inches(0.1)
     L = PP_ALIGN.LEFT
-    runs(tf.paragraphs[0], f"[{kind}]  {what.splitlines()[0]}", size + 1, col, True, L)
+    key = what.splitlines()[0]
+    if key in MEDIA_FILES:                      # 2026-10-10: 전수 제작 완료 → 실제 파일 경로로 교체
+        src, status = MEDIA_FILES[key]
+    runs(tf.paragraphs[0], f"[{kind}]  {key}", size + 1, col, True, L)
     for s in what.splitlines()[1:]:
         p = tf.add_paragraph(); runs(p, s, size, INK, align=L)
     if src:
-        p = tf.add_paragraph(); p.space_before = Pt(4); runs(p, "후보 파일: " + src, size - 1, GREY, align=L)
+        p = tf.add_paragraph(); p.space_before = Pt(4); runs(p, "파일: " + src, size - 1, GREY, align=L)
     if status:
         p = tf.add_paragraph(); runs(p, "상태: " + status, size - 1, GREY, True, L)
     return sh
@@ -146,6 +149,51 @@ def new():
 VID = "01_사기설/발표자료_실험1_실험2_20260922/발표용_영상/"
 IMG = "01_사기설/발표자료_실험1_실험2_20260922/이미지/"
 AST = "중간발표_진행정리_20261007/assets/"
+G = "01_사기설/중간발표1/그림/"; V = "01_사기설/중간발표1/영상/"
+ST_OK = "있음 (git)"
+ST_SUB = "있음 — 스크립트 교사 대역 (git). ACT·Diffusion 정책판은 Ubuntu 결과 후 교체"
+# 박스 첫 줄(제목) → (파일, 상태). 2026-10-10 전수 제작·업로드.
+MEDIA_FILES = {
+    "표지 대표 이미지": (G + "cover_cover_az120_placing_top.png  (대안: cover_cover_az60/az150, cover_front, final_*.png)", ST_OK),
+    "연구 전체 파이프라인 한 장 그림": (G + "fig_pipeline.png", ST_OK),
+    "실제 조적 현장 사진": (G + "외부/commons_4.jpg (USAF, 퍼블릭 도메인)  대안: commons_1·2.jpg (CC BY-SA 2.0). 출처: 그림/외부/출처.md", ST_OK),
+    "기존 조적 로봇 2종 나란히": (G + "외부/commons_3.jpg (In situ Fabricator, CC BY-SA 4.0) + " + G + "fig_external_metrology.png (Hadrian X·SAM100은 자유 이용 사진이 없어 도식으로 대체)", ST_OK),
+    "실패 3종 짧은 클립(각 3~5초, 나란히 또는 순차)": (V + "04_실패3종_순차.mp4 (22 s)", ST_OK),
+    "실패 3컷 정지 이미지(영상 못 틀 때 대비)": (G + "exp2_failures.png", ST_OK),
+    "정책 vs 검측 분담 도식": (G + "fig_division.png", ST_OK),
+    "'정답 좌표를 누가 쓰나' 도식": (G + "fig_truth_usage.png", ST_OK),
+    "교사→학생 구조 한 줄 도식": (G + "fig_teacher_student.png", ST_OK),
+    "SO-ARM101 실물 + MuJoCo 모델 나란히": (G + "soarm_real_vs_sim.png (실물 사진: TheRobotStudio, Apache-2.0)", ST_OK),
+    "실험 1 '복구 시연 섞음' 실패 클립": (V + "08_실험1_복구시연섞음_교란.mp4 (22 s)", ST_OK),
+    "과제 정의 2컷": (G + "task.png", ST_OK),
+    "스크립트 교사의 정상 시연 1회(18 s → 10초로 배속)": (V + "09_스크립트_정상시연_3카메라_2배속.mp4 (앞·위·손목 3패널, 10 s)", ST_OK),
+    "모르타르층 클로즈업 렌더": (G + "mortar_closeup_before_top.png (+ mortar_closeup_final.png)", ST_OK),
+    "G1·G2·G3 순간 3컷(작게)": (G + "g123_cuts.png", ST_OK),
+    "실험 1 결과 막대 그래프": (G + "exp1.png", ST_OK),
+    "실험 1 성공 vs 실험 2 실패 나란히(각 5초)": (V + "11_실험1성공_vs_실험2실패_ACT_3배속.mp4 (13 s)", ST_OK),
+    "실험 2 초기 배치 예시 4컷": (G + "exp2_shots.jpg", ST_OK),
+    "실험 2에서 관찰한 세 실패 (크게)": (G + "exp2_failures.png", ST_OK),
+    "실패 (b) 걸침 클립 10초": (V + "12_걸침_슬로모션_seed1009.mp4 (10 s)", ST_OK),
+    "첫 파지 실패 70건 분포도": (G + "diagnosis.png", ST_OK),
+    "정책이 보는 관측 3장": (G + "obs_3cams_carry.png (+ obs_3cams_initial.png)", ST_OK),
+    "ACT / Diffusion 구조 그림(원논문)": (G + "fig_models.png (원논문 그림을 우리 치수로 다시 그림, 인용 표기)", ST_OK),
+    "시연 데이터셋 한눈에": (G + "fig_initial_layouts.png (같은 분포의 320 배치 × 3개, 필터로 걸러진 60개 표시)", ST_OK),
+    "성공 기준 치수 그림": (G + "fig_tolerance.png", ST_OK),
+    "G1 문턱값 근거 그래프": (G + "fig_g1_threshold.png (렌더 에피소드의 G1 판정 13건 + 실험일지 기준값)", ST_OK),
+    "G1 작동 클립 5초": (V + "15_G1_빈손판정_재접근_스크립트_seed50004.mp4 (6 s)", ST_SUB),
+    "검측이 작동한 순서 (같은 초기 배치, ACT, 50018)": (G + "feedback_episode.jpg", ST_OK),
+    "같은 에피소드(50018) 2분할 영상 30초": (V + "16_스크립트_단독A_vs_검측D_seed50010.mp4 (17 s, 스크립트 단독 불합격 → 검측 합격)", ST_SUB),
+    "단계별 완성률 그래프": (G + "stages.png (빗금은 미적용)", ST_OK),
+    "좌표 오차 σ vs 완성률 곡선": (G + "noise.png (카메라 점선은 미적용)", ST_OK),
+    "카메라 인식 결과 3컷 (노랑 = 추정 윤곽, 빨강 = 실제 중심: 채점용, 로봇은 모름)": ("01_사기설/중간발표1/근거_rq4/perception_demo.png", ST_OK),
+    "인식 오버레이 영상 15초": (V + "19_카메라인식_오버레이_seed40000.mp4 (25 s)", ST_OK),
+    "인식 파이프라인 5단계 도식": (G + "fig_perception_pipeline.png", ST_OK),
+    "둘째 벽돌 걸침 vs 회복 비교 2컷": (G + "cmp_nbr_bias_seed50012.png", ST_OK),
+    "카메라 검측 조건 D 성공 에피소드 20초": (V + "20_스크립트_카메라검측D_대역_seed40000.mp4 (25 s)", ST_SUB),
+    "현장 vs 시뮬 나란히 2컷": (G + "site_vs_sim.png", ST_OK),
+    "대형 환경 콘셉트 렌더": (G + "concept_ur5e_wall.png (Menagerie UR5e + 2F-85, 실척 벽돌 3단×5, 렌더 전용)", ST_OK),
+    "일정 간트 차트": (G + "fig_gantt.png", ST_OK),
+}
 
 # ───────────────────────────── 1 표지
 s = new(); page[0] += 1
@@ -181,7 +229,7 @@ text(s, M, 1.7, 7.2, 3.6, [
     "그래서 벽돌 규격·적재 조건이 바뀌면 **사람이 계측 기준과 경로를 다시 설정**해야 한다",
     "시연을 보고 영상에서 바로 동작을 내는 **모방학습 정책**[4,5]은 카메라와 관절값만 쓰므로 이 재설정 부담을 없앨 수 있다"], 13, bullet=True, space=8)
 media(s, 7.95, 1.7, 4.9, 2.3, "사진", "실제 조적 현장 사진\n작업자가 벽돌을 들어 모르타르 위에 놓는 장면(반복·중량 작업이 보이게). 저작권 확인된 사진 또는 팀 촬영.", "외부(Unsplash/KS 자료) — 출처 표기", "제작/수집 필요")
-media(s, 7.95, 4.15, 4.9, 2.3, "사진", "기존 조적 로봇 2종 나란히\n(좌) In situ Fabricator — 레이저 트래커로 위치 보정 [2]  (우) Hadrian X 또는 SAM100 — 외부 계측 기반. 캡션에 '외부 계측 → 기준 좌표 재정합' 화살표.", "논문 [2] Fig., FBR·Construction Robotics 공개 이미지", "수집 필요 (출처 표기)")
+media(s, 7.95, 4.15, 4.9, 2.3, "사진", "기존 조적 로봇 2종 나란히\n(좌) In situ Fabricator 사진 — 레이저 트래커로 위치 보정 [2]  (우) '외부 계측 → 기준 좌표 재정합' 도식 (Hadrian X·SAM100 언급). 회사 보도 이미지를 쓰려면 출처 표기 후 교체.", "논문 [2] Fig., FBR·Construction Robotics 공개 이미지", "수집 필요 (출처 표기)")
 note(s, "[1] 건설근로자공제회 2025 · [2] Giftthaler et al. 2017 · [3] Gao & Adel 2026 · [4] Zhao et al. 2023 (ACT) · [5] Chi et al. 2023 (Diffusion Policy)")
 
 # ───────────────────────────── 4 문제의식 ②③
@@ -194,7 +242,7 @@ text(s, M, 3.95, 6.4, 2.4, [
     "→ 어느 단계의 확인이 어떤 실패를 얼마나 줄이는지 모른다",
     "→ 그 확인에 **로봇 자신의 감각만으로 충분한지, 외부 위치 정보가 필요한지** 모른다",
     "→ 학습 기반 조적 로봇에 **어떤 센서·검측 절차를 붙일지 설계할 수 없다**"], 13, bullet=True, space=6)
-media(s, 7.15, 1.7, 5.7, 2.25, "영상", "실패 3종 짧은 클립(각 3~5초, 나란히 또는 순차)\n(a) 헛집기 후 빈손 운반  (b) 둘째 벽돌이 이웃 끝에 걸침  (c) 어긋나게 놓고도 다음 벽돌로 진행", VID + "05, 06, 10 (실험 2 실패)", "있음 — 발표용으로 3~5초 컷 편집 필요")
+media(s, 7.15, 1.7, 5.7, 2.25, "영상", "실패 3종 짧은 클립(각 3~5초, 나란히 또는 순차)\n(a) 헛집기: 집게가 놓치고 빈손으로 올라감  (b) 둘째 벽돌이 이웃 끝에 걸침  (c) 헛집은 뒤 다음 동작으로 못 가고 멈춤 (ACT)", VID + "05, 06, 10 (실험 2 실패)", "있음 — 발표용으로 3~5초 컷 편집 필요")
 media(s, 7.15, 4.1, 5.7, 2.25, "사진", "실패 3컷 정지 이미지(영상 못 틀 때 대비)\n실험 2 관찰 실패 (a)(b)(c) — 빨간 화살표로 문제 지점 표시", AST + "exp2_failures.png", "있음")
 note(s, "[6] de Haan et al. 2019 · [7] Yang et al. 2025 · [8] Zheng et al. 2026 (Rewind-IL) · [9] Ibrahimov et al. 2026 · [10] Yu et al. 2026 (BrickCraft)")
 
