@@ -1,0 +1,98 @@
+중간발표 1 · v11 슬라이드에 넣은 사진·영상의 GitHub 위치
+저장소: https://github.com/wonyoungjacob/masonry-IL-capstone  (브랜치 main)
+
+· '저장소 경로'는 저장소 최상위 기준. 'GitHub에서 보기'는 웹 페이지, '바로 받기'는 파일 직접 다운로드 링크.
+· 저장소를 통째로 받으려면: GitHub 페이지 → Code → Download ZIP, 또는 git clone 후 같은 경로.
+
+[1쪽]
+  (사진) 표지 사진 원본 (1280×960)
+     저장소 경로: 01_사기설/중간발표1/그림/cover_cover_az120_placing_top.png
+     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EA%B7%B8%EB%A6%BC/cover_cover_az120_placing_top.png
+     바로 받기:      https://github.com/wonyoungjacob/masonry-IL-capstone/raw/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EA%B7%B8%EB%A6%BC/cover_cover_az120_placing_top.png
+  (사진) 표지에 넣은 정사각 크롭·둥근 모서리판
+     저장소 경로: 01_사기설/중간발표1/도구/v8_자산/p01_cover.png
+     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EB%8F%84%EA%B5%AC/v8_%EC%9E%90%EC%82%B0/p01_cover.png
+     바로 받기:      https://github.com/wonyoungjacob/masonry-IL-capstone/raw/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EB%8F%84%EA%B5%AC/v8_%EC%9E%90%EC%82%B0/p01_cover.png
+
+[2쪽]
+  (사진) 2쪽 시연 장면 원본
+     저장소 경로: 01_사기설/중간발표1/그림/cover_cover_az60_placing_top.png
+     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EA%B7%B8%EB%A6%BC/cover_cover_az60_placing_top.png
+     바로 받기:      https://github.com/wonyoungjacob/masonry-IL-capstone/raw/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EA%B7%B8%EB%A6%BC/cover_cover_az60_placing_top.png
+  (사진) 2쪽에 넣은 크롭판
+     저장소 경로: 01_사기설/중간발표1/도구/v8_자산/p02_demo.png
+     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EB%8F%84%EA%B5%AC/v8_%EC%9E%90%EC%82%B0/p02_demo.png
+     바로 받기:      https://github.com/wonyoungjacob/masonry-IL-capstone/raw/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EB%8F%84%EA%B5%AC/v8_%EC%9E%90%EC%82%B0/p02_demo.png
+
+[3쪽]
+  (영상) 역기구학 대본의 시연 수집 (앞·위·손목 카메라, 2배속, 10 s)
+     저장소 경로: 01_사기설/중간발표1/영상/09_스크립트_정상시연_3카메라_2배속.mp4
+     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EC%98%81%EC%83%81/09_%EC%8A%A4%ED%81%AC%EB%A6%BD%ED%8A%B8_%EC%A0%95%EC%83%81%EC%8B%9C%EC%97%B0_3%EC%B9%B4%EB%A9%94%EB%9D%BC_2%EB%B0%B0%EC%86%8D.mp4
+     바로 받기:      https://github.com/wonyoungjacob/masonry-IL-capstone/raw/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EC%98%81%EC%83%81/09_%EC%8A%A4%ED%81%AC%EB%A6%BD%ED%8A%B8_%EC%A0%95%EC%83%81%EC%8B%9C%EC%97%B0_3%EC%B9%B4%EB%A9%94%EB%9D%BC_2%EB%B0%B0%EC%86%8D.mp4
+  (사진) 영상 포스터 프레임
+     저장소 경로: 01_사기설/중간발표1/도구/v7_자산/poster_09.png
+     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EB%8F%84%EA%B5%AC/v7_%EC%9E%90%EC%82%B0/poster_09.png
+     바로 받기:      https://github.com/wonyoungjacob/masonry-IL-capstone/raw/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EB%8F%84%EA%B5%AC/v7_%EC%9E%90%EC%82%B0/poster_09.png
+
+[6쪽]
+  (영상) 딜레마 ①: 집지 못하고도 그대로 운반
+     저장소 경로: 01_사기설/중간발표1/영상/21_빈손운반_재현_seed40000.mp4
+     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EC%98%81%EC%83%81/21_%EB%B9%88%EC%86%90%EC%9A%B4%EB%B0%98_%EC%9E%AC%ED%98%84_seed40000.mp4
+     바로 받기:      https://github.com/wonyoungjacob/masonry-IL-capstone/raw/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EC%98%81%EC%83%81/21_%EB%B9%88%EC%86%90%EC%9A%B4%EB%B0%98_%EC%9E%AC%ED%98%84_seed40000.mp4
+  (사진) 포스터 프레임
+     저장소 경로: 01_사기설/중간발표1/도구/v9_자산/poster_21.png
+     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EB%8F%84%EA%B5%AC/v9_%EC%9E%90%EC%82%B0/poster_21.png
+     바로 받기:      https://github.com/wonyoungjacob/masonry-IL-capstone/raw/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EB%8F%84%EA%B5%AC/v9_%EC%9E%90%EC%82%B0/poster_21.png
+  (영상) 딜레마 ②: 복구 시연을 섞어 학습한 Diffusion
+     저장소 경로: 01_사기설/중간발표1/영상/22_복구시연학습_Diffusion_놓고도더듬거림_2배속.mp4
+     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EC%98%81%EC%83%81/22_%EB%B3%B5%EA%B5%AC%EC%8B%9C%EC%97%B0%ED%95%99%EC%8A%B5_Diffusion_%EB%86%93%EA%B3%A0%EB%8F%84%EB%8D%94%EB%93%AC%EA%B1%B0%EB%A6%BC_2%EB%B0%B0%EC%86%8D.mp4
+     바로 받기:      https://github.com/wonyoungjacob/masonry-IL-capstone/raw/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EC%98%81%EC%83%81/22_%EB%B3%B5%EA%B5%AC%EC%8B%9C%EC%97%B0%ED%95%99%EC%8A%B5_Diffusion_%EB%86%93%EA%B3%A0%EB%8F%84%EB%8D%94%EB%93%AC%EA%B1%B0%EB%A6%BC_2%EB%B0%B0%EC%86%8D.mp4
+  (사진) 포스터 프레임
+     저장소 경로: 01_사기설/중간발표1/도구/v9_자산/poster_22.png
+     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EB%8F%84%EA%B5%AC/v9_%EC%9E%90%EC%82%B0/poster_22.png
+     바로 받기:      https://github.com/wonyoungjacob/masonry-IL-capstone/raw/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EB%8F%84%EA%B5%AC/v9_%EC%9E%90%EC%82%B0/poster_22.png
+
+[9쪽]
+  (사진) 카메라 위치 추정 결과 3컷 원본
+     저장소 경로: 01_사기설/중간발표1/근거_rq4/perception_demo.png
+     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EA%B7%BC%EA%B1%B0_rq4/perception_demo.png
+     바로 받기:      https://github.com/wonyoungjacob/masonry-IL-capstone/raw/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EA%B7%BC%EA%B1%B0_rq4/perception_demo.png
+  (사진) 둥근 모서리판
+     저장소 경로: 01_사기설/중간발표1/도구/v9_자산/p08_perception.png
+     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EB%8F%84%EA%B5%AC/v9_%EC%9E%90%EC%82%B0/p08_perception.png
+     바로 받기:      https://github.com/wonyoungjacob/masonry-IL-capstone/raw/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EB%8F%84%EA%B5%AC/v9_%EC%9E%90%EC%82%B0/p08_perception.png
+
+[10쪽]
+  (사진) 현장 사진 원본 (출처: 그림/외부/출처.md)
+     저장소 경로: 01_사기설/중간발표1/그림/외부/commons_4.jpg
+     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EA%B7%B8%EB%A6%BC/%EC%99%B8%EB%B6%80/commons_4.jpg
+     바로 받기:      https://github.com/wonyoungjacob/masonry-IL-capstone/raw/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EA%B7%B8%EB%A6%BC/%EC%99%B8%EB%B6%80/commons_4.jpg
+  (사진) 크롭판
+     저장소 경로: 01_사기설/중간발표1/도구/v8_자산/p11_site.png
+     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EB%8F%84%EA%B5%AC/v8_%EC%9E%90%EC%82%B0/p11_site.png
+     바로 받기:      https://github.com/wonyoungjacob/masonry-IL-capstone/raw/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EB%8F%84%EA%B5%AC/v8_%EC%9E%90%EC%82%B0/p11_site.png
+  (사진) 시뮬레이션 앞 카메라 원본
+     저장소 경로: 01_사기설/중간발표1/그림/sim_front_initial.png
+     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EA%B7%B8%EB%A6%BC/sim_front_initial.png
+     바로 받기:      https://github.com/wonyoungjacob/masonry-IL-capstone/raw/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EA%B7%B8%EB%A6%BC/sim_front_initial.png
+  (사진) 크롭판
+     저장소 경로: 01_사기설/중간발표1/도구/v8_자산/p11_sim.png
+     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EB%8F%84%EA%B5%AC/v8_%EC%9E%90%EC%82%B0/p11_sim.png
+     바로 받기:      https://github.com/wonyoungjacob/masonry-IL-capstone/raw/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EB%8F%84%EA%B5%AC/v8_%EC%9E%90%EC%82%B0/p11_sim.png
+
+[11쪽]
+  (사진) 대형 환경 콘셉트 원본
+     저장소 경로: 01_사기설/중간발표1/그림/concept_ur5e_wall.png
+     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EA%B7%B8%EB%A6%BC/concept_ur5e_wall.png
+     바로 받기:      https://github.com/wonyoungjacob/masonry-IL-capstone/raw/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EA%B7%B8%EB%A6%BC/concept_ur5e_wall.png
+  (사진) 크롭·둥근 모서리판
+     저장소 경로: 01_사기설/중간발표1/도구/v7_자산/concept_rounded.png
+     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EB%8F%84%EA%B5%AC/v7_%EC%9E%90%EC%82%B0/concept_rounded.png
+     바로 받기:      https://github.com/wonyoungjacob/masonry-IL-capstone/raw/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EB%8F%84%EA%B5%AC/v7_%EC%9E%90%EC%82%B0/concept_rounded.png
+
+[차트·도식]
+  7·8쪽 그래프와 11쪽 간트는 PowerPoint 안에서 직접 그린 차트·도형이라 별도 파일이 없음 (슬라이드에서 데이터 편집 가능).
+  같은 내용의 이미지판: 01_사기설/중간발표1/그림/stages.png, noise.png, fig_gantt_priority.png
+
+[생성 스크립트]
+  01_사기설/중간발표1/도구/build_ppt_v11.py (이 슬라이드), 도구/미디어/*.py (영상 클립·렌더·도식)
