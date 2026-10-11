@@ -191,6 +191,46 @@ FIGS["fig_gantt"] = (1300, 560, CSS + """<div class="wrap">
  <text x="10" y="450" fill="#5b6973" font-size="14">모든 학습·평가는 Ubuntu PC(RTX 5090), 코드·결과는 github.com/wonyoungjacob/masonry-IL-capstone</text>
 </svg></div>""")
 
+FIGS["fig_gantt_priority"] = (1300, 600, CSS + """<div class="wrap" style="padding:10px 14px">
+<svg width="1270" height="560" viewBox="0 0 1270 560" font-family="Malgun Gothic" font-size="17">
+ <!-- 10/06 .. 12/15 = 70 days over 1000 px from x=250 -->
+ <g stroke="#e4e9ed"><line x1="250" y1="44" x2="250" y2="470"/><line x1="393" y1="44" x2="393" y2="470"/><line x1="536" y1="44" x2="536" y2="470"/><line x1="679" y1="44" x2="679" y2="470"/><line x1="822" y1="44" x2="822" y2="470"/><line x1="965" y1="44" x2="965" y2="470"/><line x1="1108" y1="44" x2="1108" y2="470"/><line x1="1250" y1="44" x2="1250" y2="470"/></g>
+ <g fill="#8a9ba8" font-size="15"><text x="236" y="32">10/06</text><text x="379" y="32">10/16</text><text x="522" y="32">10/26</text><text x="665" y="32">11/05</text><text x="808" y="32">11/15</text><text x="951" y="32">11/25</text><text x="1094" y="32">12/05</text></g>
+ <!-- 오늘 -->
+ <line x1="321" y1="44" x2="321" y2="470" stroke="#1c2b33" stroke-width="1.5" stroke-dasharray="5 4"/><text x="300" y="490" fill="#1c2b33" font-size="14" font-weight="bold">오늘 10/11</text>
+ <defs><style>.p1{fill:#0064e0}.p2{fill:#5e6e7a}.p3{fill:#a8b5bf}.lab{fill:#1c2b33;font-weight:bold}.chip{font-size:13px;font-weight:bold;fill:#fff}</style></defs>
+ <!-- rows -->
+ <g>
+  <rect x="10" y="62" width="36" height="22" rx="11" class="p1"/><text x="18" y="78" class="chip">P1</text><text x="54" y="79" class="lab">RQ4 학습 정책 + 카메라 검측</text>
+  <rect x="350" y="60" width="157" height="30" rx="15" class="p1"/><text x="362" y="81" fill="#fff" font-size="14" font-weight="bold">10/13–10/24</text><text x="516" y="81" fill="#344854" font-size="15">Ubuntu 22개 작업 · 예측 vs 실측</text>
+ </g>
+ <g>
+  <rect x="10" y="122" width="36" height="22" rx="11" class="p1"/><text x="18" y="138" class="chip">P1</text><text x="54" y="139" class="lab">대형 환경 구축 (병행)</text>
+  <rect x="364" y="120" width="286" height="30" rx="15" class="p1"/><text x="376" y="141" fill="#fff" font-size="14" font-weight="bold">10/14–11/03</text><text x="659" y="141" fill="#344854" font-size="15">산업용 팔 · 실척 벽돌 · 3단×4~5개 · 교사 확장</text>
+ </g>
+ <g>
+  <rect x="10" y="182" width="36" height="22" rx="11" class="p2"/><text x="18" y="198" class="chip">P2</text><text x="54" y="199" class="lab">시연 수 곡선 60/120/240</text>
+  <rect x="507" y="180" width="143" height="30" rx="15" class="p2"/><text x="519" y="201" fill="#fff" font-size="14" font-weight="bold">10/24–11/03</text>
+ </g>
+ <g>
+  <rect x="10" y="242" width="36" height="22" rx="11" class="p2"/><text x="18" y="258" class="chip">P2</text><text x="54" y="259" class="lab">RQ5 벽체 학습·평가</text>
+  <rect x="765" y="240" width="286" height="30" rx="15" class="p2"/><text x="777" y="261" fill="#fff" font-size="14" font-weight="bold">11/11–12/01</text><text x="1060" y="261" fill="#344854" font-size="15">단별 누적 오차</text>
+ </g>
+ <g>
+  <rect x="10" y="302" width="36" height="22" rx="11" class="p3"/><text x="18" y="318" class="chip">P3</text><text x="54" y="319" class="lab">보류: 건식 비교 · π0 · seed 추가</text>
+  <text x="350" y="321" fill="#8a9ba8" font-size="15">RQ와 직접 관계없음 → 시간이 남을 때만</text>
+ </g>
+ <g>
+  <text x="54" y="379" class="lab">보고서·발표 준비</text>
+  <rect x="1051" y="360" width="100" height="30" rx="15" fill="#1c2b33"/><text x="1061" y="381" fill="#fff" font-size="14" font-weight="bold">12/02–12/08</text>
+ </g>
+ <!-- milestones -->
+ <g fill="#0064e0"><polygon points="350,420 362,440 338,440"/><polygon points="750,420 762,440 738,440"/><polygon points="1150,420 1162,440 1138,440"/></g>
+ <g font-size="15" fill="#0064e0" font-weight="bold"><text x="310" y="462">10/13 중간 1</text><text x="712" y="462">11/10 중간 2</text><text x="1112" y="462">12/08 최종</text></g>
+ <text x="54" y="437" class="lab">발표</text>
+ <text x="10" y="530" fill="#8a9ba8" font-size="14">P1 = 중간 2 전까지 반드시 · P2 = 최종까지 · P3 = 보류. 모든 학습·평가는 Ubuntu PC(RTX 5090), 저장소 github.com/wonyoungjacob/masonry-IL-capstone</text>
+</svg></div>""")
+
 FIGS["fig_external_metrology"] = (1260, 700, CSS + """<div class="wrap">
 <h3>기존 조적 로봇의 위치 확보 방식 — 외부 계측 → 기준 좌표 재정합</h3>
 <svg width="1220" height="560" viewBox="0 0 1220 560" font-family="Malgun Gothic" font-size="17">
