@@ -1,0 +1,65 @@
+중간발표 1 보강 실행 보고 (Ubuntu RTX 5090, 2026-10-12)
+실행 코드 커밋: bf0a3a8a772bbe0b861bdfc3dec5e865603526ff
+저장소: github.com/wonyoungjacob/masonry-IL-capstone
+실행 위치: sim/; Python: venv/bin/python; 학습 없음; 평가 설정/기존 코드/기존 결과/데이터셋/체크포인트 수정 없음.
+Python 바이트코드 캐시 생성을 막기 위해 PYTHONDONTWRITEBYTECODE=1 사용.
+
+작업 1: 측정 오차 시험 배치
+# 8 jobs from outputs/final_test/jobs.py
+출처: outputs/final_test/jobs.py. fallback 사용 없음.
+생성한 8개 명령은 원본 시험 명령에서 --gate-pose-noise, --out, 로그 경로만 변경됐음을 검증함.
+정책 2 x 오차 2/4 mm x 덩어리 2. 각 덩어리 --episodes 25, --seed0 50000 또는 50025.
+실행: MUJOCO_GL=egl EVAL_THREADS=1 nohup xargs -P 8 -I{} bash -c '{}' < outputs/midterm1_fix/jobs_noise.txt > logs/midterm1_fix/xargs.log 2>&1 &
+8개 작업 모두 종료, xargs 종료 코드 0. 총 200회. 각 정책/오차별 seed 50000~50049 전부 포함.
+GPU 메모리 부족, 죽은 작업, 재실행: 없음. 병렬도 변경 없음.
+평가 코드가 최종 JSON 저장 후에도 .partial을 남김. 이번에 생성된 .partial 8개의 episodes/config가 최종 JSON과 동일함을 확인한 뒤 그 중복 임시 파일만 삭제. 남은 .partial 없음.
+
+중요: sigma 0 기준 결과 불일치 및 비교 제한
+기대값 Diffusion 30/40, ACT 26/48과 다름. 실제 공식 집계는 Diffusion 13/19 (68%), ACT 10/25 (40%).
+기존 결과나 집계 코드, 생성된 summary_noise.md를 보정하지 않았음.
+집계 스크립트가 읽는 기존 완료 JSON에서 Diffusion은 전체 24개, unchanged_seeds와 짝지은 배치 19개; ACT는 25개만 집계됨.
+기존 Diffusion 완료 JSON의 덩어리는 seed0=50013/50038, 각각 12회. 이번 지정 jobs.py의 덩어리 seed0=50000/50025와 다름.
+예: 배치 seed 50013/50038의 기존 inference_seed는 70000, 이번 결과는 70013. 따라서 Diffusion의 sigma 0 대비 표는 추론 seed까지 일치하는 통제 비교가 아님.
+ACT의 보유 기존 25개 결과는 seed0=50000으로 이번 첫 덩어리와 일치하지만, 기대했던 48개 기준 결과는 아님.
+발표용 30/40 및 26/48 기준 비교가 복원됐다고 해석하면 안 됨.
+
+집계 스크립트 출력 원문:
+# 측정 오차(gate pose noise) 시험 배치 결과
+
+조건: 실험 3 · 넓은 배치 ±30 mm·±60° · 실행가능성 필터 · 학습 seed 1000 · 조건 D(E_replace) · 시험 배치 50000~50049
+
+## 짝지은 배치 (7쪽과 같은 배치)
+
+| 정책 | 배치 수 | σ 0 mm | σ 2 mm | σ 4 mm |
+|---|---|---|---|---|
+| diffusion | 19 | 13/19 (68%) | 10/19 (53%) | 1/19 (5%) |
+| act | 25 | 10/25 (40%) | 12/25 (48%) | 4/25 (16%) |
+
+## 50개 전체 (참고)
+
+| 정책 | σ 0 mm | σ 2 mm | σ 4 mm |
+|---|---|---|---|
+| diffusion | 18/24 (75%) | 31/50 (62%) | 3/50 (6%) |
+| act | 10/25 (40%) | 24/50 (48%) | 5/50 (10%) |
+
+- unchanged_seeds.json: 있음
+- σ 0 확인(기대 Diffusion 30/40, ACT 26/48): Diffusion 13/19 (68%), ACT 10/25 (40%)
+- 미완료(.partial) 파일: 없음
+
+작업 1 명령 예시:
+venv/bin/python -u eval_policy.py --task 2p1 --mortar mortarB --size-rand 0 --pos-rand .03 --yaw-rand 60 --valid-supply --feasible-supply --n-action-steps 10 --disturb 0 --ckpt outputs/diffusion_v3_2p1_joint_image_clean_seed1000/checkpoints/last/pretrained_model --episodes 25 --seed0 50000 --grasp-gate --gate-recover reguide --release-gate --gate-force --gate-retries 0 --gate-replace --gate-pose-noise 0.002 --out outputs/midterm1_fix/test_diffusion_s1000_D_noise2mm_50000.json > logs/midterm1_fix/test_diffusion_s1000_D_noise2mm_50000.log 2>&1
+
+작업 2: 실험 1 clean/plus2 영상
+지정한 체크포인트 폴더 이름 그대로 사용. 추가 패키지 설치 없음.
+두 실행 모두 layout seed 10000, inference seed 70000. 종료 코드 모두 0.
+DONE exp1_diffusion_v2_2p1_joint_image_clean_seed10000 all_success True exy_mean_mm 2.79 original {'m1_all_success': True, 'm1_exy_mean_mm': 2.445901018424687}
+clean: 영상 92.1초, 1080x440, 10/1 fps, 921프레임, h264. 성공 블록 3/3.
+DONE exp1_diffusion_v2_2p1_joint_image_plus2_seed10000 all_success False exy_mean_mm 7.05 original {'m1_all_success': False, 'm1_exy_mean_mm': 5.2509457745785}
+plus2: 영상 92.1초, 1080x440, 10/1 fps, 921프레임, h264. 성공 블록 1/3.
+원래 평가와의 비교: clean은 성공=True가 일치하나 평면 오차 2.445901018424687 -> 2.7909110676659115 mm로 다름. plus2는 성공=False가 일치하나 5.2509457745785 -> 7.046287941741679 mm로 다름.
+화면 확인: clean은 3개 적층 성공. plus2는 적층 후에도 집게가 위아래로 움직이는 모습이 30~49초 연속 프레임에서 확인됨. plus2의 최종 평가 성공 블록은 1/3이므로 전체 성공으로 표현하면 안 됨.
+두 영상 모두 ffmpeg로 전체 프레임 디코딩 검사 통과.
+두 렌더 로그에 m6_min_overlap_mm All-NaN 경고 및 종료 중 MuJoCo EGL 소멸자의 ignored TypeError가 있음. DONE/MP4/JSON 생성 후 종료 코드는 모두 0. 수정이나 재실행 없이 원본 결과 보존.
+
+원본 실행 로그 및 검증 기록: sim/logs/midterm1_fix/
+결과 업로드 폴더: 01_사기설/중간발표1/근거_우분투_20261012/

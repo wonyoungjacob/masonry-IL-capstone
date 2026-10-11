@@ -1,0 +1,37 @@
+{
+  "run": "diffusion_v2_2p1_joint_image_plus2",
+  "seed": 10000,
+  "inference_seed": 70000,
+  "metrics": {
+    "m1_success_rate": 0.3333333333333333,
+    "m1_all_success": false,
+    "m1_exy_mean_mm": 7.046287941741679,
+    "m1_exy_max_mm": 12.679833971831435,
+    "m1_ez_mean_mm": 0.10867119984181671,
+    "m1_eyaw_mean_deg": 0.9957036613729917,
+    "m1_exy_norm_mean": 0.07829208824157421,
+    "m2_level_range_max_mm": 0.00026885360090295185,
+    "m3_plumb_mm": 1.444498585999543,
+    "m3_plumb_mm_per_m": 22.757327189078094,
+    "m3_max_tilt_deg": 0.0009281096815549508,
+    "m4_straightness_max_mm": 0.0,
+    "m4_bow_mm": 0.0,
+    "m5_head_gap_mean_mm": 1.3250052504544252,
+    "m5_head_gap_std_mm": 0.0,
+    "m5_head_gap_dev_from_nominal_mm": 0.3250052504544252,
+    "m5_bed_gap_mean_mm": 4.735380527359254,
+    "m5_bed_gap_dev_from_nominal_mm": 0.0016194726407455645,
+    "m6_min_overlap_mm": NaN,
+    "m6_overlap_ok_frac": 1.0,
+    "m6_through_joints": 0,
+    "m7_fallen_count": 0,
+    "m7_settle_drift_mean_mm": 2.0094958318248417e-05,
+    "m7_settle_drift_max_mm": 6.0283642800526625e-05,
+    "m7_stable": true,
+    "m8_voxel_iou": 0.8153893887682283
+  },
+  "original_eval_episode": {
+    "m1_all_success": false,
+    "m1_exy_mean_mm": 5.2509457745785
+  }
+}
