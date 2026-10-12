@@ -1,0 +1,30 @@
+[
+  {
+    "policy": "act",
+    "condition": "pre",
+    "steps_equal": true,
+    "gate_events_equal": true,
+    "camera_queries_equal": true
+  },
+  {
+    "policy": "act",
+    "condition": "prepost",
+    "steps_equal": true,
+    "gate_events_equal": true,
+    "camera_queries_equal": true
+  },
+  {
+    "policy": "diffusion",
+    "condition": "pre",
+    "steps_equal": true,
+    "gate_events_equal": true,
+    "camera_queries_equal": true
+  },
+  {
+    "policy": "diffusion",
+    "condition": "prepost",
+    "steps_equal": true,
+    "gate_events_equal": true,
+    "camera_queries_equal": true
+  }
+]

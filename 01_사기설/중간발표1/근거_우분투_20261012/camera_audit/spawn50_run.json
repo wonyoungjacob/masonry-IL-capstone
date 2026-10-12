@@ -1,0 +1,779 @@
+{
+  "config": {
+    "mode": "spawn",
+    "name": "spawn50",
+    "policy": null,
+    "condition": "policy_only",
+    "seed0": 50000,
+    "episodes": 50
+  },
+  "scene": {
+    "brick": {
+      "L": 0.09,
+      "W": 0.042632,
+      "H": 0.027,
+      "density": 1800.0
+    },
+    "wall": {
+      "n_courses": 2,
+      "n_per_course": 2,
+      "origin_x": -0.1,
+      "origin_y": -0.17,
+      "head_gap": 0.001,
+      "bed_joint": 0.004737
+    },
+    "mortar": "mortarB",
+    "mortar_sag": 0.0005,
+    "mortar_zeta": 1.0,
+    "mortar_friction": 0.75,
+    "cure_settle_steps": 40,
+    "feeder_pos": [
+      0.1,
+      -0.17
+    ],
+    "park_pos": [
+      0.55,
+      0.45
+    ],
+    "supply_yaw_deg": 60,
+    "size_rand": 0,
+    "pos_rand": 0.03,
+    "valid_supply": true,
+    "feasible_supply": true,
+    "img_h": 128,
+    "img_w": 128,
+    "ctrl_dt": 0.05,
+    "timestep": 0.001,
+    "layout": "2p1",
+    "first_course_only": false,
+    "seed": 0,
+    "mortar_impl": "bed",
+    "mortar_visual": true,
+    "bed_overhang": 0.002,
+    "target_marks": true,
+    "supply": "scatter",
+    "supply_slots": [
+      [
+        0.065,
+        -0.145
+      ],
+      [
+        0.17,
+        -0.145
+      ],
+      [
+        0.09,
+        -0.225
+      ]
+    ]
+  },
+  "episodes": [
+    {
+      "seed": 50000,
+      "inference_seed": 70000,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.18285872298292816,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50001,
+      "inference_seed": 70001,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12897163099842146,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50002,
+      "inference_seed": 70002,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12480900000082329,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50003,
+      "inference_seed": 70003,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12606316595338285,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50004,
+      "inference_seed": 70004,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12709404301131144,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50005,
+      "inference_seed": 70005,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12812788499286398,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50006,
+      "inference_seed": 70006,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12119530001655221,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50007,
+      "inference_seed": 70007,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.11998921300983056,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50008,
+      "inference_seed": 70008,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12711585400393233,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50009,
+      "inference_seed": 70009,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12400613102363423,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50010,
+      "inference_seed": 70010,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12152562104165554,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50011,
+      "inference_seed": 70011,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12315807695267722,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50012,
+      "inference_seed": 70012,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12297538301208988,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50013,
+      "inference_seed": 70013,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12088463600957766,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50014,
+      "inference_seed": 70014,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12276588898384944,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50015,
+      "inference_seed": 70015,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12384008802473545,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50016,
+      "inference_seed": 70016,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12085874698823318,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50017,
+      "inference_seed": 70017,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12372846796642989,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50018,
+      "inference_seed": 70018,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.1251547369756736,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50019,
+      "inference_seed": 70019,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12124195497017354,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50020,
+      "inference_seed": 70020,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12006185797508806,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50021,
+      "inference_seed": 70021,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.1263503530062735,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50022,
+      "inference_seed": 70022,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12316459696739912,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50023,
+      "inference_seed": 70023,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12223152397200465,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50024,
+      "inference_seed": 70024,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12069968698779121,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50025,
+      "inference_seed": 70025,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12498729198705405,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50026,
+      "inference_seed": 70026,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12281804595841095,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50027,
+      "inference_seed": 70027,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.11972596700070426,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50028,
+      "inference_seed": 70028,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12407618900761008,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50029,
+      "inference_seed": 70029,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12348544900305569,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50030,
+      "inference_seed": 70030,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12225910503184423,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50031,
+      "inference_seed": 70031,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.1245688539929688,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50032,
+      "inference_seed": 70032,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12266356602776796,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50033,
+      "inference_seed": 70033,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12512110196985304,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50034,
+      "inference_seed": 70034,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.1239836550084874,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50035,
+      "inference_seed": 70035,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12418808799702674,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50036,
+      "inference_seed": 70036,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12046914198435843,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50037,
+      "inference_seed": 70037,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12394949101144448,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50038,
+      "inference_seed": 70038,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12209840299328789,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50039,
+      "inference_seed": 70039,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12591627601068467,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50040,
+      "inference_seed": 70040,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12215877597918734,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50041,
+      "inference_seed": 70041,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12006718502379954,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50042,
+      "inference_seed": 70042,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12406839401228353,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50043,
+      "inference_seed": 70043,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.121615294017829,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50044,
+      "inference_seed": 70044,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12426132604014128,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50045,
+      "inference_seed": 70045,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12473018700256944,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50046,
+      "inference_seed": 70046,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12180462898686528,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50047,
+      "inference_seed": 70047,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12250522599788383,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50048,
+      "inference_seed": 70048,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.1272786429617554,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    },
+    {
+      "seed": 50049,
+      "inference_seed": 70049,
+      "status": "completed",
+      "steps": 5,
+      "wall_s": 0.12089556100545451,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 1,
+      "physical_world_truth_calls": {
+        "brick_pose": 45,
+        "brick_vel": 30,
+        "brick_in_slot": 15
+      }
+    }
+  ],
+  "source_sha256": {
+    "/home/won/masonry/sim/outputs/midterm1_fix/camera_audit/run_camera_audit.py": "4f45483054ebd6bd85674a31b4af4fae8de7a5f9db02687b8058c90487b196dd",
+    "outputs/midterm1_fix/camera_only/strict_camera_only.py": "34fcdb538772c34dc9eacad115ee8631014cba0e940781e844796b6ce60a0fe3",
+    "brick_sim/perception.py": "2fdfc0b1d493f2d9a914502920525326973d418539d4d3ef52800dbe8865faeb",
+    "brick_sim/grasp_gate.py": "731be43958c84e363ea83cb52249223504cff2c8a27dff85c99834f80d9c5d4c"
+  },
+  "reference_scope": "Write-only recording AFTER prediction serialization; offline scoring in a separate process."
+}

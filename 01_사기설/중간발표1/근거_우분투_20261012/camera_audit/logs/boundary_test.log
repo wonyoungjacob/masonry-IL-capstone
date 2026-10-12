@@ -1,0 +1,6 @@
+test_prediction_precedes_reference_and_is_invariant (__main__.AuditTests.test_prediction_precedes_reference_and_is_invariant) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+OK

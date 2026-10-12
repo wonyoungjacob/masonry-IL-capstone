@@ -1,0 +1,41 @@
+{
+  "base_commit": "bf7baef3c45183bbe4882a39c4e9489e0eac1974",
+  "python": "3.12.3",
+  "mujoco": "3.13.0",
+  "torch": "2.11.0+cu128",
+  "weights": {
+    "act": {
+      "outputs/act_v3_2p1_joint_image_clean_seed1000/checkpoints/last/pretrained_model/model.safetensors": {
+        "bytes": 206699736,
+        "sha256": "97ca6278fdd65e81c0efaa78de9ec36ab80e8c5b2a65838a0ed344eedf11eb84"
+      },
+      "outputs/act_v3_2p1_joint_image_clean_seed1000/checkpoints/last/pretrained_model/policy_postprocessor_step_0_unnormalizer_processor.safetensors": {
+        "bytes": 8528,
+        "sha256": "62d69416a467e5d81b2d977139cd00548f292636f417e64e96c317bae4ca6ace"
+      },
+      "outputs/act_v3_2p1_joint_image_clean_seed1000/checkpoints/last/pretrained_model/policy_preprocessor_step_3_normalizer_processor.safetensors": {
+        "bytes": 8536,
+        "sha256": "b8003a2349390c614873c0f1d3f4e9adf40bb5478944260822683397a9cef324"
+      }
+    },
+    "diffusion": {
+      "outputs/diffusion_v3_2p1_joint_image_clean_seed1000/checkpoints/last/pretrained_model/model.safetensors": {
+        "bytes": 1170926072,
+        "sha256": "e0b991de653b328967aa54967d52a5f8b9e3499d353d5b3916d8c5f94e829f0e"
+      },
+      "outputs/diffusion_v3_2p1_joint_image_clean_seed1000/checkpoints/last/pretrained_model/policy_postprocessor_step_0_unnormalizer_processor.safetensors": {
+        "bytes": 8528,
+        "sha256": "62d69416a467e5d81b2d977139cd00548f292636f417e64e96c317bae4ca6ace"
+      },
+      "outputs/diffusion_v3_2p1_joint_image_clean_seed1000/checkpoints/last/pretrained_model/policy_preprocessor_step_3_normalizer_processor.safetensors": {
+        "bytes": 8536,
+        "sha256": "b8003a2349390c614873c0f1d3f4e9adf40bb5478944260822683397a9cef324"
+      }
+    }
+  },
+  "policy_inference_seed": "70000 + layout_seed - 50000",
+  "reference_data": "Audit only, no online labels/poses/errors returned",
+  "evaluation_scope": "50 static layouts; 5 layouts each for ACT/Diffusion policy-only motion; seed50000 pre/prepost pilots",
+  "new_large_environment_created": false,
+  "training_performed": false
+}

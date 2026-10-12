@@ -1,0 +1,149 @@
+{
+  "config": {
+    "mode": "rollout",
+    "name": "diffusion_policy_only",
+    "policy": "diffusion",
+    "condition": "policy_only",
+    "seed0": 50000,
+    "episodes": 5
+  },
+  "scene": {
+    "brick": {
+      "L": 0.09,
+      "W": 0.042632,
+      "H": 0.027,
+      "density": 1800.0
+    },
+    "wall": {
+      "n_courses": 2,
+      "n_per_course": 2,
+      "origin_x": -0.1,
+      "origin_y": -0.17,
+      "head_gap": 0.001,
+      "bed_joint": 0.004737
+    },
+    "mortar": "mortarB",
+    "mortar_sag": 0.0005,
+    "mortar_zeta": 1.0,
+    "mortar_friction": 0.75,
+    "cure_settle_steps": 40,
+    "feeder_pos": [
+      0.1,
+      -0.17
+    ],
+    "park_pos": [
+      0.55,
+      0.45
+    ],
+    "supply_yaw_deg": 60,
+    "size_rand": 0,
+    "pos_rand": 0.03,
+    "valid_supply": true,
+    "feasible_supply": true,
+    "img_h": 128,
+    "img_w": 128,
+    "ctrl_dt": 0.05,
+    "timestep": 0.001,
+    "layout": "2p1",
+    "first_course_only": false,
+    "seed": 0,
+    "mortar_impl": "bed",
+    "mortar_visual": true,
+    "bed_overhang": 0.002,
+    "target_marks": true,
+    "supply": "scatter",
+    "supply_slots": [
+      [
+        0.065,
+        -0.145
+      ],
+      [
+        0.17,
+        -0.145
+      ],
+      [
+        0.09,
+        -0.225
+      ]
+    ]
+  },
+  "episodes": [
+    {
+      "seed": 50000,
+      "inference_seed": 70000,
+      "status": "completed",
+      "steps": 1850,
+      "wall_s": 135.2504313379759,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 371,
+      "physical_world_truth_calls": {
+        "brick_pose": 16650,
+        "brick_vel": 11100,
+        "brick_in_slot": 5550
+      }
+    },
+    {
+      "seed": 50001,
+      "inference_seed": 70001,
+      "status": "completed",
+      "steps": 1850,
+      "wall_s": 135.22396232100436,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 371,
+      "physical_world_truth_calls": {
+        "brick_pose": 13653,
+        "brick_vel": 8103,
+        "brick_in_slot": 5550
+      }
+    },
+    {
+      "seed": 50002,
+      "inference_seed": 70002,
+      "status": "completed",
+      "steps": 1850,
+      "wall_s": 113.51174058398465,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 371,
+      "physical_world_truth_calls": {
+        "brick_pose": 2592,
+        "brick_vel": 1727,
+        "brick_in_slot": 861
+      }
+    },
+    {
+      "seed": 50003,
+      "inference_seed": 70003,
+      "status": "completed",
+      "steps": 1850,
+      "wall_s": 105.89907248795498,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 371,
+      "physical_world_truth_calls": {
+        "brick_pose": 2543,
+        "brick_vel": 1693,
+        "brick_in_slot": 846
+      }
+    },
+    {
+      "seed": 50004,
+      "inference_seed": 70004,
+      "status": "completed",
+      "steps": 1850,
+      "wall_s": 114.03459064202616,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 371,
+      "physical_world_truth_calls": {
+        "brick_pose": 13490,
+        "brick_vel": 7940,
+        "brick_in_slot": 5550
+      }
+    }
+  ],
+  "source_sha256": {
+    "/home/won/masonry/sim/outputs/midterm1_fix/camera_audit/run_camera_audit.py": "4f45483054ebd6bd85674a31b4af4fae8de7a5f9db02687b8058c90487b196dd",
+    "outputs/midterm1_fix/camera_only/strict_camera_only.py": "34fcdb538772c34dc9eacad115ee8631014cba0e940781e844796b6ce60a0fe3",
+    "brick_sim/perception.py": "2fdfc0b1d493f2d9a914502920525326973d418539d4d3ef52800dbe8865faeb",
+    "brick_sim/grasp_gate.py": "731be43958c84e363ea83cb52249223504cff2c8a27dff85c99834f80d9c5d4c"
+  },
+  "reference_scope": "Write-only recording AFTER prediction serialization; offline scoring in a separate process."
+}

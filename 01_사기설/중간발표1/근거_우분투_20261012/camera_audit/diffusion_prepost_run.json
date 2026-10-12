@@ -1,0 +1,120 @@
+{
+  "config": {
+    "mode": "rollout",
+    "name": "diffusion_prepost",
+    "policy": "diffusion",
+    "condition": "prepost",
+    "seed0": 50000,
+    "episodes": 1
+  },
+  "scene": {
+    "brick": {
+      "L": 0.09,
+      "W": 0.042632,
+      "H": 0.027,
+      "density": 1800.0
+    },
+    "wall": {
+      "n_courses": 2,
+      "n_per_course": 2,
+      "origin_x": -0.1,
+      "origin_y": -0.17,
+      "head_gap": 0.001,
+      "bed_joint": 0.004737
+    },
+    "mortar": "mortarB",
+    "mortar_sag": 0.0005,
+    "mortar_zeta": 1.0,
+    "mortar_friction": 0.75,
+    "cure_settle_steps": 40,
+    "feeder_pos": [
+      0.1,
+      -0.17
+    ],
+    "park_pos": [
+      0.55,
+      0.45
+    ],
+    "supply_yaw_deg": 60,
+    "size_rand": 0,
+    "pos_rand": 0.03,
+    "valid_supply": true,
+    "feasible_supply": true,
+    "img_h": 128,
+    "img_w": 128,
+    "ctrl_dt": 0.05,
+    "timestep": 0.001,
+    "layout": "2p1",
+    "first_course_only": false,
+    "seed": 0,
+    "mortar_impl": "bed",
+    "mortar_visual": true,
+    "bed_overhang": 0.002,
+    "target_marks": true,
+    "supply": "scatter",
+    "supply_slots": [
+      [
+        0.065,
+        -0.145
+      ],
+      [
+        0.17,
+        -0.145
+      ],
+      [
+        0.09,
+        -0.225
+      ]
+    ]
+  },
+  "episodes": [
+    {
+      "seed": 50000,
+      "inference_seed": 70000,
+      "status": "blocked_camera_tracking",
+      "reason": "t=49: camera track 1 not visible/matchable; visible=[0, 2]",
+      "steps": 49,
+      "wall_s": 9.674732609011699,
+      "controller_forbidden_truth_reads": [],
+      "audit_reference_frames": 11,
+      "physical_world_truth_calls": {
+        "brick_pose": 441,
+        "brick_vel": 294,
+        "brick_in_slot": 147
+      },
+      "gate": {
+        "pose_source": "strict_camera_current_rgbd",
+        "gate_events": [],
+        "release_events": [],
+        "gate_retries": 0,
+        "gate_done": false,
+        "gate_abort": false,
+        "release_corrected": 0,
+        "post_release_replacements": 0,
+        "replace_enabled": true,
+        "nbr_bias_m": 0.0015
+      },
+      "camera_reads": [
+        {
+          "t": 49,
+          "track": 0,
+          "source": "current_rgbd",
+          "full": true,
+          "ambiguous": false
+        },
+        {
+          "t": 49,
+          "track": 1,
+          "source": "missing"
+        }
+      ]
+    }
+  ],
+  "source_sha256": {
+    "/home/won/masonry/sim/outputs/midterm1_fix/camera_audit/run_camera_audit.py": "4f45483054ebd6bd85674a31b4af4fae8de7a5f9db02687b8058c90487b196dd",
+    "outputs/midterm1_fix/camera_only/strict_camera_only.py": "34fcdb538772c34dc9eacad115ee8631014cba0e940781e844796b6ce60a0fe3",
+    "brick_sim/perception.py": "2fdfc0b1d493f2d9a914502920525326973d418539d4d3ef52800dbe8865faeb",
+    "brick_sim/grasp_gate.py": "731be43958c84e363ea83cb52249223504cff2c8a27dff85c99834f80d9c5d4c"
+  },
+  "reference_scope": "Write-only recording AFTER prediction serialization; offline scoring in a separate process."
+}
