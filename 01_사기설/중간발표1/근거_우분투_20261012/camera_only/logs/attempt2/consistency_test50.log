@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "/home/won/masonry/sim/outputs/midterm1_fix/camera_only/strict_camera_only.py", line 494, in <module>
+    main()
+  File "/home/won/masonry/sim/outputs/midterm1_fix/camera_only/strict_camera_only.py", line 484, in main
+    res = consistency(args) if args.mode == "consistency" else rollout(args)
+          ^^^^^^^^^^^^^^^^^
+  File "/home/won/masonry/sim/outputs/midterm1_fix/camera_only/strict_camera_only.py", line 365, in consistency
+    frames = [b.estimator.detect(force=True) for _ in range(3)]
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/won/masonry/sim/brick_sim/perception.py", line 175, in detect
+    dets += self._fit(pc, hgt, B)
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/won/masonry/sim/brick_sim/perception.py", line 239, in _fit
+    dets = self._reconstruct(ex3, ey3, **frame)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/won/masonry/sim/brick_sim/perception.py", line 261, in _reconstruct
+    gap = self.env.cfg.wall.head_gap
+          ^^^^^^^^^^^^
+AttributeError: 'types.SimpleNamespace' object has no attribute 'cfg'

@@ -1,0 +1,3 @@
+Loading weights from local directory
+DONE diffusion prepost seed=50000 status=blocked_missing_camera_observation steps=49 forbidden=[] reason=t=49: camera track 1 not visible/matchable; visible=[0, 2]
+SAVED outputs/midterm1_fix/camera_only/pilot_diffusion_prepost_50000.json

@@ -1,0 +1,137 @@
+{
+  "status": "completed",
+  "policy": "diffusion",
+  "condition": "policy_only",
+  "checkpoint": "outputs/diffusion_v3_2p1_joint_image_clean_seed1000/checkpoints/last/pretrained_model",
+  "input_features": [
+    "observation.images.front",
+    "observation.images.wrist",
+    "observation.images.top",
+    "observation.state"
+  ],
+  "requested_episodes": 1,
+  "completed_episodes": 1,
+  "episodes": [
+    {
+      "seed": 50000,
+      "inference_seed": 70000,
+      "status": "completed",
+      "true_task_success": null,
+      "steps": 1850,
+      "wall_s": 73.03203258098802,
+      "forbidden_truth_reads": [],
+      "physics_truth_calls": {
+        "brick_pose": 16650,
+        "brick_vel": 11100,
+        "brick_in_slot": 5550
+      },
+      "camera_assessment": {
+        "source": "current_rgbd_vs_nominal_drawing",
+        "absolute_accuracy_mm": null,
+        "true_task_success": null,
+        "visible_detections": 3,
+        "slots": [
+          {
+            "slot": 0,
+            "camera_exy_mm": 228.89369603777678,
+            "camera_ez_mm": -0.10774326324467301,
+            "camera_eyaw_deg": 25.29202079772949,
+            "full": true,
+            "ambiguous": false,
+            "camera_gate_tolerance_pass": false
+          },
+          {
+            "slot": 1,
+            "camera_exy_mm": 105.20251597703022,
+            "camera_ez_mm": -0.10774326324467301,
+            "camera_eyaw_deg": 13.298567771911621,
+            "full": true,
+            "ambiguous": false,
+            "camera_gate_tolerance_pass": false
+          },
+          {
+            "slot": 2,
+            "camera_exy_mm": 287.99761813171386,
+            "camera_ez_mm": -31.84474326324467,
+            "camera_eyaw_deg": 6.082340240478515,
+            "full": true,
+            "ambiguous": false,
+            "camera_gate_tolerance_pass": false
+          }
+        ],
+        "camera_all_slots_pass": false
+      },
+      "top_image": "pilot_diffusion_policy_only_50000_seed50000_top.png"
+    }
+  ],
+  "scene": {
+    "brick": {
+      "L": 0.09,
+      "W": 0.042632,
+      "H": 0.027,
+      "density": 1800.0
+    },
+    "wall": {
+      "n_courses": 2,
+      "n_per_course": 2,
+      "origin_x": -0.1,
+      "origin_y": -0.17,
+      "head_gap": 0.001,
+      "bed_joint": 0.004737
+    },
+    "mortar": "mortarB",
+    "mortar_sag": 0.0005,
+    "mortar_zeta": 1.0,
+    "mortar_friction": 0.75,
+    "cure_settle_steps": 40,
+    "feeder_pos": [
+      0.1,
+      -0.17
+    ],
+    "park_pos": [
+      0.55,
+      0.45
+    ],
+    "supply_yaw_deg": 60,
+    "size_rand": 0,
+    "pos_rand": 0.03,
+    "valid_supply": true,
+    "feasible_supply": true,
+    "img_h": 128,
+    "img_w": 128,
+    "ctrl_dt": 0.05,
+    "timestep": 0.001,
+    "layout": "2p1",
+    "first_course_only": false,
+    "seed": 0,
+    "mortar_impl": "bed",
+    "mortar_visual": true,
+    "bed_overhang": 0.002,
+    "target_marks": true,
+    "supply": "scatter",
+    "supply_slots": [
+      [
+        0.065,
+        -0.145
+      ],
+      [
+        0.17,
+        -0.145
+      ],
+      [
+        0.09,
+        -0.225
+      ]
+    ]
+  },
+  "script_sha256": "34fcdb538772c34dc9eacad115ee8631014cba0e940781e844796b6ce60a0fe3",
+  "config": {
+    "mode": "rollout",
+    "policy": "diffusion",
+    "condition": "policy_only",
+    "seed0": 50000,
+    "episodes": 1,
+    "out": "outputs/midterm1_fix/camera_only/pilot_diffusion_policy_only_50000.json"
+  },
+  "scope": "No privileged brick state in perception association, control, or scoring. Simulator physics and original feasible-layout sampling retain internal state."
+}

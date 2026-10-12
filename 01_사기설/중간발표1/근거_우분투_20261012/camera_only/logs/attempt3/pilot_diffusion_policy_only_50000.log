@@ -1,0 +1,12 @@
+Loading weights from local directory
+PROGRESS diffusion policy_only seed=50000 step=200
+PROGRESS diffusion policy_only seed=50000 step=400
+PROGRESS diffusion policy_only seed=50000 step=600
+PROGRESS diffusion policy_only seed=50000 step=800
+PROGRESS diffusion policy_only seed=50000 step=1000
+PROGRESS diffusion policy_only seed=50000 step=1200
+PROGRESS diffusion policy_only seed=50000 step=1400
+PROGRESS diffusion policy_only seed=50000 step=1600
+PROGRESS diffusion policy_only seed=50000 step=1800
+DONE diffusion policy_only seed=50000 status=completed steps=1850 forbidden=[] reason=
+SAVED outputs/midterm1_fix/camera_only/pilot_diffusion_policy_only_50000.json

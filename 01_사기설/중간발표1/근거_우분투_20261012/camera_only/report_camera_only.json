@@ -1,0 +1,104 @@
+{
+  "base_commit": "f986fe7adaf4d32a644f5f2a2ad36d9fe0889101",
+  "scope": "Camera-only perception association, control and scoring; original simulator physics and feasible-layout sampling unchanged.",
+  "absolute_accuracy_mm": null,
+  "true_task_success": null,
+  "initial_layouts": 50,
+  "initial_count_consistent_layouts": 50,
+  "first_frame_full_flag": 110,
+  "first_frame_detections": 150,
+  "initial_ambiguous_detections": 0,
+  "frozen_frame_repeat_displacement_max_mm": 0.0,
+  "controls": [
+    {
+      "policy": "act",
+      "condition": "policy_only",
+      "status": "completed",
+      "steps": 1850,
+      "sim_seconds": 92.5,
+      "completed_release_events": 0,
+      "post_release_replacements": 0,
+      "reason": null,
+      "camera_all_slots_pass": null,
+      "wall_s": 18.662475014978554,
+      "file": "pilot_act_policy_only_50000.json"
+    },
+    {
+      "policy": "act",
+      "condition": "pre",
+      "status": "blocked_missing_camera_observation",
+      "steps": 227,
+      "sim_seconds": 11.350000000000001,
+      "completed_release_events": 0,
+      "post_release_replacements": 0,
+      "reason": "t=227: camera track 0 not visible/matchable; visible=[1, 2]",
+      "camera_all_slots_pass": false,
+      "wall_s": 13.410360000038054,
+      "file": "pilot_act_pre_50000.json"
+    },
+    {
+      "policy": "act",
+      "condition": "prepost",
+      "status": "blocked_missing_camera_observation",
+      "steps": 227,
+      "sim_seconds": 11.350000000000001,
+      "completed_release_events": 0,
+      "post_release_replacements": 0,
+      "reason": "t=227: camera track 0 not visible/matchable; visible=[1, 2]",
+      "camera_all_slots_pass": false,
+      "wall_s": 13.486368704994675,
+      "file": "pilot_act_prepost_50000.json"
+    },
+    {
+      "policy": "diffusion",
+      "condition": "policy_only",
+      "status": "completed",
+      "steps": 1850,
+      "sim_seconds": 92.5,
+      "completed_release_events": 0,
+      "post_release_replacements": 0,
+      "reason": null,
+      "camera_all_slots_pass": false,
+      "wall_s": 73.03203258098802,
+      "file": "pilot_diffusion_policy_only_50000.json"
+    },
+    {
+      "policy": "diffusion",
+      "condition": "pre",
+      "status": "blocked_missing_camera_observation",
+      "steps": 49,
+      "sim_seconds": 2.45,
+      "completed_release_events": 0,
+      "post_release_replacements": 0,
+      "reason": "t=49: camera track 1 not visible/matchable; visible=[0, 2]",
+      "camera_all_slots_pass": false,
+      "wall_s": 9.334380578016862,
+      "file": "pilot_diffusion_pre_50000.json"
+    },
+    {
+      "policy": "diffusion",
+      "condition": "prepost",
+      "status": "blocked_missing_camera_observation",
+      "steps": 49,
+      "sim_seconds": 2.45,
+      "completed_release_events": 0,
+      "post_release_replacements": 0,
+      "reason": "t=49: camera track 1 not visible/matchable; visible=[0, 2]",
+      "camera_all_slots_pass": false,
+      "wall_s": 9.32655793899903,
+      "file": "pilot_diffusion_prepost_50000.json"
+    }
+  ],
+  "forbidden_truth_reads": 0,
+  "blocked": true,
+  "blocker": "Temporal association without true brick IDs loses tracks. G2/G3 efficacy remains untested.",
+  "required_before_full_evaluation": [
+    "Camera-only track reacquisition/occlusion handling validated without oracle identity.",
+    "An independent reference if absolute mm accuracy is required. Current reference-free test cannot provide it."
+  ],
+  "startup_notes": [
+    "Initial detached launcher ended before evaluations produced results; retained logs.",
+    "attempt2 failed on missing nominal cfg attribute in the new sensor adapter; fixed before attempt3. No scene, thresholds or checkpoint changes.",
+    "attempt3 is the complete recorded pilot batch. Exit 2 indicates a required camera observation was unavailable. No OOM."
+  ]
+}

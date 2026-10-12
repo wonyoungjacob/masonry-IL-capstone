@@ -1,0 +1,4 @@
+Loading weights from local directory
+PROGRESS act prepost seed=50000 step=200
+DONE act prepost seed=50000 status=blocked_missing_camera_observation steps=227 forbidden=[] reason=t=227: camera track 0 not visible/matchable; visible=[1, 2]
+SAVED outputs/midterm1_fix/camera_only/pilot_act_prepost_50000.json
