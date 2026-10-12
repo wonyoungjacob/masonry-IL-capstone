@@ -1,0 +1,17 @@
+{
+  "name": "consistency_test50",
+  "returncode": 0,
+  "elapsed_s": 18.547776699066162,
+  "command": [
+    "venv/bin/python",
+    "-u",
+    "outputs/midterm1_fix/camera_only/strict_camera_only.py",
+    "consistency",
+    "--seed0",
+    "50000",
+    "--episodes",
+    "50",
+    "--out",
+    "outputs/midterm1_fix/camera_only/consistency_test50.json"
+  ]
+}

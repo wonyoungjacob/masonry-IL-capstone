@@ -1,0 +1,145 @@
+[
+  {
+    "name": "consistency_test50",
+    "returncode": 0,
+    "elapsed_s": 18.547776699066162,
+    "command": [
+      "venv/bin/python",
+      "-u",
+      "outputs/midterm1_fix/camera_only/strict_camera_only.py",
+      "consistency",
+      "--seed0",
+      "50000",
+      "--episodes",
+      "50",
+      "--out",
+      "outputs/midterm1_fix/camera_only/consistency_test50.json"
+    ]
+  },
+  {
+    "name": "pilot_act_policy_only_50000",
+    "returncode": 0,
+    "elapsed_s": 23.84662413597107,
+    "command": [
+      "venv/bin/python",
+      "-u",
+      "outputs/midterm1_fix/camera_only/strict_camera_only.py",
+      "rollout",
+      "--policy",
+      "act",
+      "--condition",
+      "policy_only",
+      "--seed0",
+      "50000",
+      "--episodes",
+      "1",
+      "--out",
+      "outputs/midterm1_fix/camera_only/pilot_act_policy_only_50000.json"
+    ]
+  },
+  {
+    "name": "pilot_act_pre_50000",
+    "returncode": 2,
+    "elapsed_s": 18.694195985794067,
+    "command": [
+      "venv/bin/python",
+      "-u",
+      "outputs/midterm1_fix/camera_only/strict_camera_only.py",
+      "rollout",
+      "--policy",
+      "act",
+      "--condition",
+      "pre",
+      "--seed0",
+      "50000",
+      "--episodes",
+      "1",
+      "--out",
+      "outputs/midterm1_fix/camera_only/pilot_act_pre_50000.json"
+    ]
+  },
+  {
+    "name": "pilot_act_prepost_50000",
+    "returncode": 2,
+    "elapsed_s": 18.732149124145508,
+    "command": [
+      "venv/bin/python",
+      "-u",
+      "outputs/midterm1_fix/camera_only/strict_camera_only.py",
+      "rollout",
+      "--policy",
+      "act",
+      "--condition",
+      "prepost",
+      "--seed0",
+      "50000",
+      "--episodes",
+      "1",
+      "--out",
+      "outputs/midterm1_fix/camera_only/pilot_act_prepost_50000.json"
+    ]
+  },
+  {
+    "name": "pilot_diffusion_policy_only_50000",
+    "returncode": 0,
+    "elapsed_s": 79.63956642150879,
+    "command": [
+      "venv/bin/python",
+      "-u",
+      "outputs/midterm1_fix/camera_only/strict_camera_only.py",
+      "rollout",
+      "--policy",
+      "diffusion",
+      "--condition",
+      "policy_only",
+      "--seed0",
+      "50000",
+      "--episodes",
+      "1",
+      "--out",
+      "outputs/midterm1_fix/camera_only/pilot_diffusion_policy_only_50000.json"
+    ]
+  },
+  {
+    "name": "pilot_diffusion_pre_50000",
+    "returncode": 2,
+    "elapsed_s": 16.458352088928223,
+    "command": [
+      "venv/bin/python",
+      "-u",
+      "outputs/midterm1_fix/camera_only/strict_camera_only.py",
+      "rollout",
+      "--policy",
+      "diffusion",
+      "--condition",
+      "pre",
+      "--seed0",
+      "50000",
+      "--episodes",
+      "1",
+      "--out",
+      "outputs/midterm1_fix/camera_only/pilot_diffusion_pre_50000.json"
+    ]
+  },
+  {
+    "name": "pilot_diffusion_prepost_50000",
+    "returncode": 2,
+    "elapsed_s": 16.605323314666748,
+    "command": [
+      "venv/bin/python",
+      "-u",
+      "outputs/midterm1_fix/camera_only/strict_camera_only.py",
+      "rollout",
+      "--policy",
+      "diffusion",
+      "--condition",
+      "prepost",
+      "--seed0",
+      "50000",
+      "--episodes",
+      "1",
+      "--out",
+      "outputs/midterm1_fix/camera_only/pilot_diffusion_prepost_50000.json"
+    ]
+  }
+]

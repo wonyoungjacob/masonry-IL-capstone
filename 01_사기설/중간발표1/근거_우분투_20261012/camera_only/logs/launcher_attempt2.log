@@ -1,0 +1,14 @@
+STARTSTART  STARTpilot_act_policy_only_50000 
+consistency_test50
+START pilot_act_prepost_50000
+pilot_act_pre_50000START pilot_diffusion_policy_only_50000
+START
+START pilot_diffusion_pre_50000
+ pilot_diffusion_prepost_50000
+EXIT consistency_test50 1
+EXIT pilot_act_pre_50000 1
+EXIT pilot_act_prepost_50000 1
+EXIT pilot_diffusion_prepost_50000 1
+EXIT pilot_diffusion_pre_50000 1
+EXIT pilot_act_policy_only_50000 1
+EXIT pilot_diffusion_policy_only_50000 1

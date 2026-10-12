@@ -1,0 +1,42 @@
+Loading weights from local directory
+Traceback (most recent call last):
+  File "/home/won/masonry/sim/outputs/midterm1_fix/camera_only/strict_camera_only.py", line 423, in rollout
+    tracker.update()
+  File "/home/won/masonry/sim/outputs/midterm1_fix/camera_only/strict_camera_only.py", line 126, in update
+    ds = self.est.detect()
+         ^^^^^^^^^^^^^^^^^
+  File "/home/won/masonry/sim/brick_sim/perception.py", line 175, in detect
+    dets += self._fit(pc, hgt, B)
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/won/masonry/sim/brick_sim/perception.py", line 239, in _fit
+    dets = self._reconstruct(ex3, ey3, **frame)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/won/masonry/sim/brick_sim/perception.py", line 261, in _reconstruct
+    gap = self.env.cfg.wall.head_gap
+          ^^^^^^^^^^^^
+AttributeError: 'types.SimpleNamespace' object has no attribute 'cfg'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/won/masonry/sim/outputs/midterm1_fix/camera_only/strict_camera_only.py", line 494, in <module>
+    main()
+  File "/home/won/masonry/sim/outputs/midterm1_fix/camera_only/strict_camera_only.py", line 484, in main
+    res = consistency(args) if args.mode == "consistency" else rollout(args)
+                                                               ^^^^^^^^^^^^^
+  File "/home/won/masonry/sim/outputs/midterm1_fix/camera_only/strict_camera_only.py", line 447, in rollout
+    row["camera_assessment"] = camera_assessment(b)
+                               ^^^^^^^^^^^^^^^^^^^^
+  File "/home/won/masonry/sim/outputs/midterm1_fix/camera_only/strict_camera_only.py", line 338, in camera_assessment
+    ds = backend.estimator.detect(force=True)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/won/masonry/sim/brick_sim/perception.py", line 175, in detect
+    dets += self._fit(pc, hgt, B)
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/won/masonry/sim/brick_sim/perception.py", line 239, in _fit
+    dets = self._reconstruct(ex3, ey3, **frame)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/won/masonry/sim/brick_sim/perception.py", line 261, in _reconstruct
+    gap = self.env.cfg.wall.head_gap
+          ^^^^^^^^^^^^
+AttributeError: 'types.SimpleNamespace' object has no attribute 'cfg'

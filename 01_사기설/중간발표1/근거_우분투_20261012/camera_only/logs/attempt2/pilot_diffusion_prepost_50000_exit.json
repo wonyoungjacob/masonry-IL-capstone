@@ -1,0 +1,21 @@
+{
+  "name": "pilot_diffusion_prepost_50000",
+  "returncode": 1,
+  "elapsed_s": 6.389678478240967,
+  "command": [
+    "venv/bin/python",
+    "-u",
+    "outputs/midterm1_fix/camera_only/strict_camera_only.py",
+    "rollout",
+    "--policy",
+    "diffusion",
+    "--condition",
+    "prepost",
+    "--seed0",
+    "50000",
+    "--episodes",
+    "1",
+    "--out",
+    "outputs/midterm1_fix/camera_only/pilot_diffusion_prepost_50000.json"
+  ]
+}

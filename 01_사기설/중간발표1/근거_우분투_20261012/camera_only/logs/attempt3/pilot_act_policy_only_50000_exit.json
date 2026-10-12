@@ -1,0 +1,21 @@
+{
+  "name": "pilot_act_policy_only_50000",
+  "returncode": 0,
+  "elapsed_s": 23.84662413597107,
+  "command": [
+    "venv/bin/python",
+    "-u",
+    "outputs/midterm1_fix/camera_only/strict_camera_only.py",
+    "rollout",
+    "--policy",
+    "act",
+    "--condition",
+    "policy_only",
+    "--seed0",
+    "50000",
+    "--episodes",
+    "1",
+    "--out",
+    "outputs/midterm1_fix/camera_only/pilot_act_policy_only_50000.json"
+  ]
+}

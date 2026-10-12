@@ -1,0 +1,12 @@
+test_ambiguous_initial_image_stops (__main__.CameraBoundaryTests.test_ambiguous_initial_image_stops) ... ok
+test_camera_identity_survives_detection_order_permutation (__main__.CameraBoundaryTests.test_camera_identity_survives_detection_order_permutation) ... ok
+test_distant_detection_is_not_silently_relabelled (__main__.CameraBoundaryTests.test_distant_detection_is_not_silently_relabelled) ... ok
+test_missing_detection_never_returns_cached_position (__main__.CameraBoundaryTests.test_missing_detection_never_returns_cached_position) ... ok
+test_raw_truth_guard_and_sanitized_robot_state (__main__.CameraBoundaryTests.test_raw_truth_guard_and_sanitized_robot_state) ... ok
+test_slot_bookkeeping_uses_camera_not_sim_identity (__main__.CameraBoundaryTests.test_slot_bookkeeping_uses_camera_not_sim_identity) ... ok
+test_truth_audit_keys_removed_recursively (__main__.CameraBoundaryTests.test_truth_audit_keys_removed_recursively) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.093s
+
+OK
