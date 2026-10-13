@@ -389,10 +389,10 @@ def footnote(slide, extra=None):
 
 # ═══════════════════════════ 1 표지
 s = new()
-text(s, 0.9, 1.2, 7.0, 0.35, "사회기반시스템종합설계 · 14조 · 랩미팅 2026.10.12 (중간발표 1 자료 기반)", 16, "charcoal", True)
+text(s, 0.9, 1.2, 7.0, 0.35, "Weekly Progress · 26.10.13", 16, "charcoal", True)
 text(s, 0.9, 1.75, 7.0, 2.6, ["모방학습 조적 로봇의", "실패 보정 딜레마와", "정책 밖 검측 설계"], 42, "inkdeep", True, spacing=1.1, after=0)
 text(s, 0.9, 4.5, 7.0, 0.4, "MuJoCo 시뮬레이션 · 벽돌 2+1 적층 · SO-ARM101", 20, "ink")
-text(s, 0.9, 5.2, 7.0, 0.4, "정원영 · 임수현 · 강건 · **정성용 (발표자)**", 18, "ink")
+text(s, 0.9, 5.2, 7.0, 0.4, "**정원영**", 18, "ink")
 text(s, 0.9, 5.62, 7.0, 0.36, "지도교수 김홍조", 16, "charcoal")
 pill(s, 0.9, 6.4, 2.5, 0.42, "시뮬레이션-ONLY", "inkdeep", "white", 14)
 src = G + "cover_cover_az120_placing_top.png"
