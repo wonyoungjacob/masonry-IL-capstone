@@ -1,0 +1,1 @@
+venv/bin/python -u outputs/midterm1_fix/camera_audit/run_camera_audit.py rollout --name act_pre --policy act --condition pre --episodes 1

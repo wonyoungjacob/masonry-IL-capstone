@@ -1,0 +1,1020 @@
+{
+  "scoring": "Offline only; references never sent to the running system.",
+  "runs": [
+    {
+      "config": {
+        "mode": "rollout",
+        "name": "act_policy_only",
+        "policy": "act",
+        "condition": "policy_only",
+        "seed0": 50000,
+        "episodes": 5
+      },
+      "frames": 1855,
+      "expected_brick_observations": 5565,
+      "detections": 5063,
+      "assigned_detections": 5050,
+      "missing_detection_slots": 515,
+      "extra_detections": 13,
+      "assignments_within_30mm_3d": 4971,
+      "detection_xy_mm": {
+        "n": 5050,
+        "mean": 3.505196825273795,
+        "median": 0.24989168821408192,
+        "p95": 23.052965516231005,
+        "max": 38.70813203386874
+      },
+      "detection_xyz_mm": {
+        "n": 5050,
+        "mean": 4.589180138937666,
+        "median": 0.24989168851358154,
+        "p95": 25.814408484575257,
+        "max": 55.90171055878633
+      },
+      "detection_yaw_deg": {
+        "n": 5050,
+        "mean": 3.7323141536973505,
+        "median": 0.013058191444333666,
+        "p95": 19.80125525411833,
+        "max": 89.99957039873796
+      },
+      "full_detection_xy_mm": {
+        "n": 2600,
+        "mean": 0.1158699596129817,
+        "median": 0.11073895267220889,
+        "p95": 0.24989155253441303,
+        "max": 0.5357766826555815
+      },
+      "partial_detection_xy_mm": {
+        "n": 2450,
+        "mean": 7.10203349903629,
+        "median": 1.037228025623703,
+        "p95": 25.890300949286623,
+        "max": 38.70813203386874
+      },
+      "tracked_observations": 3982,
+      "expected_track_observations": 5565,
+      "track_coverage": 0.7155435759209344,
+      "wrong_identity_observations": 312,
+      "track_xy_fixed_identity_mm": {
+        "n": 3982,
+        "mean": 7.7527829509149,
+        "median": 0.24989155250523337,
+        "p95": 70.09919429336715,
+        "max": 97.8128998338734
+      },
+      "gate_pose_queries": 0,
+      "missing_gate_pose_queries": 0,
+      "gate_query_xy_mm": {
+        "n": 0,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "max": null
+      },
+      "episodes": [
+        {
+          "seed": 50000,
+          "status": "completed",
+          "steps": 1850,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 230.1448033456679
+        },
+        {
+          "seed": 50001,
+          "status": "completed",
+          "steps": 1850,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 228.42762566815696
+        },
+        {
+          "seed": 50002,
+          "status": "completed",
+          "steps": 1850,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 6.925530726474991
+        },
+        {
+          "seed": 50003,
+          "status": "completed",
+          "steps": 1850,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 1.7552484941703381
+        },
+        {
+          "seed": 50004,
+          "status": "completed",
+          "steps": 1850,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 146.4133403445285
+        }
+      ],
+      "warnings": [
+        "Detection error uses one-to-one set assignment after prediction; all assigned errors are retained, including >30mm.",
+        "Track error holds the first-frame offline identity mapping fixed; missing tracks are reported separately.",
+        "Dynamic frames sampled every 5 control steps plus actual gate queries; not uniform weighting over time.",
+        "Gate query error excludes missing queries, which are counted separately. Early stops truncate gated trajectories.",
+        "Ideal simulated RGB-D and calibration, not real-camera accuracy."
+      ]
+    },
+    {
+      "config": {
+        "mode": "rollout",
+        "name": "act_pre",
+        "policy": "act",
+        "condition": "pre",
+        "seed0": 50000,
+        "episodes": 1
+      },
+      "frames": 50,
+      "expected_brick_observations": 150,
+      "detections": 151,
+      "assigned_detections": 150,
+      "missing_detection_slots": 0,
+      "extra_detections": 1,
+      "assignments_within_30mm_3d": 149,
+      "detection_xy_mm": {
+        "n": 150,
+        "mean": 2.5520919668751914,
+        "median": 0.23717077865720998,
+        "p95": 23.02959950128066,
+        "max": 33.51148312362436
+      },
+      "detection_xyz_mm": {
+        "n": 150,
+        "mean": 2.610576168642098,
+        "median": 0.23729644491634386,
+        "p95": 23.03155916067582,
+        "max": 33.545794306675724
+      },
+      "detection_yaw_deg": {
+        "n": 150,
+        "mean": 8.250429525580149,
+        "median": 0.005321861287557083,
+        "p95": 89.77364428259605,
+        "max": 89.97961613122891
+      },
+      "full_detection_xy_mm": {
+        "n": 76,
+        "mean": 0.07495638393755735,
+        "median": 0.06110684754236297,
+        "p95": 0.12033917513212522,
+        "max": 0.2486141565038016
+      },
+      "partial_detection_xy_mm": {
+        "n": 74,
+        "mean": 5.096177160162492,
+        "median": 0.6097978890616046,
+        "p95": 23.248721610491252,
+        "max": 33.51148312362436
+      },
+      "tracked_observations": 138,
+      "expected_track_observations": 150,
+      "track_coverage": 0.92,
+      "wrong_identity_observations": 0,
+      "track_xy_fixed_identity_mm": {
+        "n": 138,
+        "mean": 1.2004215148921906,
+        "median": 0.37401898118469745,
+        "p95": 6.006085991870643,
+        "max": 18.551060333891563
+      },
+      "gate_pose_queries": 30,
+      "missing_gate_pose_queries": 1,
+      "gate_query_xy_mm": {
+        "n": 29,
+        "mean": 1.2891174569107149,
+        "median": 0.583016944214782,
+        "p95": 5.040292972812546,
+        "max": 5.361758771053299
+      },
+      "episodes": [
+        {
+          "seed": 50000,
+          "status": "blocked_camera_tracking",
+          "steps": 227,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 156.64061269813513
+        }
+      ],
+      "warnings": [
+        "Detection error uses one-to-one set assignment after prediction; all assigned errors are retained, including >30mm.",
+        "Track error holds the first-frame offline identity mapping fixed; missing tracks are reported separately.",
+        "Dynamic frames sampled every 5 control steps plus actual gate queries; not uniform weighting over time.",
+        "Gate query error excludes missing queries, which are counted separately. Early stops truncate gated trajectories.",
+        "Ideal simulated RGB-D and calibration, not real-camera accuracy."
+      ]
+    },
+    {
+      "config": {
+        "mode": "rollout",
+        "name": "act_prepost",
+        "policy": "act",
+        "condition": "prepost",
+        "seed0": 50000,
+        "episodes": 1
+      },
+      "frames": 50,
+      "expected_brick_observations": 150,
+      "detections": 151,
+      "assigned_detections": 150,
+      "missing_detection_slots": 0,
+      "extra_detections": 1,
+      "assignments_within_30mm_3d": 149,
+      "detection_xy_mm": {
+        "n": 150,
+        "mean": 2.5520919668751914,
+        "median": 0.23717077865720998,
+        "p95": 23.02959950128066,
+        "max": 33.51148312362436
+      },
+      "detection_xyz_mm": {
+        "n": 150,
+        "mean": 2.610576168642098,
+        "median": 0.23729644491634386,
+        "p95": 23.03155916067582,
+        "max": 33.545794306675724
+      },
+      "detection_yaw_deg": {
+        "n": 150,
+        "mean": 8.250429525580149,
+        "median": 0.005321861287557083,
+        "p95": 89.77364428259605,
+        "max": 89.97961613122891
+      },
+      "full_detection_xy_mm": {
+        "n": 76,
+        "mean": 0.07495638393755735,
+        "median": 0.06110684754236297,
+        "p95": 0.12033917513212522,
+        "max": 0.2486141565038016
+      },
+      "partial_detection_xy_mm": {
+        "n": 74,
+        "mean": 5.096177160162492,
+        "median": 0.6097978890616046,
+        "p95": 23.248721610491252,
+        "max": 33.51148312362436
+      },
+      "tracked_observations": 138,
+      "expected_track_observations": 150,
+      "track_coverage": 0.92,
+      "wrong_identity_observations": 0,
+      "track_xy_fixed_identity_mm": {
+        "n": 138,
+        "mean": 1.2004215148921906,
+        "median": 0.37401898118469745,
+        "p95": 6.006085991870643,
+        "max": 18.551060333891563
+      },
+      "gate_pose_queries": 30,
+      "missing_gate_pose_queries": 1,
+      "gate_query_xy_mm": {
+        "n": 29,
+        "mean": 1.2891174569107149,
+        "median": 0.583016944214782,
+        "p95": 5.040292972812546,
+        "max": 5.361758771053299
+      },
+      "episodes": [
+        {
+          "seed": 50000,
+          "status": "blocked_camera_tracking",
+          "steps": 227,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 156.64061269813513
+        }
+      ],
+      "warnings": [
+        "Detection error uses one-to-one set assignment after prediction; all assigned errors are retained, including >30mm.",
+        "Track error holds the first-frame offline identity mapping fixed; missing tracks are reported separately.",
+        "Dynamic frames sampled every 5 control steps plus actual gate queries; not uniform weighting over time.",
+        "Gate query error excludes missing queries, which are counted separately. Early stops truncate gated trajectories.",
+        "Ideal simulated RGB-D and calibration, not real-camera accuracy."
+      ]
+    },
+    {
+      "config": {
+        "mode": "rollout",
+        "name": "diffusion_policy_only",
+        "policy": "diffusion",
+        "condition": "policy_only",
+        "seed0": 50000,
+        "episodes": 5
+      },
+      "frames": 1855,
+      "expected_brick_observations": 5565,
+      "detections": 4310,
+      "assigned_detections": 4310,
+      "missing_detection_slots": 1255,
+      "extra_detections": 0,
+      "assignments_within_30mm_3d": 4268,
+      "detection_xy_mm": {
+        "n": 4310,
+        "mean": 1.9285161704226095,
+        "median": 0.1302530091824004,
+        "p95": 22.302420001286034,
+        "max": 35.50273158022793
+      },
+      "detection_xyz_mm": {
+        "n": 4310,
+        "mean": 1.9730184720834372,
+        "median": 0.2372352848293961,
+        "p95": 23.081520991025894,
+        "max": 35.50273158023001
+      },
+      "detection_yaw_deg": {
+        "n": 4310,
+        "mean": 5.892637429397762,
+        "median": 0.006735716102563418,
+        "p95": 89.32609374949402,
+        "max": 89.9992373091182
+      },
+      "full_detection_xy_mm": {
+        "n": 2263,
+        "mean": 0.07997760665125075,
+        "median": 0.07656487461735215,
+        "p95": 0.13025300914758364,
+        "max": 0.8337442887506076
+      },
+      "partial_detection_xy_mm": {
+        "n": 2047,
+        "mean": 3.972113029149812,
+        "median": 0.5838114913116265,
+        "p95": 23.275618588600796,
+        "max": 35.50273158022793
+      },
+      "tracked_observations": 2851,
+      "expected_track_observations": 5565,
+      "track_coverage": 0.5123090745732255,
+      "wrong_identity_observations": 617,
+      "track_xy_fixed_identity_mm": {
+        "n": 2851,
+        "mean": 10.672471731224483,
+        "median": 0.0942966077074416,
+        "p95": 46.79267858902819,
+        "max": 54.47887265146425
+      },
+      "gate_pose_queries": 0,
+      "missing_gate_pose_queries": 0,
+      "gate_query_xy_mm": {
+        "n": 0,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "max": null
+      },
+      "episodes": [
+        {
+          "seed": 50000,
+          "status": "completed",
+          "steps": 1850,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 207.4390735513685
+        },
+        {
+          "seed": 50001,
+          "status": "completed",
+          "steps": 1850,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 96.93749714851239
+        },
+        {
+          "seed": 50002,
+          "status": "completed",
+          "steps": 1850,
+          "true_completion_at_recorded_end": true,
+          "true_placement_xy_mean_mm": 2.0526697229258497
+        },
+        {
+          "seed": 50003,
+          "status": "completed",
+          "steps": 1850,
+          "true_completion_at_recorded_end": true,
+          "true_placement_xy_mean_mm": 2.1023089611946504
+        },
+        {
+          "seed": 50004,
+          "status": "completed",
+          "steps": 1850,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 97.48048314429698
+        }
+      ],
+      "warnings": [
+        "Detection error uses one-to-one set assignment after prediction; all assigned errors are retained, including >30mm.",
+        "Track error holds the first-frame offline identity mapping fixed; missing tracks are reported separately.",
+        "Dynamic frames sampled every 5 control steps plus actual gate queries; not uniform weighting over time.",
+        "Gate query error excludes missing queries, which are counted separately. Early stops truncate gated trajectories.",
+        "Ideal simulated RGB-D and calibration, not real-camera accuracy."
+      ]
+    },
+    {
+      "config": {
+        "mode": "rollout",
+        "name": "diffusion_pre",
+        "policy": "diffusion",
+        "condition": "pre",
+        "seed0": 50000,
+        "episodes": 1
+      },
+      "frames": 11,
+      "expected_brick_observations": 33,
+      "detections": 33,
+      "assigned_detections": 33,
+      "missing_detection_slots": 0,
+      "extra_detections": 0,
+      "assignments_within_30mm_3d": 32,
+      "detection_xy_mm": {
+        "n": 33,
+        "mean": 1.2245195411260918,
+        "median": 0.07419687741762357,
+        "p95": 0.6104178225602361,
+        "max": 35.10957440464724
+      },
+      "detection_xyz_mm": {
+        "n": 33,
+        "mean": 1.256987707638081,
+        "median": 0.07419687841428858,
+        "p95": 0.8451208486369707,
+        "max": 35.10957440464935
+      },
+      "detection_yaw_deg": {
+        "n": 33,
+        "mean": 0.3836993615950193,
+        "median": 0.0015906948275400232,
+        "p95": 0.08136460718859961,
+        "max": 12.01358347317491
+      },
+      "full_detection_xy_mm": {
+        "n": 25,
+        "mean": 0.05733447403376382,
+        "median": 0.06110684734144262,
+        "p95": 0.07655079241153237,
+        "max": 0.07656488708991913
+      },
+      "partial_detection_xy_mm": {
+        "n": 8,
+        "mean": 4.871972875789617,
+        "median": 0.5528916794444871,
+        "p95": 23.050204374601662,
+        "max": 35.10957440464724
+      },
+      "tracked_observations": 26,
+      "expected_track_observations": 33,
+      "track_coverage": 0.7878787878787878,
+      "wrong_identity_observations": 0,
+      "track_xy_fixed_identity_mm": {
+        "n": 26,
+        "mean": 1.9250774389091065,
+        "median": 0.07419687763394266,
+        "p95": 0.6359757787017223,
+        "max": 45.48363436526158
+      },
+      "gate_pose_queries": 2,
+      "missing_gate_pose_queries": 1,
+      "gate_query_xy_mm": {
+        "n": 1,
+        "mean": 0.06110684739870353,
+        "median": 0.06110684739870353,
+        "p95": 0.06110684739870353,
+        "max": 0.06110684739870353
+      },
+      "episodes": [
+        {
+          "seed": 50000,
+          "status": "blocked_camera_tracking",
+          "steps": 49,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 217.72937879815936
+        }
+      ],
+      "warnings": [
+        "Detection error uses one-to-one set assignment after prediction; all assigned errors are retained, including >30mm.",
+        "Track error holds the first-frame offline identity mapping fixed; missing tracks are reported separately.",
+        "Dynamic frames sampled every 5 control steps plus actual gate queries; not uniform weighting over time.",
+        "Gate query error excludes missing queries, which are counted separately. Early stops truncate gated trajectories.",
+        "Ideal simulated RGB-D and calibration, not real-camera accuracy."
+      ]
+    },
+    {
+      "config": {
+        "mode": "rollout",
+        "name": "diffusion_prepost",
+        "policy": "diffusion",
+        "condition": "prepost",
+        "seed0": 50000,
+        "episodes": 1
+      },
+      "frames": 11,
+      "expected_brick_observations": 33,
+      "detections": 33,
+      "assigned_detections": 33,
+      "missing_detection_slots": 0,
+      "extra_detections": 0,
+      "assignments_within_30mm_3d": 32,
+      "detection_xy_mm": {
+        "n": 33,
+        "mean": 1.2245195411260918,
+        "median": 0.07419687741762357,
+        "p95": 0.6104178225602361,
+        "max": 35.10957440464724
+      },
+      "detection_xyz_mm": {
+        "n": 33,
+        "mean": 1.256987707638081,
+        "median": 0.07419687841428858,
+        "p95": 0.8451208486369707,
+        "max": 35.10957440464935
+      },
+      "detection_yaw_deg": {
+        "n": 33,
+        "mean": 0.3836993615950193,
+        "median": 0.0015906948275400232,
+        "p95": 0.08136460718859961,
+        "max": 12.01358347317491
+      },
+      "full_detection_xy_mm": {
+        "n": 25,
+        "mean": 0.05733447403376382,
+        "median": 0.06110684734144262,
+        "p95": 0.07655079241153237,
+        "max": 0.07656488708991913
+      },
+      "partial_detection_xy_mm": {
+        "n": 8,
+        "mean": 4.871972875789617,
+        "median": 0.5528916794444871,
+        "p95": 23.050204374601662,
+        "max": 35.10957440464724
+      },
+      "tracked_observations": 26,
+      "expected_track_observations": 33,
+      "track_coverage": 0.7878787878787878,
+      "wrong_identity_observations": 0,
+      "track_xy_fixed_identity_mm": {
+        "n": 26,
+        "mean": 1.9250774389091065,
+        "median": 0.07419687763394266,
+        "p95": 0.6359757787017223,
+        "max": 45.48363436526158
+      },
+      "gate_pose_queries": 2,
+      "missing_gate_pose_queries": 1,
+      "gate_query_xy_mm": {
+        "n": 1,
+        "mean": 0.06110684739870353,
+        "median": 0.06110684739870353,
+        "p95": 0.06110684739870353,
+        "max": 0.06110684739870353
+      },
+      "episodes": [
+        {
+          "seed": 50000,
+          "status": "blocked_camera_tracking",
+          "steps": 49,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 217.72937879815936
+        }
+      ],
+      "warnings": [
+        "Detection error uses one-to-one set assignment after prediction; all assigned errors are retained, including >30mm.",
+        "Track error holds the first-frame offline identity mapping fixed; missing tracks are reported separately.",
+        "Dynamic frames sampled every 5 control steps plus actual gate queries; not uniform weighting over time.",
+        "Gate query error excludes missing queries, which are counted separately. Early stops truncate gated trajectories.",
+        "Ideal simulated RGB-D and calibration, not real-camera accuracy."
+      ]
+    },
+    {
+      "config": {
+        "mode": "spawn",
+        "name": "spawn50",
+        "policy": null,
+        "condition": "policy_only",
+        "seed0": 50000,
+        "episodes": 50
+      },
+      "frames": 50,
+      "expected_brick_observations": 150,
+      "detections": 150,
+      "assigned_detections": 150,
+      "missing_detection_slots": 0,
+      "extra_detections": 0,
+      "assignments_within_30mm_3d": 150,
+      "detection_xy_mm": {
+        "n": 150,
+        "mean": 0.2051907116703245,
+        "median": 0.10216125241001307,
+        "p95": 0.5872524752078246,
+        "max": 0.6942246100463371
+      },
+      "detection_xyz_mm": {
+        "n": 150,
+        "mean": 0.20519074645940688,
+        "median": 0.10216125827326737,
+        "p95": 0.5872524762278254,
+        "max": 0.6942246109091661
+      },
+      "detection_yaw_deg": {
+        "n": 150,
+        "mean": 0.016289026629858868,
+        "median": 0.006285697050400213,
+        "p95": 0.05402719875404929,
+        "max": 0.39476529007054395
+      },
+      "full_detection_xy_mm": {
+        "n": 110,
+        "mean": 0.07709631444553967,
+        "median": 0.08418785190908365,
+        "p95": 0.13871090644011463,
+        "max": 0.34048216419991284
+      },
+      "partial_detection_xy_mm": {
+        "n": 40,
+        "mean": 0.5574503040384826,
+        "median": 0.567578913856609,
+        "p95": 0.5993099900138755,
+        "max": 0.6942246100463371
+      },
+      "tracked_observations": 150,
+      "expected_track_observations": 150,
+      "track_coverage": 1.0,
+      "wrong_identity_observations": 0,
+      "track_xy_fixed_identity_mm": {
+        "n": 150,
+        "mean": 0.20519071167032446,
+        "median": 0.10216125241001307,
+        "p95": 0.5872524752078246,
+        "max": 0.6942246100463371
+      },
+      "gate_pose_queries": 0,
+      "missing_gate_pose_queries": 0,
+      "gate_query_xy_mm": {
+        "n": 0,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "max": null
+      },
+      "episodes": [
+        {
+          "seed": 50000,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 216.83509117339665
+        },
+        {
+          "seed": 50001,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 224.42924077513814
+        },
+        {
+          "seed": 50002,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 213.2602786205332
+        },
+        {
+          "seed": 50003,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 208.45160448540088
+        },
+        {
+          "seed": 50004,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 213.69920189873156
+        },
+        {
+          "seed": 50005,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 215.4596704456211
+        },
+        {
+          "seed": 50006,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 213.23719461496583
+        },
+        {
+          "seed": 50007,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 204.72713184282546
+        },
+        {
+          "seed": 50008,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 202.24459035069228
+        },
+        {
+          "seed": 50009,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 227.25353953562757
+        },
+        {
+          "seed": 50010,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 200.91387409241403
+        },
+        {
+          "seed": 50011,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 202.50023741910928
+        },
+        {
+          "seed": 50012,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 220.8315887385155
+        },
+        {
+          "seed": 50013,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 226.03975758674426
+        },
+        {
+          "seed": 50014,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 225.67494828973844
+        },
+        {
+          "seed": 50015,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 217.3052683898591
+        },
+        {
+          "seed": 50016,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 213.22920413129643
+        },
+        {
+          "seed": 50017,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 232.86210792698762
+        },
+        {
+          "seed": 50018,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 211.83949505155616
+        },
+        {
+          "seed": 50019,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 231.7817487401752
+        },
+        {
+          "seed": 50020,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 220.2493775916026
+        },
+        {
+          "seed": 50021,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 212.62890041039324
+        },
+        {
+          "seed": 50022,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 214.66755547504093
+        },
+        {
+          "seed": 50023,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 207.6354441982579
+        },
+        {
+          "seed": 50024,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 229.3770600035154
+        },
+        {
+          "seed": 50025,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 219.26510083763932
+        },
+        {
+          "seed": 50026,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 211.7798821099637
+        },
+        {
+          "seed": 50027,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 222.0160719178412
+        },
+        {
+          "seed": 50028,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 215.603884730062
+        },
+        {
+          "seed": 50029,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 222.192814343663
+        },
+        {
+          "seed": 50030,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 218.59038445074188
+        },
+        {
+          "seed": 50031,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 209.62156524076545
+        },
+        {
+          "seed": 50032,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 217.71972648521913
+        },
+        {
+          "seed": 50033,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 202.40206853704538
+        },
+        {
+          "seed": 50034,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 213.80903039931172
+        },
+        {
+          "seed": 50035,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 216.7101649488065
+        },
+        {
+          "seed": 50036,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 219.77096850264158
+        },
+        {
+          "seed": 50037,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 208.99558244893097
+        },
+        {
+          "seed": 50038,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 210.66853314628017
+        },
+        {
+          "seed": 50039,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 219.57418586063002
+        },
+        {
+          "seed": 50040,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 235.65002280937142
+        },
+        {
+          "seed": 50041,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 224.86537571668944
+        },
+        {
+          "seed": 50042,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 221.77045857882408
+        },
+        {
+          "seed": 50043,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 210.99290702958282
+        },
+        {
+          "seed": 50044,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 222.72863628099503
+        },
+        {
+          "seed": 50045,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 220.62036021516633
+        },
+        {
+          "seed": 50046,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 224.0230608833525
+        },
+        {
+          "seed": 50047,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 227.8595302621852
+        },
+        {
+          "seed": 50048,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 228.80240134857422
+        },
+        {
+          "seed": 50049,
+          "status": "completed",
+          "steps": 5,
+          "true_completion_at_recorded_end": false,
+          "true_placement_xy_mean_mm": 211.50676451755092
+        }
+      ],
+      "warnings": [
+        "Detection error uses one-to-one set assignment after prediction; all assigned errors are retained, including >30mm.",
+        "Track error holds the first-frame offline identity mapping fixed; missing tracks are reported separately.",
+        "Dynamic frames sampled every 5 control steps plus actual gate queries; not uniform weighting over time.",
+        "Gate query error excludes missing queries, which are counted separately. Early stops truncate gated trajectories.",
+        "Ideal simulated RGB-D and calibration, not real-camera accuracy."
+      ]
+    }
+  ]
+}

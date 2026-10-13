@@ -1,0 +1,36 @@
+Loading weights from local directory
+PROGRESS diffusion_policy_only 50000 300
+PROGRESS diffusion_policy_only 50000 600
+PROGRESS diffusion_policy_only 50000 900
+PROGRESS diffusion_policy_only 50000 1200
+PROGRESS diffusion_policy_only 50000 1500
+PROGRESS diffusion_policy_only 50000 1800
+DONE diffusion_policy_only 50000 completed steps 1850 audit_frames 371
+PROGRESS diffusion_policy_only 50001 300
+PROGRESS diffusion_policy_only 50001 600
+PROGRESS diffusion_policy_only 50001 900
+PROGRESS diffusion_policy_only 50001 1200
+PROGRESS diffusion_policy_only 50001 1500
+PROGRESS diffusion_policy_only 50001 1800
+DONE diffusion_policy_only 50001 completed steps 1850 audit_frames 371
+PROGRESS diffusion_policy_only 50002 300
+PROGRESS diffusion_policy_only 50002 600
+PROGRESS diffusion_policy_only 50002 900
+PROGRESS diffusion_policy_only 50002 1200
+PROGRESS diffusion_policy_only 50002 1500
+PROGRESS diffusion_policy_only 50002 1800
+DONE diffusion_policy_only 50002 completed steps 1850 audit_frames 371
+PROGRESS diffusion_policy_only 50003 300
+PROGRESS diffusion_policy_only 50003 600
+PROGRESS diffusion_policy_only 50003 900
+PROGRESS diffusion_policy_only 50003 1200
+PROGRESS diffusion_policy_only 50003 1500
+PROGRESS diffusion_policy_only 50003 1800
+DONE diffusion_policy_only 50003 completed steps 1850 audit_frames 371
+PROGRESS diffusion_policy_only 50004 300
+PROGRESS diffusion_policy_only 50004 600
+PROGRESS diffusion_policy_only 50004 900
+PROGRESS diffusion_policy_only 50004 1200
+PROGRESS diffusion_policy_only 50004 1500
+PROGRESS diffusion_policy_only 50004 1800
+DONE diffusion_policy_only 50004 completed steps 1850 audit_frames 371

@@ -1,0 +1,12 @@
+START act_policy_only
+START act_pre
+START act_prepost
+START diffusion_policy_only
+START diffusion_pre
+START diffusion_prepost
+EXIT {'name': 'diffusion_prepost', 'returncode': 0, 'wall_s': 16.915375471115112}
+EXIT {'name': 'diffusion_pre', 'returncode': 0, 'wall_s': 17.26908802986145}
+EXIT {'name': 'act_pre', 'returncode': 0, 'wall_s': 20.644670248031616}
+EXIT {'name': 'act_prepost', 'returncode': 0, 'wall_s': 20.76199221611023}
+EXIT {'name': 'act_policy_only', 'returncode': 0, 'wall_s': 346.1079099178314}
+EXIT {'name': 'diffusion_policy_only', 'returncode': 0, 'wall_s': 610.3438684940338}
