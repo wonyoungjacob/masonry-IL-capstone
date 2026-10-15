@@ -22,12 +22,15 @@ W, H, RHO, MU_BRICK = 0.090, 0.057, 2000.0, 0.6
 BRICKS = {"full": 0.190, "half": 0.090}
 TS = 0.001
 TIP_Z = 0.2080        # pad tip-edge (contact) depth below the mount along the approach axis, measured at a 90 mm closure
+CLEAR = 0.002         # A1+: gap between the deepest finger point and the brick bottom (floor / lower course)
 
 
-def build(cfg: G.GripperConfig, length=None):
+def build(cfg: G.GripperConfig, length=None, impratio=20.0, noslip=0):
+    """impratio/noslip: solver options. brick_sim/scene.py (지난 실험) uses impratio 10, noslip_iterations 3."""
     s = mujoco.MjSpec()
     s.option.timestep = TS
-    s.option.impratio = 20
+    s.option.impratio = impratio
+    s.option.noslip_iterations = noslip
     s.option.cone = mujoco.mjtCone.mjCONE_ELLIPTIC
     wb = s.worldbody
     wb.add_light(pos=[0, -1, 2], dir=[0, 0.5, -1])
@@ -78,10 +81,10 @@ def pad_forces(m, d):
     return out
 
 
-def run(cfg: G.GripperConfig, kind=None, move_time=0.7, dz=0.0):
+def run(cfg: G.GripperConfig, kind=None, move_time=0.7, dz=0.0, impratio=20.0, noslip=0, rest_after_move=0.5):
     """dz: pad tip edge height above the brick mid-height (m), ③."""
     length = BRICKS[kind] if kind else None
-    m = build(cfg, length)
+    m = build(cfg, length, impratio, noslip)
     d = mujoco.MjData(m)
     carrier = lambda: d.body("carrier").xpos.copy()
     has = length is not None
@@ -107,7 +110,14 @@ def run(cfg: G.GripperConfig, kind=None, move_time=0.7, dz=0.0):
     lp, rp = d.geom("g_left_fingerpad_collision"), d.geom("g_right_fingerpad_collision")
     log["open_inner_gap_mm"] = float((rp.xpos[1] - lp.xpos[1] - 2 * m.geom_size[lp.id][2]) * 1000)
     # ③ pad tip edge (contact) at the brick mid-height
-    z_grasp = (H / 2 + dz + TIP_Z) - 0.6
+    if cfg.parallel_pads:
+        # A1+ ③: parallel pads touch with their face; put the deepest finger point CLEAR above the brick bottom
+        cal = G.calibrate(cfg, W)
+        pad_c = (cal["deepest_finger_depth"] - cal["pad_center_depth"]) + CLEAR + dz   # pad centre above brick bottom
+        z_grasp = pad_c + cal["pad_center_depth"] - 0.6
+        log["pad_center_above_mid_mm"] = (pad_c - H / 2) * 1000
+    else:
+        z_grasp = (H / 2 + dz + TIP_Z) - 0.6
     move([0, 0, 0], [0, 0, z_grasp], False, 1.0)
     hold([0, 0, z_grasp], False, 0.2)
     hold([0, 0, z_grasp], True, 1.0)
@@ -125,7 +135,9 @@ def run(cfg: G.GripperConfig, kind=None, move_time=0.7, dz=0.0):
     log["hold_closure_rad"] = G.closure(d)
     over = [0.5, 0, z_grasp + 0.3]
     move(up, over, True, move_time, "move")
-    hold(over, True, 0.5)
+    for _ in range(int(rest_after_move / TS)):
+        step(over, True)
+        seq["move"].append((d.body("brick").xpos - carrier()).copy()); seq["move_q"].append(d.body("brick").xquat.copy())
     seq["move"].append((d.body("brick").xpos - carrier()).copy()); seq["move_q"].append(d.body("brick").xquat.copy())
     for tag in ("lift", "move"):
         disp = np.linalg.norm(np.array(seq[tag]) - rel0, axis=1)

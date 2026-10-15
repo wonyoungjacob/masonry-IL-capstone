@@ -1,0 +1,676 @@
+{
+ "interpretation": "A1+ = ①②③ + ④ finger coupling equality solref 0.005 1, solimp 0.95 0.99 0.001 (Menagerie 2F-85) + ⑤ parallel pad coupling",
+ "criteria": {
+  "slip_mm_max": 1.0,
+  "tilt_deg_max": 1.0,
+  "both_full_and_half": true,
+  "slip_window": "lift + move + 2 s hold"
+ },
+ "solver_robosuite_impratio20_noslip0": {
+  "n": 32,
+  "n_pass": 13,
+  "note": "full brick creeps down ~0.6 mm/s regardless of grip force (MuJoCo soft friction creep)"
+ },
+ "solver_brick_sim_impratio10_noslip3": {
+  "n": 32,
+  "n_pass": 32,
+  "rows": [
+   {
+    "brick": "full",
+    "torque_limit": 2.0,
+    "dz": 0.0,
+    "pass": true,
+    "closure_rad": 0.23893400648850444,
+    "hold_normal_N": {
+     "left": 27.45,
+     "right": 27.45,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.02286624046288184,
+    "move_slip_max_mm": 0.00768742371331009,
+    "lift_tilt_max_deg": 0.0034215340781306716,
+    "move_tilt_max_deg": 0.010412427939151028,
+    "placed_xy_err_mm": 0.03698101430783638,
+    "pad_center_above_mid_mm": 9.287900934058703
+   },
+   {
+    "brick": "half",
+    "torque_limit": 2.0,
+    "dz": 0.0,
+    "pass": true,
+    "closure_rad": 0.2384224253204822,
+    "hold_normal_N": {
+     "left": 24.95,
+     "right": 24.95,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.012331812531412256,
+    "move_slip_max_mm": 0.0007827863082067796,
+    "lift_tilt_max_deg": 2.8623708520629015e-05,
+    "move_tilt_max_deg": 0.0003538580210159375,
+    "placed_xy_err_mm": 0.014660326951178271,
+    "pad_center_above_mid_mm": 9.287900934058703
+   },
+   {
+    "brick": "full",
+    "torque_limit": 2.0,
+    "dz": 0.004,
+    "pass": true,
+    "closure_rad": 0.2397089328448531,
+    "hold_normal_N": {
+     "left": 27.37,
+     "right": 27.37,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.024507542079591278,
+    "move_slip_max_mm": 0.0034897161852853165,
+    "lift_tilt_max_deg": 0.0014815036930245118,
+    "move_tilt_max_deg": 0.0048309624298674214,
+    "placed_xy_err_mm": 0.025578529522645655,
+    "pad_center_above_mid_mm": 13.287900934058706
+   },
+   {
+    "brick": "half",
+    "torque_limit": 2.0,
+    "dz": 0.004,
+    "pass": true,
+    "closure_rad": 0.238922235437934,
+    "hold_normal_N": {
+     "left": 24.91,
+     "right": 24.91,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.012941432008682498,
+    "move_slip_max_mm": 0.0011976548377655492,
+    "lift_tilt_max_deg": 6.297123270465375e-05,
+    "move_tilt_max_deg": 0.0005469778008981107,
+    "placed_xy_err_mm": 0.02335679682036868,
+    "pad_center_above_mid_mm": 13.287900934058706
+   },
+   {
+    "brick": "full",
+    "torque_limit": 3.0,
+    "dz": 0.0,
+    "pass": true,
+    "closure_rad": 0.24119473104386774,
+    "hold_normal_N": {
+     "left": 38.57,
+     "right": 38.57,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.06844982866558427,
+    "move_slip_max_mm": 0.05069171207537567,
+    "lift_tilt_max_deg": 0.03030786821698079,
+    "move_tilt_max_deg": 0.025426489979092005,
+    "placed_xy_err_mm": 0.0548490489821538,
+    "pad_center_above_mid_mm": 9.264134562382255
+   },
+   {
+    "brick": "half",
+    "torque_limit": 3.0,
+    "dz": 0.0,
+    "pass": true,
+    "closure_rad": 0.24101806876741524,
+    "hold_normal_N": {
+     "left": 36.07,
+     "right": 36.07,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.010767619300837413,
+    "move_slip_max_mm": 0.0006890791354495681,
+    "lift_tilt_max_deg": 3.332999347565838e-05,
+    "move_tilt_max_deg": 0.00030039731828808457,
+    "placed_xy_err_mm": 0.014654207648876707,
+    "pad_center_above_mid_mm": 9.264134562382255
+   },
+   {
+    "brick": "full",
+    "torque_limit": 3.0,
+    "dz": 0.004,
+    "pass": true,
+    "closure_rad": 0.2422795184781097,
+    "hold_normal_N": {
+     "left": 38.46,
+     "right": 38.46,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.0222455314411566,
+    "move_slip_max_mm": 0.005495842836517919,
+    "lift_tilt_max_deg": 0.002255989873500586,
+    "move_tilt_max_deg": 0.0071411067057962204,
+    "placed_xy_err_mm": 0.02050983774697228,
+    "pad_center_above_mid_mm": 13.264134562382258
+   },
+   {
+    "brick": "half",
+    "torque_limit": 3.0,
+    "dz": 0.004,
+    "pass": true,
+    "closure_rad": 0.24167892853541856,
+    "hold_normal_N": {
+     "left": 36.02,
+     "right": 36.02,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.011420989681064397,
+    "move_slip_max_mm": 0.001041806622208938,
+    "lift_tilt_max_deg": 3.741048680443488e-05,
+    "move_tilt_max_deg": 0.00046262243215835255,
+    "placed_xy_err_mm": 0.013190280095698954,
+    "pad_center_above_mid_mm": 13.264134562382258
+   },
+   {
+    "brick": "full",
+    "torque_limit": 4.0,
+    "dz": 0.0,
+    "pass": true,
+    "closure_rad": 0.2437970344290707,
+    "hold_normal_N": {
+     "left": 49.64,
+     "right": 49.64,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.029168679364195125,
+    "move_slip_max_mm": 0.014224892975701005,
+    "lift_tilt_max_deg": 0.005883537499597293,
+    "move_tilt_max_deg": 0.01455650186900924,
+    "placed_xy_err_mm": 0.021255147715376285,
+    "pad_center_above_mid_mm": 9.333472102149155
+   },
+   {
+    "brick": "half",
+    "torque_limit": 4.0,
+    "dz": 0.0,
+    "pass": true,
+    "closure_rad": 0.24342496682266107,
+    "hold_normal_N": {
+     "left": 47.17,
+     "right": 47.17,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.011215549745868598,
+    "move_slip_max_mm": 0.0006574701958141823,
+    "lift_tilt_max_deg": 2.8521662889138495e-05,
+    "move_tilt_max_deg": 0.0002951835182126291,
+    "placed_xy_err_mm": 0.006004599830993009,
+    "pad_center_above_mid_mm": 9.333472102149155
+   },
+   {
+    "brick": "full",
+    "torque_limit": 4.0,
+    "dz": 0.004,
+    "pass": true,
+    "closure_rad": 0.24496518320368404,
+    "hold_normal_N": {
+     "left": 49.52,
+     "right": 49.52,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.024958628546495856,
+    "move_slip_max_mm": 0.005040756050039664,
+    "lift_tilt_max_deg": 0.002066893424038089,
+    "move_tilt_max_deg": 0.006612857137426357,
+    "placed_xy_err_mm": 0.008927853604489317,
+    "pad_center_above_mid_mm": 13.333472102149159
+   },
+   {
+    "brick": "half",
+    "torque_limit": 4.0,
+    "dz": 0.004,
+    "pass": true,
+    "closure_rad": 0.2443563597630276,
+    "hold_normal_N": {
+     "left": 47.11,
+     "right": 47.11,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.012157084442716584,
+    "move_slip_max_mm": 0.0009561589843408699,
+    "lift_tilt_max_deg": 3.7720952599236896e-05,
+    "move_tilt_max_deg": 0.0004378851802461246,
+    "placed_xy_err_mm": 0.00045462016130197523,
+    "pad_center_above_mid_mm": 13.333472102149159
+   },
+   {
+    "brick": "full",
+    "torque_limit": 5.0,
+    "dz": 0.0,
+    "pass": true,
+    "closure_rad": 0.24643672675681744,
+    "hold_normal_N": {
+     "left": 60.68,
+     "right": 60.68,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.051016752948388255,
+    "move_slip_max_mm": 0.03074234764923032,
+    "lift_tilt_max_deg": 0.006504918836736364,
+    "move_tilt_max_deg": 0.015525281515284324,
+    "placed_xy_err_mm": 0.020206036875778724,
+    "pad_center_above_mid_mm": 9.384121807001401
+   },
+   {
+    "brick": "half",
+    "torque_limit": 5.0,
+    "dz": 0.0,
+    "pass": true,
+    "closure_rad": 0.24647133071269278,
+    "hold_normal_N": {
+     "left": 58.21,
+     "right": 58.21,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.012108823429976915,
+    "move_slip_max_mm": 0.0007639553915645747,
+    "lift_tilt_max_deg": 1.85487114168054e-05,
+    "move_tilt_max_deg": 0.000326172821501002,
+    "placed_xy_err_mm": 0.007385962340430475,
+    "pad_center_above_mid_mm": 9.384121807001401
+   },
+   {
+    "brick": "full",
+    "torque_limit": 5.0,
+    "dz": 0.004,
+    "pass": true,
+    "closure_rad": 0.24822538395016414,
+    "hold_normal_N": {
+     "left": 60.51,
+     "right": 60.51,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.02483492273910287,
+    "move_slip_max_mm": 0.00523088202271611,
+    "lift_tilt_max_deg": 0.0021546662353960438,
+    "move_tilt_max_deg": 0.006845232744438317,
+    "placed_xy_err_mm": 0.010942424280707626,
+    "pad_center_above_mid_mm": 13.384121807001405
+   },
+   {
+    "brick": "half",
+    "torque_limit": 5.0,
+    "dz": 0.004,
+    "pass": true,
+    "closure_rad": 0.24760409517750806,
+    "hold_normal_N": {
+     "left": 58.14,
+     "right": 58.14,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.01272017331291286,
+    "move_slip_max_mm": 0.0008946644742475919,
+    "lift_tilt_max_deg": 3.306651113363217e-05,
+    "move_tilt_max_deg": 0.0004069662341053722,
+    "placed_xy_err_mm": 0.010306664841764865,
+    "pad_center_above_mid_mm": 13.384121807001405
+   },
+   {
+    "brick": "full",
+    "torque_limit": 6.0,
+    "dz": 0.0,
+    "pass": true,
+    "closure_rad": 0.2484535816530864,
+    "hold_normal_N": {
+     "left": 71.68,
+     "right": 71.68,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.0941335222388409,
+    "move_slip_max_mm": 0.07245847980382265,
+    "lift_tilt_max_deg": 0.005770524389105242,
+    "move_tilt_max_deg": 0.015946306591054626,
+    "placed_xy_err_mm": 0.018843985130584797,
+    "pad_center_above_mid_mm": 9.25860535119757
+   },
+   {
+    "brick": "half",
+    "torque_limit": 6.0,
+    "dz": 0.0,
+    "pass": true,
+    "closure_rad": 0.24865655165916054,
+    "hold_normal_N": {
+     "left": 69.2,
+     "right": 69.2,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.048125929788986936,
+    "move_slip_max_mm": 0.03650666750588357,
+    "lift_tilt_max_deg": 0.001675235305544556,
+    "move_tilt_max_deg": 0.0014341211836654906,
+    "placed_xy_err_mm": 0.006462380789876187,
+    "pad_center_above_mid_mm": 9.25860535119757
+   },
+   {
+    "brick": "full",
+    "torque_limit": 6.0,
+    "dz": 0.004,
+    "pass": true,
+    "closure_rad": 0.25127326862596877,
+    "hold_normal_N": {
+     "left": 71.48,
+     "right": 71.48,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.02446197046727568,
+    "move_slip_max_mm": 0.005067793299952041,
+    "lift_tilt_max_deg": 0.0021079482865853263,
+    "move_tilt_max_deg": 0.006676028202966432,
+    "placed_xy_err_mm": 0.008548598248632855,
+    "pad_center_above_mid_mm": 13.258605351197573
+   },
+   {
+    "brick": "half",
+    "torque_limit": 6.0,
+    "dz": 0.004,
+    "pass": true,
+    "closure_rad": 0.2507435105137482,
+    "hold_normal_N": {
+     "left": 69.14,
+     "right": 69.14,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.012541225237383411,
+    "move_slip_max_mm": 0.0008603350130785411,
+    "lift_tilt_max_deg": 2.7953753927588597e-05,
+    "move_tilt_max_deg": 0.0003844712513087462,
+    "placed_xy_err_mm": 0.0024561038979746446,
+    "pad_center_above_mid_mm": 13.258605351197573
+   },
+   {
+    "brick": "full",
+    "torque_limit": 8.0,
+    "dz": 0.0,
+    "pass": true,
+    "closure_rad": 0.25362066838953967,
+    "hold_normal_N": {
+     "left": 93.55,
+     "right": 93.55,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.11219638595557606,
+    "move_slip_max_mm": 0.09079459722599108,
+    "lift_tilt_max_deg": 0.004743679476449058,
+    "move_tilt_max_deg": 0.014207456475853444,
+    "placed_xy_err_mm": 0.015287931014782138,
+    "pad_center_above_mid_mm": 9.451740905617147
+   },
+   {
+    "brick": "half",
+    "torque_limit": 8.0,
+    "dz": 0.0,
+    "pass": true,
+    "closure_rad": 0.2539010199100726,
+    "hold_normal_N": {
+     "left": 91.15,
+     "right": 91.15,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.06689150574767369,
+    "move_slip_max_mm": 0.05559728841987607,
+    "lift_tilt_max_deg": 0.0006596394648747505,
+    "move_tilt_max_deg": 0.0008966915984564695,
+    "placed_xy_err_mm": 0.0027703455329689576,
+    "pad_center_above_mid_mm": 9.451740905617147
+   },
+   {
+    "brick": "full",
+    "torque_limit": 8.0,
+    "dz": 0.004,
+    "pass": true,
+    "closure_rad": 0.25703377453420306,
+    "hold_normal_N": {
+     "left": 93.34,
+     "right": 93.34,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.02358777736327011,
+    "move_slip_max_mm": 0.00496029124681345,
+    "lift_tilt_max_deg": 0.0020722533925028406,
+    "move_tilt_max_deg": 0.006615206804878315,
+    "placed_xy_err_mm": 0.029777113958155067,
+    "pad_center_above_mid_mm": 13.45174090561715
+   },
+   {
+    "brick": "half",
+    "torque_limit": 8.0,
+    "dz": 0.004,
+    "pass": true,
+    "closure_rad": 0.2567080703057828,
+    "hold_normal_N": {
+     "left": 91.05,
+     "right": 91.05,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.01209861406713686,
+    "move_slip_max_mm": 0.0009182247515439643,
+    "lift_tilt_max_deg": 5.312640386793274e-05,
+    "move_tilt_max_deg": 0.0004172359576402622,
+    "placed_xy_err_mm": 0.022425835720131442,
+    "pad_center_above_mid_mm": 13.45174090561715
+   },
+   {
+    "brick": "full",
+    "torque_limit": 10.0,
+    "dz": 0.0,
+    "pass": true,
+    "closure_rad": 0.2592812294824325,
+    "hold_normal_N": {
+     "left": 115.18,
+     "right": 115.18,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.15951490228078097,
+    "move_slip_max_mm": 0.1384801796896284,
+    "lift_tilt_max_deg": 0.0029372305153895595,
+    "move_tilt_max_deg": 0.009226413058820016,
+    "placed_xy_err_mm": 0.008394799866478604,
+    "pad_center_above_mid_mm": 9.508326013057923
+   },
+   {
+    "brick": "half",
+    "torque_limit": 10.0,
+    "dz": 0.0,
+    "pass": true,
+    "closure_rad": 0.26001087716167914,
+    "hold_normal_N": {
+     "left": 112.91,
+     "right": 112.91,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.11533283195971153,
+    "move_slip_max_mm": 0.1041615254983695,
+    "lift_tilt_max_deg": 0.001487461882561107,
+    "move_tilt_max_deg": 0.0016074125022881936,
+    "placed_xy_err_mm": 0.002645489997494429,
+    "pad_center_above_mid_mm": 9.508326013057923
+   },
+   {
+    "brick": "full",
+    "torque_limit": 10.0,
+    "dz": 0.004,
+    "pass": true,
+    "closure_rad": 0.26391037244470616,
+    "hold_normal_N": {
+     "left": 115.0,
+     "right": 115.0,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.023231834853787357,
+    "move_slip_max_mm": 0.005036489479191755,
+    "lift_tilt_max_deg": 0.0021093897815339627,
+    "move_tilt_max_deg": 0.006822027127358772,
+    "placed_xy_err_mm": 0.022341035836969964,
+    "pad_center_above_mid_mm": 13.508326013057927
+   },
+   {
+    "brick": "half",
+    "torque_limit": 10.0,
+    "dz": 0.004,
+    "pass": true,
+    "closure_rad": 0.26365593371628304,
+    "hold_normal_N": {
+     "left": 112.78,
+     "right": 112.78,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.011863907541348329,
+    "move_slip_max_mm": 0.001033667306872728,
+    "lift_tilt_max_deg": 8.212219657279307e-05,
+    "move_tilt_max_deg": 0.0004831936457807091,
+    "placed_xy_err_mm": 0.020973388984732527,
+    "pad_center_above_mid_mm": 13.508326013057927
+   },
+   {
+    "brick": "full",
+    "torque_limit": 12.0,
+    "dz": 0.0,
+    "pass": true,
+    "closure_rad": 0.2634500156826624,
+    "hold_normal_N": {
+     "left": 136.84,
+     "right": 136.86,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.3196095101902973,
+    "move_slip_max_mm": 0.2743421018303674,
+    "lift_tilt_max_deg": 0.052798667473548166,
+    "move_tilt_max_deg": 0.03064482952879599,
+    "placed_xy_err_mm": 0.09725879520376814,
+    "pad_center_above_mid_mm": 9.31388822130993
+   },
+   {
+    "brick": "half",
+    "torque_limit": 12.0,
+    "dz": 0.0,
+    "pass": true,
+    "closure_rad": 0.26456773790337207,
+    "hold_normal_N": {
+     "left": 134.61,
+     "right": 134.63,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.44857056084602365,
+    "move_slip_max_mm": 0.3845381156983693,
+    "lift_tilt_max_deg": 0.11122616876116313,
+    "move_tilt_max_deg": 0.0807304992641668,
+    "placed_xy_err_mm": 0.04019879221958045,
+    "pad_center_above_mid_mm": 9.31388822130993
+   },
+   {
+    "brick": "full",
+    "torque_limit": 12.0,
+    "dz": 0.004,
+    "pass": true,
+    "closure_rad": 0.26950691763516743,
+    "hold_normal_N": {
+     "left": 136.64,
+     "right": 136.62,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.02226964720742909,
+    "move_slip_max_mm": 0.004763081643538511,
+    "lift_tilt_max_deg": 0.002066800317299198,
+    "move_tilt_max_deg": 0.006625793319915005,
+    "placed_xy_err_mm": 0.41186868595263965,
+    "pad_center_above_mid_mm": 13.313888221309934
+   },
+   {
+    "brick": "half",
+    "torque_limit": 12.0,
+    "dz": 0.004,
+    "pass": true,
+    "closure_rad": 0.26936386387319555,
+    "hold_normal_N": {
+     "left": 134.46,
+     "right": 134.45,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.011333314519880594,
+    "move_slip_max_mm": 0.0010528829140169192,
+    "lift_tilt_max_deg": 0.00019945438843183054,
+    "move_tilt_max_deg": 0.0005019724379740255,
+    "placed_xy_err_mm": 0.021196753982243192,
+    "pad_center_above_mid_mm": 13.313888221309934
+   }
+  ],
+  "empty_closure_rad": {
+   "2.0": 0.5498731646067707,
+   "3.0": 0.5347601322210933,
+   "4.0": 0.5634223258824043,
+   "5.0": 0.531653386141597,
+   "6.0": 0.5722882713715,
+   "8.0": 0.5482880451372962,
+   "10.0": 0.6061586415194371,
+   "12.0": 0.5558550854371216
+  }
+ },
+ "chosen": {
+  "config": {
+   "exclude_self": true,
+   "kp": 100.0,
+   "kv": 1.0,
+   "torque_limit": 4.0,
+   "close_ctrl": 0.7,
+   "open_ctrl": 0.0,
+   "eq_solref": [
+    0.005,
+    1.0
+   ],
+   "eq_solimp": [
+    0.95,
+    0.99,
+    0.001
+   ],
+   "parallel_pads": true
+  },
+  "solver": {
+   "impratio": 10,
+   "noslip_iterations": 3,
+   "cone": "elliptic"
+  },
+  "calibration_90mm": {
+   "open_inner_gap": 0.12645253282815858,
+   "closure": 0.22123012082171123,
+   "gap": 0.08983506771551789,
+   "pad_center_depth": 0.18757153937129178,
+   "deepest_finger_depth": 0.22340501147344094,
+   "pad_half_length": 0.033
+  },
+  "grasp_rule": "deepest finger point 2 mm above brick bottom (pad centre +9.2 mm above mid-height, contact patch centre +2.4 mm)",
+  "g1_closure_grasp_rad": 0.244,
+  "g1_closure_empty_rad": 0.5634223258824043,
+  "g1_threshold_candidate_rad": 0.4
+ },
+ "git_commit_at_run": "97092c2fa07a8cc0e7e01a3e39fec8df54418638"
+}
