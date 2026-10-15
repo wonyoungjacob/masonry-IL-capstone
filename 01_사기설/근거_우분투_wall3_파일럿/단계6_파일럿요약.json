@@ -1,0 +1,280 @@
+{
+ "n_walls": 50,
+ "n_spec_pass": 48,
+ "pass_rate": 0.96,
+ "n_aborted": 0,
+ "abort_reasons": [],
+ "item_fail_counts": {
+  "3_plumb": 2
+ },
+ "item_fail_slots": {
+  "3_plumb": {
+   "11": 1,
+   "13": 1
+  }
+ },
+ "fail_details": [
+  {
+   "seed": 700000,
+   "aborted": null,
+   "exists": true,
+   "items": {
+    "3_plumb": {
+     "value_mm": 2.3138316519100144,
+     "tol_mm": 2.0,
+     "slot": 11
+    }
+   }
+  },
+  {
+   "seed": 700046,
+   "aborted": null,
+   "exists": true,
+   "items": {
+    "3_plumb": {
+     "value_mm": 2.0335511723351685,
+     "tol_mm": 2.0,
+     "slot": 13
+    }
+   }
+  }
+ ],
+ "item_values_mm": {
+  "2_line_plane": {
+   "median": 0.8104838876871522,
+   "p95": 1.1122059987437547,
+   "max": 1.3166755136094013
+  },
+  "3_plumb": {
+   "median": 1.1537168028616929,
+   "p95": 1.8155772630100648,
+   "max": 2.3138316519100144
+  },
+  "4_position": {
+   "median": 0.9556829671260592,
+   "p95": 1.2050048802770552,
+   "max": 1.596228646224107
+  }
+ },
+ "bed_joint_mm": [
+  9.985676717351385,
+  9.995372716910033
+ ],
+ "iou_mean": {
+  "median": 0.9884481658984038,
+  "min": 0.9863906608994298
+ },
+ "sensitivity_pass": {
+  "1mm": 12,
+  "2mm": 48,
+  "3mm": 50
+ },
+ "brick_time_s": {
+  "n": 800,
+  "median": 8.475000000000001,
+  "p95": 9.15,
+  "max": 9.15,
+  "over_10s": 0,
+  "over_10s_slots": {},
+  "per_slot": {
+   "0": {
+    "median": 8.35,
+    "max": 8.35
+   },
+   "1": {
+    "median": 8.3,
+    "max": 8.3
+   },
+   "2": {
+    "median": 8.55,
+    "max": 8.55
+   },
+   "3": {
+    "median": 8.3,
+    "max": 8.3
+   },
+   "4": {
+    "median": 8.3,
+    "max": 8.3
+   },
+   "5": {
+    "median": 8.25,
+    "max": 8.25
+   },
+   "6": {
+    "median": 8.5,
+    "max": 8.5
+   },
+   "7": {
+    "median": 9.15,
+    "max": 9.15
+   },
+   "8": {
+    "median": 8.6,
+    "max": 8.6
+   },
+   "9": {
+    "median": 8.4,
+    "max": 8.4
+   },
+   "10": {
+    "median": 8.450000000000001,
+    "max": 8.450000000000001
+   },
+   "11": {
+    "median": 8.4,
+    "max": 8.450000000000001
+   },
+   "12": {
+    "median": 8.75,
+    "max": 8.8
+   },
+   "13": {
+    "median": 8.8,
+    "max": 8.8
+   },
+   "14": {
+    "median": 8.950000000000001,
+    "max": 8.950000000000001
+   },
+   "15": {
+    "median": 8.8,
+    "max": 8.8
+   }
+  }
+ },
+ "marks": {
+  "all_pass_walls_16_ok": true,
+  "problems": {}
+ },
+ "in_hand_drift_transport_mm": {
+  "median": 11.194752026970416,
+  "p95": 21.768905042047066,
+  "max": 29.440559968894068
+ },
+ "placement_xy_err_mm_by_base_dist": {
+  "0.60-0.65 m": {
+   "n": 400,
+   "median_mm": 0.34011561208780294,
+   "p95_mm": 0.7023017364498844
+  },
+  "0.65-0.70 m": {
+   "n": 100,
+   "median_mm": 0.1352888412408767,
+   "p95_mm": 0.3013825808249791
+  },
+  "0.70-0.76 m": {
+   "n": 300,
+   "median_mm": 0.21500423091752394,
+   "p95_mm": 0.90854049437289
+  }
+ },
+ "robot_contact_events": 0,
+ "beds_laid": {
+  "all": true
+ },
+ "cost": {
+  "wall_sim_seconds": 138.862,
+  "wall_compute_s_per_worker": {
+   "median": 32.968056321144104,
+   "max": 55.23834037780762
+  },
+  "workers": 12,
+  "collect_elapsed_s": 162.2928774356842,
+  "raw_mb_per_wall": 103.0800248,
+  "dataset_mb_per_pass_wall": 12.623084041666667,
+  "estimate_1000_pass_walls": {
+   "walls_to_attempt": 1041.6666666666667,
+   "collect_hours_at_this_parallelism": 0.9391948925676171,
+   "convert_hours": 14.600208741095331,
+   "raw_gb": 107.37502583333334,
+   "dataset_gb": 12.623084041666665
+  }
+ },
+ "dataset": {
+  "root": "data/wall3_pilot_20261016",
+  "verify": {
+   "num_episodes": 768,
+   "num_frames": 131388,
+   "expected_episodes": 768,
+   "expected_frames": 131388,
+   "camera_keys": [
+    "observation.images.front",
+    "observation.images.top",
+    "observation.images.wrist"
+   ],
+   "problems": [],
+   "checked_frames": 2304,
+   "ok": true,
+   "dataset_sha256": "50d322259070ec2ffae341c6dbfe934688bd05a34058c5235793514e15dff263",
+   "bytes": 605908034,
+   "build_s": 2522.916070461273
+  }
+ },
+ "reproducibility": {
+  "git_commit": "b625505f048fff4eba8042d65d41c8184c2ada07",
+  "git_dirty_wall3": false,
+  "assets": {
+   "ur10e_xml": "a8f709df340788033d497ff7d892fdecab4f6cc9c36299a00f57efa9f25e0744",
+   "gripper_xml": "4792761b61411052ced36116ee8a0553429c9756d095fddf3730bfedb67900f0",
+   "menagerie_source": "repo:   https://github.com/google-deepmind/mujoco_menagerie\ncommit: 62ab00f2bc44f6f20c1c9b7a13f3fb1dd41a4e35\nfolder: universal_robots_ur10e (copied unchanged)\nfetched: 2026-10-15",
+   "robosuite_source": "Robotiq 2F-140 gripper MuJoCo model, copied unchanged from robosuite\nrepo:   https://github.com/ARISE-Initiative/robosuite\ncommit: 5ce6643f3092639d08f7b0f90ed1c6a84f50552c\nfiles:  robosuite/models/assets/grippers/robotiq_gripper_140.xml\n        robosuite/models/assets/grippers/meshes/robotiq_140_gripper/\n        LICENSE (MIT)\nfetched: 2026-10-15"
+  },
+  "seeds": [
+   700000,
+   700049
+  ],
+  "raw_sha256": {
+   "700000": "1aaea6b600506a875ef4460c71b5cad09fc65112afd8fd45ceff6253108906e0",
+   "700001": "427037fb15e3bb0c42f2535b304605a333236e71d1644d777d75658105433628",
+   "700002": "3c3641d227543e5a700966b0a334b064dc4351ed6d9b0496a15919044e2c9f0b",
+   "700003": "f16038d56b0d32efb157a22427d8653e72843e27d94b4a2437cb7f51abcdb525",
+   "700004": "1c1e2b80412f8deecddbdaa11a682a8a9054b35ec02c521b2af3aaed9e4939ee",
+   "700005": "bdd3f4e42ea90b56bc63ef3a48c7418302b760647904236a5914e47c24b7cc14",
+   "700006": "a35e299a14b6b1ec5bcad536d45e5c2ff4f2f27bef925e23878f5f73c04d102e",
+   "700007": "5291143e3271a81663a84e3b64d6875e6f967d81382be54c6638ef03da8e7cc3",
+   "700008": "e711cd1fa41e110a9ed998723f9912224fd910146da0eb20caf25afd84f0b336",
+   "700009": "7a17190511fe3fe913e7786a386737a9c9736efb3d24fe48c50006613b840dfa",
+   "700010": "ad3050ab56a354e5d551a1945519a87b51013a171f47fadcbd481428b35be47a",
+   "700011": "36595063aef98c0d177419a397e8de4eb696cef4ac5d12abc93cee2838df7b34",
+   "700012": "aa2ca334ce42c5bb3f3510919695e10ebfed649da0aaeb036b8a57be4e31c049",
+   "700013": "f463dfdb6651c69eb7e61979ed83899a4217bfafd860ba343edc888f96785fde",
+   "700014": "47ccd7e1335376ed09c05d07009e48fc455637578a773d980502ec4c1fe877eb",
+   "700015": "442f247e213be7c3133ef6188618093eb829be40eb83efb1c3114c585d06071a",
+   "700016": "56288afe6dba22294ad175d50d4e121bc6e1c152fbc105044ba6e1dd538a71bb",
+   "700017": "be3b3eb39afb834f0dc8a78b4b2d9d81722cf2a97a289b102ca8c5f2bbc4368c",
+   "700018": "9d7a5f888e7178a6ebe17dc17ea8de9cd55747b374db9d47a8b85fc6e763c44a",
+   "700019": "2d06ff655a070e0c7b55193801058e5550f7773ced167e125f5542902756dd29",
+   "700020": "48297bb01140335fc1eb5ff96da06a2ccfd7395fd04413c860da2dbf55d2aecd",
+   "700021": "dce457297ee40063385436de10e43d1acc2b2e8a94544b500b91f9970b53e603",
+   "700022": "da35126348147f69d6e14573ccb41a07ff7aa7f71e6077a9c69abd042207f732",
+   "700023": "f5b7bb1160c3557d45f06f878aa44ae75e013dba4e82b1818436a4df0fd48509",
+   "700024": "8cdb2bb7834fdd46d23e27e5af24a67f9aa2ab262622416c5b4f6a3a600c9e8a",
+   "700025": "5a82c8feefed476d78756ddf4ca6980594e9e96448a679b3c3123cc9e03a7d77",
+   "700026": "753fa72cd33a5c0b0f02f12d0faf513ca1b0b383d4b6144ca7a86ad691aff408",
+   "700027": "a836f2d1d7a4d7fb1ae860b6461e61514dfab97a147e117ac31297700f757772",
+   "700028": "c9f83a44055c9c29b7dc676c5509ff120517f7bc6bec540ffa697c2740716faf",
+   "700029": "332c4816ef8a0a2c6684efc0f131644b963b763349e8a7cbf13b8a8d72f48636",
+   "700030": "ec771e5e11e06638d56fa26f8748aa8f97c9b2ba6304d7b3fc26004fd5b1dd63",
+   "700031": "a642722d65b9cbd42df48cfc31b11283050ede94a54d6b447c4947d4089ca72c",
+   "700032": "1f4e8dd62b2183883c5945c3c56b9be6b82313e219eb249376f318f428e205a5",
+   "700033": "c0d46defc3152c204d3b0e3edc89ad4a746f3b931824aa0d2dacb2dbbd850206",
+   "700034": "8b30e755506b19b0de2e59f996934c9f3d5c95e33d2c43f48371ca1c08d5eae7",
+   "700035": "088e64427f54daf0ae66ddfc0bd15234cff3c56be1874961d2034298996f9308",
+   "700036": "99efdde72c22f728ca30d941eef355927db31616e734261b10eca16bc9b0bf07",
+   "700037": "7fd347c4cbb0093720c3bcf0aba1f510ec29565f8f8af81a63df646b3731a89e",
+   "700038": "5ad2886ec58f5be09c5c52580dcf3c948f1e4635b558848780f36747224ae8ff",
+   "700039": "9b6e52f74f55bed171796da9bdedc274018d33f1ca8c89e7edeb16e3a9f943e2",
+   "700040": "205ba1f310133cb0e9d4b30e616a65d859b06807b5fb9a3ed8ccdd4375c01d40",
+   "700041": "859d7f4ada36fc571178c4042f13306f445fc2750c8d6c194fe2390f09fa25d7",
+   "700042": "20cf11bf26401a904616c42567b11d0491f8b056179b2888108e70f26ccbe427",
+   "700043": "0c973c8c127d2b2b0173e6be02da5151ed03d783c07361fad625ab1eb791b703",
+   "700044": "3957f978a12df8a496d806b44056f58340825b9c5028f4e0beeea30e59fc43d1",
+   "700045": "a3cddfb484b0d4e98a4a42462b6d33591a98bdf5ce378175f2c31b7638711f28",
+   "700046": "fdfc7531f24ae56e254236a9fa6aa654bbb7748d9f0361874b6d93b8e97b5509",
+   "700047": "41785de21c71d5051b99e2d238c247cabf3e087e45040ea959add665bbd69074",
+   "700048": "e5209f108f85146c5bd2a60ccc25f098aaf1dd6958070bb21dd10fb1948cb12e",
+   "700049": "9a7864365b4de664251d1c87e5af25788230676481869877b115587abede2ee6"
+  }
+ }
+}
