@@ -1,0 +1,308 @@
+{
+ "git_commit_at_run": "4785fa19b8e8e6743f18cf703990eba33cc565ee",
+ "criteria": {
+  "slip_mm_max": 1.0,
+  "tilt_deg_max": 1.0,
+  "both_full_and_half": true
+ },
+ "empty_close_closure_rad_kp100_tau4": 0.692,
+ "allowed_sweep": {
+  "adjustments": "① exclude gripper self-contact, ② kp 100/kv 1 with torque limit 1.5-5 N·m (+ robosuite kp 20 no limit), ③ pad tip edge at brick mid-height ±8/15 mm",
+  "n_runs": 80,
+  "n_pass": 0,
+  "n_brick_dropped_or_ejected": 47,
+  "best": [
+   {
+    "brick": "half",
+    "kp": 100.0,
+    "kv": 1.0,
+    "torque_limit": 2.5,
+    "dz": -0.008,
+    "eq_solref": null,
+    "pass": false,
+    "closure_rad": 0.1923382966938803,
+    "hold_normal_N": {
+     "left": 14.49,
+     "right": 14.47,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 9.68055861712911,
+    "move_slip_max_mm": 7.926514304118207,
+    "lift_tilt_max_deg": 0.8487487288709591,
+    "move_tilt_max_deg": 0.27221700068413274,
+    "max_tendon_violation_rad": 0.005689977982216148
+   },
+   {
+    "brick": "half",
+    "kp": 100.0,
+    "kv": 1.0,
+    "torque_limit": 1.5,
+    "dz": -0.015,
+    "eq_solref": null,
+    "pass": false,
+    "closure_rad": 0.15061131592595606,
+    "hold_normal_N": {
+     "left": 7.04,
+     "right": 6.91,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 9.992584919800251,
+    "move_slip_max_mm": 8.191795237405007,
+    "lift_tilt_max_deg": 1.298710633194137,
+    "move_tilt_max_deg": 0.9368158749793453,
+    "max_tendon_violation_rad": 0.005689977982335426
+   },
+   {
+    "brick": "half",
+    "kp": 100.0,
+    "kv": 1.0,
+    "torque_limit": 3.5,
+    "dz": -0.008,
+    "eq_solref": null,
+    "pass": false,
+    "closure_rad": 0.2181540410126196,
+    "hold_normal_N": {
+     "left": 23.69,
+     "right": 23.53,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 10.04212050990049,
+    "move_slip_max_mm": 7.922344711721622,
+    "lift_tilt_max_deg": 1.6805650953667113,
+    "move_tilt_max_deg": 1.0764754500480442,
+    "max_tendon_violation_rad": 0.00568997798235954
+   },
+   {
+    "brick": "half",
+    "kp": 100.0,
+    "kv": 1.0,
+    "torque_limit": 2.0,
+    "dz": -0.015,
+    "eq_solref": null,
+    "pass": false,
+    "closure_rad": 0.1723611397973679,
+    "hold_normal_N": {
+     "left": 10.33,
+     "right": 10.26,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 10.133647139585475,
+    "move_slip_max_mm": 8.389922925617176,
+    "lift_tilt_max_deg": 1.1104329862193925,
+    "move_tilt_max_deg": 0.4801791983991842,
+    "max_tendon_violation_rad": 0.005689977982228029
+   },
+   {
+    "brick": "half",
+    "kp": 100.0,
+    "kv": 1.0,
+    "torque_limit": 1.5,
+    "dz": -0.008,
+    "eq_solref": null,
+    "pass": false,
+    "closure_rad": 0.15061296861468726,
+    "hold_normal_N": {
+     "left": 7.02,
+     "right": 6.91,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 10.146783318580145,
+    "move_slip_max_mm": 8.242367963842113,
+    "lift_tilt_max_deg": 1.3387201958214427,
+    "move_tilt_max_deg": 0.9007118654092622,
+    "max_tendon_violation_rad": 0.005689977982324955
+   },
+   {
+    "brick": "half",
+    "kp": 100.0,
+    "kv": 1.0,
+    "torque_limit": 1.5,
+    "dz": 0.0,
+    "eq_solref": null,
+    "pass": false,
+    "closure_rad": 0.15061491595957233,
+    "hold_normal_N": {
+     "left": 7.0,
+     "right": 6.92,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 10.30956289492937,
+    "move_slip_max_mm": 8.288360593567106,
+    "lift_tilt_max_deg": 1.3796977054741664,
+    "move_tilt_max_deg": 0.9287575189923079,
+    "max_tendon_violation_rad": 0.005689977982307458
+   }
+  ]
+ },
+ "diag_stiff_coupling_not_allowed": {
+  "adjustment": "above + finger coupling equality solref 0.005/0.002, solimp 0.95 0.99 0.001 (Menagerie 2F-85 values)",
+  "n_runs": 48,
+  "n_pass": 0,
+  "n_brick_dropped_or_ejected": 26,
+  "best": [
+   {
+    "brick": "half",
+    "kp": null,
+    "kv": null,
+    "torque_limit": 4.0,
+    "dz": -0.008,
+    "eq_solref": [
+     0.002,
+     1.0
+    ],
+    "pass": false,
+    "closure_rad": 0.09599422357005614,
+    "hold_normal_N": {
+     "left": 19.22,
+     "right": 19.22,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.49641220464555735,
+    "move_slip_max_mm": 1.3006488130365523,
+    "lift_tilt_max_deg": 0.01768876882270726,
+    "move_tilt_max_deg": 0.17013548492527888,
+    "max_tendon_violation_rad": 6.71920595058822e-05
+   },
+   {
+    "brick": "half",
+    "kp": null,
+    "kv": null,
+    "torque_limit": 4.0,
+    "dz": 0.0,
+    "eq_solref": [
+     0.002,
+     1.0
+    ],
+    "pass": false,
+    "closure_rad": 0.09599056307697455,
+    "hold_normal_N": {
+     "left": 19.22,
+     "right": 19.22,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.49395171743291477,
+    "move_slip_max_mm": 1.3006563864279421,
+    "lift_tilt_max_deg": 0.017493699608197043,
+    "move_tilt_max_deg": 0.03977043690198699,
+    "max_tendon_violation_rad": 6.71920595058816e-05
+   },
+   {
+    "brick": "half",
+    "kp": null,
+    "kv": null,
+    "torque_limit": 4.0,
+    "dz": -0.008,
+    "eq_solref": [
+     0.005,
+     1.0
+    ],
+    "pass": false,
+    "closure_rad": 0.09904972562973842,
+    "hold_normal_N": {
+     "left": 19.18,
+     "right": 19.17,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.6058634258148358,
+    "move_slip_max_mm": 1.3921949571725845,
+    "lift_tilt_max_deg": 0.027301942593611035,
+    "move_tilt_max_deg": 0.1784670783707551,
+    "max_tendon_violation_rad": 0.00033171241991193656
+   },
+   {
+    "brick": "half",
+    "kp": null,
+    "kv": null,
+    "torque_limit": 4.0,
+    "dz": 0.0,
+    "eq_solref": [
+     0.005,
+     1.0
+    ],
+    "pass": false,
+    "closure_rad": 0.09907365903826205,
+    "hold_normal_N": {
+     "left": 19.18,
+     "right": 19.17,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.6037474383701645,
+    "move_slip_max_mm": 1.3929707666629603,
+    "lift_tilt_max_deg": 0.027112523351105484,
+    "move_tilt_max_deg": 0.051292967333239764,
+    "max_tendon_violation_rad": 0.00033171241991193754
+   },
+   {
+    "brick": "half",
+    "kp": null,
+    "kv": null,
+    "torque_limit": 3.0,
+    "dz": 0.0,
+    "eq_solref": [
+     0.002,
+     1.0
+    ],
+    "pass": false,
+    "closure_rad": 0.09521250432156803,
+    "hold_normal_N": {
+     "left": 14.37,
+     "right": 14.37,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.5467929570491911,
+    "move_slip_max_mm": 1.4166612511948078,
+    "lift_tilt_max_deg": 0.016658179855730693,
+    "move_tilt_max_deg": 0.03692635274767253,
+    "max_tendon_violation_rad": 6.719205950588315e-05
+   },
+   {
+    "brick": "half",
+    "kp": null,
+    "kv": null,
+    "torque_limit": 3.0,
+    "dz": -0.008,
+    "eq_solref": [
+     0.002,
+     1.0
+    ],
+    "pass": false,
+    "closure_rad": 0.09521249062512074,
+    "hold_normal_N": {
+     "left": 14.37,
+     "right": 14.37,
+     "other_gripper": 0.0,
+     "floor": 0.0
+    },
+    "lift_slip_max_mm": 0.54678148289937,
+    "move_slip_max_mm": 1.4180909942494444,
+    "lift_tilt_max_deg": 0.016658246717894575,
+    "move_tilt_max_deg": 0.1831506102897561,
+    "max_tendon_violation_rad": 6.71920595058836e-05
+   }
+  ],
+  "creep_full_tau4_solref0005": {
+   "after_lift_z_mm": -1.48,
+   "after_move_and_rest_z_mm": -2.79,
+   "with_stiffer_brick_contact_0004_after_move_z_mm": -2.23
+  }
+ },
+ "pad_geometry": {
+  "pad_length_mm": 66,
+  "pad_toe_in_deg_at_90mm": 8.6,
+  "contact": "pad tip edge",
+  "tip_depth_below_mount_m": 0.208,
+  "max_inner_gap_open_mm": 126.5
+ },
+ "menagerie_2f85_reference": "2f85.xml <exclude> base–driver, base–spring_link, coupler–follower; equality solref 0.005 1, solimp 0.95 0.99 0.001"
+}
