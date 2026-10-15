@@ -50,15 +50,29 @@ class GripperConfig:
     eq_solref: tuple = ()            # ④ finger coupling equality solref. () = as received (MuJoCo default 0.02 1)
     eq_solimp: tuple = ()            # ④ same, solimp. () = as received (0.9 0.95 0.001)
     parallel_pads: bool = False      # ⑤
+    close_time: float = 0.0          # s, command ramp open → close (0 = step command). Real 2F-140 closes at 30 ~ 250 mm/s;
+                                     # a step command slams the light fingers shut in ~5 ms (≈ 7 m/s) and pops the brick up.
+    open_time: float = 0.0           # s, command ramp close → open
 
     def to_dict(self):
         return asdict(self)
 
 
-def a1plus(torque_limit: float, kp: float = 100.0, kv: float = 1.0) -> GripperConfig:
-    """A1+ configuration (①②④⑤ applied; ③ is done by the expert)."""
+def a1plus(torque_limit: float, kp: float = 100.0, kv: float = 1.0, close_time: float = 0.5, open_time: float = 0.3) -> GripperConfig:
+    """A1+ configuration (①②④⑤ applied; ③ is done by the expert). Command ramps: closing 0.5 s ≈ 105 mm/s per pad."""
     return GripperConfig(kp=kp, kv=kv, torque_limit=torque_limit, eq_solref=(0.005, 1.0),
-                         eq_solimp=(0.95, 0.99, 0.001), parallel_pads=True)
+                         eq_solimp=(0.95, 0.99, 0.001), parallel_pads=True, close_time=close_time, open_time=open_time)
+
+
+def ramp(cfg: GripperConfig, close: bool, t: float, start: float | None = None) -> float:
+    """finger_1 command t seconds after a close/open order (start = command when the order was given)."""
+    if close:
+        s0 = cfg.open_ctrl if start is None else start
+        T = cfg.close_time
+        return cfg.close_ctrl if T <= 0 else float(min(cfg.close_ctrl, s0 + (cfg.close_ctrl - cfg.open_ctrl) * t / T))
+    s0 = cfg.close_ctrl if start is None else start
+    T = cfg.open_time
+    return cfg.open_ctrl if T <= 0 else float(max(cfg.open_ctrl, s0 - (cfg.close_ctrl - cfg.open_ctrl) * t / T))
 
 
 def _gripper_spec(cfg: GripperConfig) -> "mujoco.MjSpec":

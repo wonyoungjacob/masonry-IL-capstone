@@ -38,7 +38,8 @@ def _look_at(pos, target, up=(0, 0, 1)):
 
 def _quat_rotmat(q):
     R = np.zeros(9)
-    mujoco.mju_quat2Mat(R, np.asarray(q, float))
+    q = np.asarray(q, float)
+    mujoco.mju_quat2Mat(R, q / np.linalg.norm(q))
     return R.reshape(3, 3)
 
 
@@ -153,7 +154,8 @@ class WallEnv:
         att = s.site("attachment_site")
         G.attach(att, s, c.gripper)
         w3 = s.body("wrist_3_link")
-        Ra = _quat_rotmat(att.quat)
+        qa = np.asarray(att.quat, float)
+        Ra = _quat_rotmat(qa / np.linalg.norm(qa))          # the UR10e file writes this quat unnormalised (-1 1 0 0)
         pa = np.asarray(att.pos, float)
         w3.add_site(name="tcp", pos=pa + Ra @ [0, 0, self.cal["pad_center_depth"]], quat=att.quat, size=[0.004, 0, 0],
                     rgba=[0, 0, 1, 0.5], group=4)
@@ -225,9 +227,10 @@ class WallEnv:
         d.qpos[self.arm_qadr] = q
         d.ctrl[self.arm_act] = q
         d.ctrl[self.grip_act] = G.grip_ctrl(False, self.cfg.gripper)
+        self.last_action = np.r_[q, self.cfg.gripper.open_ctrl]
         for nm, mid in self.bed_mocap.items():
             d.mocap_pos[mid] = [0, 0, -1]
-        d.eq_active[:] = 0
+        # mj_resetData restores eq_active0: cure welds off, gripper coupling equalities on
         self.cured = np.zeros(self.n, bool)
         self.cure_t = np.full(self.n, -1)
         self.settle_count = np.zeros(self.n, int)
@@ -239,12 +242,22 @@ class WallEnv:
 
     # ------------------------------------------------------------------ dynamics
     def step(self, arm_ctrl, grip_cmd):
-        """One 20 Hz control step. arm_ctrl: 6 joint position targets (rad); grip_cmd: finger_1 command (0 open .. 0.7)."""
+        """One 20 Hz control step. arm_ctrl: 6 joint position targets (rad) to reach at the end of the step;
+        grip_cmd: finger_1 command (0 open .. 0.7).
+
+        Like an industrial arm controller (UR servoj interpolates at 500 Hz), the actuator targets are interpolated
+        linearly from the previous action to this one over the 50 physics steps. Holding them constant made the very
+        stiff UR10e servos (kp 5000) slam to their force limit for 1–2 ms at every 20 Hz update, which twisted the brick
+        in the hand."""
         d = self.data
-        d.ctrl[self.arm_act] = arm_ctrl
-        d.ctrl[self.grip_act] = [grip_cmd, -grip_cmd]
-        for _ in range(self.n_sub):
+        new = np.r_[np.asarray(arm_ctrl, float), float(grip_cmd)]
+        old = self.last_action
+        for j in range(1, self.n_sub + 1):
+            c = old + (new - old) * (j / self.n_sub)
+            d.ctrl[self.arm_act] = c[:6]
+            d.ctrl[self.grip_act] = [c[6], -c[6]]
             mujoco.mj_step(self.model, d)
+        self.last_action = new
         self.t += 1
         self._update_cure()
         for bnd in (1, 2):

@@ -91,8 +91,14 @@ def run(cfg: G.GripperConfig, kind=None, move_time=0.7, dz=0.0, impratio=20.0, n
     log = {"brick": kind or "none"}
     seq = {"lift": [], "move": []}
 
+    state = {"close": False, "t0": 0.0, "c0": cfg.open_ctrl, "cmd": cfg.open_ctrl}
+
     def step(target, close):
-        d.ctrl[:3] = target; d.ctrl[3:5] = G.grip_ctrl(close, cfg)
+        if close != state["close"]:                       # new order: ramp from the current command
+            state.update(close=close, t0=d.time, c0=state["cmd"])
+        c = G.ramp(cfg, close, d.time - state["t0"], state["c0"])
+        state["cmd"] = c
+        d.ctrl[:3] = target; d.ctrl[3:5] = [c, -c]
         mujoco.mj_step(m, d)
 
     def hold(target, close, sec):
@@ -120,8 +126,21 @@ def run(cfg: G.GripperConfig, kind=None, move_time=0.7, dz=0.0, impratio=20.0, n
         z_grasp = (H / 2 + dz + TIP_Z) - 0.6
     move([0, 0, 0], [0, 0, z_grasp], False, 1.0)
     hold([0, 0, z_grasp], False, 0.2)
-    hold([0, 0, z_grasp], True, 1.0)
+    zb0 = d.body("brick").xpos[2] if has else 0.0
+    pen, zmax = 0.0, zb0
+    for _ in range(int(1.0 / TS)):                     # close, watching the brick and the finger penetration
+        step([0, 0, z_grasp], True)
+        if has:
+            zmax = max(zmax, d.body("brick").xpos[2])
+            bid = m.geom("brick").id
+            for i in range(d.ncon):
+                c = d.contact[i]
+                if bid in (c.geom1, c.geom2) and m.geom(c.geom2 if c.geom1 == bid else c.geom1).name.startswith("g_"):
+                    pen = min(pen, c.dist)
     log["closure_rad"] = G.closure(d)
+    if has:
+        log["close_brick_rise_mm"] = float((zmax - zb0) * 1000)
+        log["close_max_penetration_mm"] = float(-pen * 1000)
     if not has:
         return log
     f = pad_forces(m, d)

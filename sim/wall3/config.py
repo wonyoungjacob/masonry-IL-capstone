@@ -42,6 +42,11 @@ def design_slots():
 SUPPLY_SLOTS = ((-0.91, -0.25), (-0.65, -0.25), (+0.91, -0.25), (+0.65, -0.25), (+0.65, -0.43), (-0.65, -0.43), (-0.39, -0.43), (-0.39, -0.79), (+0.65, -0.61), (+0.39, -0.43), (+0.39, -0.61), (-0.65, -0.61), (-0.39, -0.61), (+0.39, -0.79), (+0.13, -0.79), (+0.13, -0.61))
 
 
+# 철수 자세 (reach_map.py): TCP (0, 0.40, 0.75) m, gripper down. Every brick starts and ends here.
+RETRACT_TCP = (0.0, 0.40, 0.75)
+RETRACT_Q = (-2.020805, -2.131279, 2.263128, -1.702647, -1.570801, -0.450007)
+
+
 @dataclass
 class SceneConfig:
     # robot (P3)
@@ -77,7 +82,7 @@ class SceneConfig:
     hi_h: int = 960
     # gripper (P1, A1+)
     gripper: G.GripperConfig = field(default_factory=lambda: G.a1plus(4.0))
-    grasp_clear: float = 0.002                  # ③ deepest finger point above the brick bottom
+    grasp_clear: float = 0.005                  # ③ deepest finger point above the brick bottom (2 mm let the fingertips touch the table: pads sink ~2 mm into the brick under 50 N and keep descending as they close)
 
     def to_dict(self):
         d = asdict(self)

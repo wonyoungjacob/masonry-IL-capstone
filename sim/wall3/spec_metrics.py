@@ -232,7 +232,13 @@ def evaluate(poses, lengths, design, width, height, front_y, front_dir=(0.0, 1.0
                     d3, worst3 = abs(v - ref), k
     ends3 = 0.0
     for side_left in (True, False):
-        ends = {c: (min if side_left else max)(ks, key=lambda k: design[k]["x"]) for c, ks in by_course.items() if ks}
+        # the design end slot of each course (only if it is filled)
+        ends = {}
+        for c in sorted({s["course"] for s in design}):
+            ks = [k for k in range(n_slots) if design[k]["course"] == c]
+            ke = (min if side_left else max)(ks, key=lambda k: design[k]["x"])
+            if ke in B:
+                ends[c] = ke
         if 1 not in ends:
             continue
         r0 = B[ends[1]]
