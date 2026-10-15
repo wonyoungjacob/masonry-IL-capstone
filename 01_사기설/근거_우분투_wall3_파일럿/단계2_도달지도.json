@@ -1,0 +1,146 @@
+{
+ "wall_slots_ok": 16,
+ "wall_poses_checked": 64,
+ "wall_min_clearance_mm": 10.0,
+ "wall_min_clearance_note": "10 mm = held brick to neighbour/lower brick (design joint)",
+ "supply_slots_ok": 16,
+ "supply_cases_checked": 144,
+ "supply_min_clearance_mm": 33.0,
+ "min_joint_margin": {
+  "wall": 0.356,
+  "supply": 0.321
+ },
+ "retract": {
+  "tcp": [
+   0.0,
+   0.4,
+   0.75
+  ],
+  "q": [
+   -2.0208051616186022,
+   -2.131278794709589,
+   2.263128239751619,
+   -1.7026465248080196,
+   -1.5708006345420902,
+   -0.4500071304664188
+  ],
+  "margins": {
+   "elbow": 2.0013288519524695,
+   "wrist2": 0.7411809548882009,
+   "shoulder": 0.1433221177400223
+  },
+  "clearance_m": 0.03299999999999988
+ },
+ "supply_slots": [
+  [
+   -0.91,
+   -0.25
+  ],
+  [
+   -0.65,
+   -0.25
+  ],
+  [
+   0.91,
+   -0.25
+  ],
+  [
+   0.65,
+   -0.25
+  ],
+  [
+   0.65,
+   -0.43
+  ],
+  [
+   -0.65,
+   -0.43
+  ],
+  [
+   -0.39,
+   -0.43
+  ],
+  [
+   -0.39,
+   -0.79
+  ],
+  [
+   0.65,
+   -0.61
+  ],
+  [
+   0.39,
+   -0.43
+  ],
+  [
+   0.39,
+   -0.61
+  ],
+  [
+   -0.65,
+   -0.61
+  ],
+  [
+   -0.39,
+   -0.61
+  ],
+  [
+   0.39,
+   -0.79
+  ],
+  [
+   0.13,
+   -0.79
+  ],
+  [
+   0.13,
+   -0.61
+  ]
+ ],
+ "supply_base_dist_m": [
+  0.944,
+  0.696,
+  0.944,
+  0.696,
+  0.779,
+  0.779,
+  0.581,
+  0.881,
+  0.891,
+  0.581,
+  0.724,
+  0.891,
+  0.724,
+  0.881,
+  0.801,
+  0.624
+ ],
+ "wall_base_dist_m": [
+  0.721,
+  0.632,
+  0.6,
+  0.632,
+  0.721,
+  0.75,
+  0.671,
+  0.608,
+  0.608,
+  0.671,
+  0.75,
+  0.721,
+  0.632,
+  0.6,
+  0.632,
+  0.721
+ ],
+ "calibration": {
+  "open_inner_gap": 0.12645253282815858,
+  "closure": 0.22123012082171123,
+  "gap": 0.08983506771551789,
+  "pad_center_depth": 0.18757153937129178,
+  "deepest_finger_depth": 0.22340501147344094,
+  "pad_half_length": 0.033
+ },
+ "git_commit": "cad303a8e975ea864d9d694bfdff77e9eda79408",
+ "conditions": "IK top-down TCP; elbow >= 15 deg, |sin(wrist_2)| >= sin 15 deg, wrist centre >= 0.10 m off base axis, one posture family; clearance >= 0.5 mm to pedestal/table/floor/bricks (mj_geomDistance)"
+}
