@@ -1,0 +1,113 @@
+{
+ "gripper_xml_sha256": "4792761b61411052ced36116ee8a0553429c9756d095fddf3730bfedb67900f0",
+ "git_commit": "023eacce00b90f5b212c17a3acc1901c30fa6c83",
+ "brick_mass_kg": 1.9494000000000002,
+ "as_received": {
+  "brick": {
+   "open_pad_distance_mm": 150.95263521164495,
+   "carrier_to_pad_m": 0.18217179570312592,
+   "closed_finger_joint": 0.18374190959732478,
+   "closed_right_knuckle": -0.19797934291849603,
+   "closed_pad_distance_mm": 118.3565130073855,
+   "lift_brick_z_m": 0.3141018946950635,
+   "slip_after_lift_mm": [
+    -0.03,
+    0.63,
+    -8.92
+   ],
+   "carry_slip_max_mm": 28.998963272692293,
+   "carry_slip_end_mm": 16.874125125374704,
+   "slip_during_move_mm": [
+    -2.72,
+    -0.15,
+    -6.84
+   ],
+   "carry_tilt_deg": 7.028289014582585,
+   "pad_contacts": [
+    [
+     "g_left_fingerpad_collision",
+     "brick"
+    ],
+    [
+     "g_left_fingertip_collision",
+     "brick"
+    ],
+    [
+     "g_right_fingerpad_collision",
+     "brick"
+    ],
+    [
+     "g_right_fingertip_collision",
+     "brick"
+    ]
+   ],
+   "placed_xy_err_mm": 1.960385243604547,
+   "placed_z_m": 0.028392244579785248,
+   "placed_tilt_deg": 0.0,
+   "max_tendon_violation_rad": 0.4279062376093883
+  },
+  "empty_close": {
+   "open_pad_distance_mm": 150.95263521164495,
+   "carrier_to_pad_m": 0.18217179570312592,
+   "closed_finger_joint": 0.1837419095973248,
+   "closed_right_knuckle": -0.19797934291849623,
+   "closed_pad_distance_mm": 118.35651300738543,
+   "lift_brick_z_m": null,
+   "max_tendon_violation_rad": 0.3483577413830626
+  }
+ },
+ "exclude_self": {
+  "brick": {
+   "open_pad_distance_mm": 128.5527490030515,
+   "carrier_to_pad_m": 0.17536334845077806,
+   "closed_finger_joint": 0.1774370599339198,
+   "closed_right_knuckle": -0.16308842243558347,
+   "closed_pad_distance_mm": 92.33095685084791,
+   "lift_brick_z_m": 0.30540064341416373,
+   "slip_after_lift_mm": [
+    -0.0,
+    2.74,
+    -19.02
+   ],
+   "carry_slip_max_mm": 20.610426137151396,
+   "carry_slip_end_mm": 20.610426137151396,
+   "slip_during_move_mm": [
+    -0.0,
+    -0.22,
+    -2.4
+   ],
+   "carry_tilt_deg": 6.130769159436653,
+   "pad_contacts": [
+    [
+     "g_left_fingerpad_collision",
+     "brick"
+    ],
+    [
+     "g_left_fingertip_collision",
+     "brick"
+    ],
+    [
+     "g_right_fingerpad_collision",
+     "brick"
+    ],
+    [
+     "g_right_fingertip_collision",
+     "brick"
+    ]
+   ],
+   "placed_xy_err_mm": 2.515092838489337,
+   "placed_z_m": 0.02839224457978824,
+   "placed_tilt_deg": 0.0,
+   "max_tendon_violation_rad": 0.00530253641405656
+  },
+  "empty_close": {
+   "open_pad_distance_mm": 128.5527490030515,
+   "carrier_to_pad_m": 0.17536334845077806,
+   "closed_finger_joint": 0.24225501247107925,
+   "closed_right_knuckle": -0.2499185422607053,
+   "closed_pad_distance_mm": 68.78699720745672,
+   "lift_brick_z_m": null,
+   "max_tendon_violation_rad": 0.005139681423595414
+  }
+ }
+}
