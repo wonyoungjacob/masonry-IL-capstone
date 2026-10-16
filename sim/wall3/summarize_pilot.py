@@ -68,6 +68,24 @@ def main():
     vals = {k: [w["eval"][k].get("value_mm", w["eval"][k].get("max_mm")) for w in walls] for k in ITEMS[1:4]}
     touch = sum(w.get("n_touch_events", 0) for w in walls)
 
+    lock = None
+    br_all = [b for w in walls for b in w["bricks"] if "duration_s" in b]
+    if br_all and "locks" in br_all[0]:                  # main_v1 grip lock (2차 나2 결정)
+        rel = [e for b in br_all for e in b.get("lock_events", []) if e["event"] == "release"]
+        lk = [e for b in br_all for e in b.get("lock_events", []) if e["event"] == "lock"]
+        lock = {"grasps": len(br_all), "grasps_locked": sum(b["locks"] >= 1 for b in br_all), "locks": len(lk),
+                "releases_by_reason": dict(Counter(e["reason"] for e in rel)),
+                "overload_releases": sum(e["reason"] != "open" for e in rel),
+                "lock_jump_mm_max": max([e.get("jump_mm", 0.0) for e in lk] or [0.0]),
+                "lock_max_dev_mm": max(b.get("lock_max_dev_mm", 0.0) for b in br_all),
+                "pad_normal_N_min": min([min(e["N_left"], e["N_right"]) for e in lk] or [None]),
+                "grasp_offset_mm": {"median": float(np.median([e["grasp_offset_mm"] for e in lk])), "max": float(np.max([e["grasp_offset_mm"] for e in lk]))} if lk else None,
+                "in_hand_drift_max_mm": float(max(b["max_drift_mm"] for b in br_all))}
+        sag = [(v, w["design"][i]["half"]) for w in walls for i, v in enumerate(w.get("sag_at_cure_mm", [])) if v is not None]
+        if sag:
+            lock["sag_at_cure_mm"] = {h: {"n": sum(x[1] == hv for x in sag), "min": float(min(x[0] for x in sag if x[1] == hv)),
+                                          "median": float(np.median([x[0] for x in sag if x[1] == hv])), "max": float(max(x[0] for x in sag if x[1] == hv))}
+                                      for h, hv in (("full", False), ("half", True)) if any(x[1] == hv for x in sag)}
     raw_bytes = [w["raw_bytes"] for w in walls]
     wall_time = [w["time_s"]["total"] for w in walls]
     ds_meta = Path(a.root) / "meta"
@@ -90,6 +108,7 @@ def main():
         "in_hand_drift_transport_mm": {"median": float(np.median(drift)), "p95": float(np.percentile(drift, 95)), "max": float(drift.max())},
         "placement_xy_err_mm_by_base_dist": by_dist, "robot_contact_events": int(touch),
         "beds_laid": {"all": all(w["bed_laid_t"]["1"] >= 0 and w["bed_laid_t"]["2"] >= 0 for w in walls)},
+        "grip_lock": lock,
         "cost": {"wall_sim_seconds": sim_s, "wall_compute_s_per_worker": {"median": float(np.median(wall_time)), "max": float(np.max(wall_time))},
                  "workers": workers, "collect_elapsed_s": summ["elapsed_s"],
                  "raw_mb_per_wall": float(np.mean(raw_bytes) / 1e6),

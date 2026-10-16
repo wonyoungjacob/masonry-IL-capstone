@@ -14,7 +14,7 @@ class TestMortar(unittest.TestCase):
         self.assertAlmostEqual(impedance(0.002), 0.99)
 
     def test_slabs_and_pairs(self):
-        env = WallEnv(scene_config("main_v1"))
+        env = WallEnv(scene_config("main_v1", mortar_stiffness="impedance"))      # 나3 formula (reverted in main_v1 by 나5)
         n = [env._slabs_under(i) for i in range(env.n)]
         for i, s in enumerate(env.design):
             self.assertEqual(n[i], 0 if s["course"] == 1 else (1 if s["half"] else 3))
