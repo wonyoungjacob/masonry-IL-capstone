@@ -5,7 +5,7 @@
 벽 단위: 벽돌별 시작·끝 스텝, 시방 5항목·벽돌별 IoU 판정, 실패 사유, 설정·커밋·자산 해시.
 중단된 벽은 저장하지 않는다(벽마다 끝까지 돈 뒤 임시 파일 → 이름 바꾸기). 같은 출력 폴더가 있으면 멈춘다.
 
-실행: cd sim && MUJOCO_GL=egl venv/bin/python -m wall3.collect --seed0 700000 --n 50 --out outputs/wall3/<이름> [--record-every 10]
+실행: cd sim && MUJOCO_GL=egl venv/bin/python -m wall3.collect --env-version main_v1 --seed0 700000 --n 50 --out outputs/wall3/<이름> [--record-every 10]
       합격 벽 개수를 채울 때까지: --target-pass K (시작값을 seed0부터 차례로, 모자란 개수만큼씩 묶어 시도, 최대 --n번)
 """
 import argparse, hashlib, json, os, subprocess, time
@@ -79,13 +79,13 @@ class StepLog:
 
 
 def one_wall(args):
-    seed, out_dir, record = args
-    from wall3.config import SceneConfig
+    seed, out_dir, record, env_version = args
+    from wall3.config import scene_config
     from wall3.scene import WallEnv
     from wall3.expert import WallExpert
     from wall3.spec_metrics import evaluate_env, sensitivity
     t0 = time.time()
-    env = WallEnv(SceneConfig())
+    env = WallEnv(scene_config(env_version))
     ex = WallExpert(env)
     log = StepLog(env)
     rec = None
@@ -107,6 +107,7 @@ def one_wall(args):
     r["sensitivity"] = sensitivity(env)
     r["final_brick_poses"] = env.brick_poses().tolist()
     r["design"] = env.design
+    r["env_version"] = env_version
     r["supply_initial"] = [[p.tolist(), float(y)] for p, y in env.supply]
     r["base_dist_m"] = [float(np.hypot(s["x"], s["y"])) for s in env.design]
     arr = log.arrays()
@@ -134,6 +135,7 @@ def main():
     ap.add_argument("--workers", type=int, default=12)
     ap.add_argument("--record-every", type=int, default=0, help="record every N-th wall to video/ (0 = none)")
     ap.add_argument("--target-pass", type=int, default=0, help="stop once this many walls pass the spec (0 = run all --n)")
+    ap.add_argument("--env-version", required=True, help="pilot_20261016 | main_v1 (wall3.config.ENV_VERSIONS)")
     a = ap.parse_args()
     seeds = list(range(a.seed0, a.seed0 + a.n))
     if seeds[0] < PILOT[0] or seeds[-1] > PILOT[1]:
@@ -142,14 +144,14 @@ def main():
     if out.exists():
         raise SystemExit(f"{out} 이미 있음: 덮어쓰지 않음")
     (out / "raw").mkdir(parents=True)
-    from wall3.config import SceneConfig
+    from wall3.config import scene_config
     from wall3.expert import ExpertConfig
     meta = {"git_commit": subprocess.check_output(["git", "-C", str(SIM), "rev-parse", "HEAD"], text=True).strip(),
             "git_dirty": bool(subprocess.check_output(["git", "-C", str(SIM), "status", "--porcelain", "--", "wall3"], text=True).strip()),
-            "assets": asset_info(), "scene": SceneConfig().to_dict(), "expert": ExpertConfig().to_dict(),
+            "assets": asset_info(), "env_version": a.env_version, "scene": scene_config(a.env_version).to_dict(), "expert": ExpertConfig().to_dict(),
             "seeds": seeds, "phases": PHASES, "cams": CAMS, "started": time.strftime("%Y-%m-%d %H:%M:%S")}
     (out / "collect_config.json").write_text(json.dumps(meta, indent=1, default=float, ensure_ascii=False))
-    jobs = [(s, str(out), bool(a.record_every) and (s - a.seed0) % a.record_every == 0) for s in seeds]
+    jobs = [(s, str(out), bool(a.record_every) and (s - a.seed0) % a.record_every == 0, a.env_version) for s in seeds]
     t0 = time.time()
     res = []
     with Pool(a.workers) as p:

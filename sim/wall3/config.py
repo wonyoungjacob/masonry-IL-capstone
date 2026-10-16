@@ -49,6 +49,12 @@ RETRACT_Q = (-2.020805, -2.131279, 2.263128, -1.702647, -1.570801, -0.450007)
 
 @dataclass
 class SceneConfig:
+    # environment version (2차 지시 나1). Build with scene_config(version); the dataclass defaults are main_v1.
+    env_version: str = "main_v1"
+    brick_rgba: tuple = ((0.64, 0.29, 0.21, 1.0), (0.58, 0.26, 0.19, 1.0))   # 적벽돌 색 (2026-10-16), two shades
+    ctrl_interp: str = "linear"                 # how a 20 Hz target is spread over the 50 physics steps (나2)
+    mortar_stiffness: str = "brick_sim"         # "brick_sim": k = g / sag (pilot, ignores the constraint impedance);
+                                                # "impedance": k = (1 - d)/d · g / sag so the bed really sags `mortar_sag` (나3)
     # robot (P3)
     pedestal_h: float = 0.60
     pedestal_half: float = 0.15                 # square pedestal half-size (m)
@@ -87,6 +93,21 @@ class SceneConfig:
     def to_dict(self):
         d = asdict(self)
         return d
+
+
+# Environment versions. pilot_20261016 reproduces the pilot collection exactly (gray bricks, linear target interpolation,
+# brick_sim mortar stiffness). main_v1 = the dataclass defaults, filled in step by step by 나2 ~ 나4 and frozen in 나5.
+ENV_VERSIONS = {
+    "pilot_20261016": dict(brick_rgba=((0.62, 0.62, 0.60, 1.0), (0.58, 0.58, 0.56, 1.0)), ctrl_interp="linear",
+                           mortar_stiffness="brick_sim"),
+    "main_v1": dict(),
+}
+
+
+def scene_config(version: str, **kw) -> "SceneConfig":
+    if version not in ENV_VERSIONS:
+        raise ValueError(f"unknown env version {version!r}; known: {sorted(ENV_VERSIONS)}")
+    return SceneConfig(env_version=version, **{**ENV_VERSIONS[version], **kw})
 
 
 def slot_distance(x, y):

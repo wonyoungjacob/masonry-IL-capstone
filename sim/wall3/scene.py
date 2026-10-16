@@ -43,6 +43,23 @@ def _quat_rotmat(q):
     return R.reshape(3, 3)
 
 
+def mortar_solref(c):
+    """Direct-form (stiffness, damping) of the bed contact pairs, mass-normalised.
+
+    brick_sim (pilot): k = g / sag. In MuJoCo the static penetration of a soft constraint is (1 − d)/d · a0 / k with the
+    impedance d = solimp dmax (0.99 here), so the real sag was ~1 % of `mortar_sag` (≈ 0.01 mm).
+    impedance (main_v1): k = (1 − d)/d · g / sag, b = 2 ζ √(k / d), so a brick resting on the bed sinks `mortar_sag`.
+    """
+    if c.mortar_stiffness == "brick_sim":
+        k = 9.81 / c.mortar_sag
+        return k, 2.0 * c.mortar_zeta * np.sqrt(k)
+    if c.mortar_stiffness == "impedance":
+        dmax = 0.99
+        k = (1 - dmax) / dmax * 9.81 / c.mortar_sag
+        return k, 2.0 * c.mortar_zeta * np.sqrt(k / dmax)
+    raise ValueError(f"unknown mortar_stiffness {c.mortar_stiffness!r}")
+
+
 def yaw_quat(yaw):
     return np.array([np.cos(yaw / 2), 0.0, 0.0, np.sin(yaw / 2)])
 
@@ -118,12 +135,11 @@ class WallEnv:
             b.add_freejoint(name=f"brick_{i}_free")
             # red brick colour common on Korean sites (적벽돌), two close shades so neighbours stay distinguishable.
             # Colour only (2026-10-16): density 2,000 kg/m3, friction 0.6 and size unchanged; mortar colour unchanged.
-            col = [0.64, 0.29, 0.21, 1] if i % 2 == 0 else [0.58, 0.26, 0.19, 1]
+            col = list(c.brick_rgba[i % 2])
             b.add_geom(name=f"brick_{i}", type=mujoco.mjtGeom.mjGEOM_BOX, size=[d["L"] / 2, W / 2, H / 2],
                        mass=d["L"] * W * H * RHO, friction=fr, rgba=col, condim=3)
         # mortar beds: boundary 1 (on course 1) and 2 (on course 2); one slab per lower brick + one per head joint
-        k = 9.81 / c.mortar_sag
-        bdamp = 2.0 * c.mortar_zeta * np.sqrt(k)
+        k, bdamp = mortar_solref(c)
         tb = JOINT
         self.beds = {}
         for bnd in (1, 2):
@@ -234,6 +250,7 @@ class WallEnv:
         d.ctrl[self.arm_act] = q
         d.ctrl[self.grip_act] = G.grip_ctrl(False, self.cfg.gripper)
         self.last_action = np.r_[q, self.cfg.gripper.open_ctrl]
+        self.prev_action = self.last_action.copy()
         for nm, mid in self.bed_mocap.items():
             d.mocap_pos[mid] = [0, 0, -1]
         # mj_resetData restores eq_active0: cure welds off, gripper coupling equalities on
@@ -257,18 +274,24 @@ class WallEnv:
         in the hand."""
         d = self.data
         new = np.r_[np.asarray(arm_ctrl, float), float(grip_cmd)]
-        old = self.last_action
-        for j in range(1, self.n_sub + 1):
-            c = old + (new - old) * (j / self.n_sub)
+        for c in self._interp(self.last_action, new):
             d.ctrl[self.arm_act] = c[:6]
             d.ctrl[self.grip_act] = [c[6], -c[6]]
             mujoco.mj_step(self.model, d)
+        self.prev_action = self.last_action
         self.last_action = new
         self.t += 1
         self._update_cure()
         for bnd in (1, 2):
             if self.bed_laid[bnd] < 0:
                 self._update_bed(bnd)
+
+    def _interp(self, old, new):
+        """Actuator targets for the n_sub physics steps of one control step (cfg.ctrl_interp)."""
+        n = self.n_sub
+        if self.cfg.ctrl_interp == "linear":            # pilot_20261016
+            return [old + (new - old) * (j / n) for j in range(1, n + 1)]
+        raise ValueError(f"unknown ctrl_interp {self.cfg.ctrl_interp!r}")
 
     # ------------------------------------------------------------------ state
     def brick_pose(self, i):

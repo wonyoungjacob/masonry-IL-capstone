@@ -16,7 +16,7 @@ import numpy as np
 
 SIM = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SIM))
-from wall3.config import SceneConfig                       # noqa: E402
+from wall3.config import scene_config                      # noqa: E402
 from wall3.scene import WallEnv                            # noqa: E402
 from wall3.expert import WallExpert                        # noqa: E402
 from wall3.spec_metrics import evaluate_env                # noqa: E402
@@ -45,7 +45,7 @@ def summary(ev):
 # ---------------------------------------------------------------- viewer
 def view(a):
     import mujoco.viewer
-    env = WallEnv(SceneConfig())
+    env = WallEnv(scene_config(a.env_version))
     ex = WallExpert(env)
     for w in range(a.walls):
         seed = a.seed + w
@@ -151,9 +151,9 @@ def speedup(src, dst, factor, width=None):
 
 
 def record(a):
-    env = WallEnv(SceneConfig())
+    env = WallEnv(scene_config(a.env_version))
     ex = WallExpert(env)
-    rec = Recorder(env, a.record, label=f"seed {a.seed}")
+    rec = Recorder(env, a.record, label=f"{a.env_version} seed {a.seed}")
     env.reset(a.seed, arm_q=ex.q_ret)
     rec.frame("start")
 
@@ -182,6 +182,7 @@ def main():
     ap.add_argument("--record", default="", help="녹화 mp4 경로 (화면 없이, EGL)")
     ap.add_argument("--short", type=int, default=0, help="녹화: N배속 축약본도 저장")
     ap.add_argument("--short-width", type=int, default=640)
+    ap.add_argument("--env-version", default="main_v1", help="pilot_20261016 | main_v1")
     a = ap.parse_args()
     if not 700000 <= a.seed <= 700049 or a.seed + a.walls - 1 > 700049:
         raise SystemExit("파일럿 시작값 범위(700000 ~ 700049)만 쓴다")

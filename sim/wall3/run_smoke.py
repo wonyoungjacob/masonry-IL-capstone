@@ -2,13 +2,15 @@
 
 검사: 벽돌 16장 모두 시작·끝 기록, 끝 > 시작, 다음 벽돌 시작 = 이전 벽돌 끝(철수 자세에서 출발), 끝에서 벽돌 정지,
 벽돌 한 장 10초 이내. 결과는 --out/smoke.json.
-실행: cd sim && MUJOCO_GL=egl venv/bin/python -m wall3.run_smoke --seeds 700000 700001 700002 --out outputs/wall3/<이름>
+실행: cd sim && MUJOCO_GL=egl venv/bin/python -m wall3.run_smoke --env-version main_v1 --seeds 700000 700001 700002 --out outputs/wall3/<이름>
 """
 import argparse, json, subprocess, time
 from multiprocessing import Pool
 from pathlib import Path
 
-from wall3.config import SceneConfig
+from functools import partial
+
+from wall3.config import scene_config
 from wall3.scene import WallEnv
 from wall3.expert import WallExpert, ExpertConfig
 from wall3.spec_metrics import evaluate_env, sensitivity
@@ -37,8 +39,8 @@ def check_marks(r, n=16, limit_s=10.0):
     return probs
 
 
-def one(seed):
-    env = WallEnv(SceneConfig())
+def one(seed, env_version):
+    env = WallEnv(scene_config(env_version))
     ex = WallExpert(env)
     t0 = time.time()
     r = ex.run(seed)
@@ -55,6 +57,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--seeds", type=int, nargs="+", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--env-version", required=True)
     a = ap.parse_args()
     if any(not 700000 <= s <= 700049 for s in a.seeds):
         raise SystemExit("파일럿 시작값 범위(700000 ~ 700049)만 쓴다")
@@ -63,9 +66,9 @@ def main():
         raise SystemExit(f"{out} 이미 있음: 덮어쓰지 않음")
     out.mkdir(parents=True)
     with Pool(min(len(a.seeds), 16)) as p:
-        res = p.map(one, a.seeds)
+        res = p.map(partial(one, env_version=a.env_version), a.seeds)
     meta = {"git_commit": subprocess.check_output(["git", "-C", str(SIM), "rev-parse", "HEAD"], text=True).strip(),
-            "scene": SceneConfig().to_dict(), "expert": ExpertConfig().to_dict()}
+            "env_version": a.env_version, "scene": scene_config(a.env_version).to_dict(), "expert": ExpertConfig().to_dict()}
     (out / "smoke.json").write_text(json.dumps({"meta": meta, "walls": res}, indent=1, default=float, ensure_ascii=False))
     for r in res:
         times = [b["duration_s"] for b in r["bricks"] if "duration_s" in b]
