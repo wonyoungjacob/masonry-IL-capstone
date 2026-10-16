@@ -1,0 +1,958 @@
+{
+ "freeze_A_with_mortar_correction": {
+  "env_version": "main_v1",
+  "git_commit": "5e0312ec80c150ec7a3f90225e28e3ea3005471d",
+  "git_dirty_wall3": false,
+  "scene_sha256": "29e283fa3cb143fb93634cf7a59bf0e6d2c8853bb9c8f888a7fb820cbdb1ea23",
+  "expert_sha256": "a5ef1227c4dc656cfb5361858dd9d789f0a7d51b3d94a6e2a62db70fc96098f5",
+  "g1_sha256": "eea399b13d798ca42af69a15fbbb4430af50de4aa0a42220527f6720a6bdb36d",
+  "code_sha256": "aa15e97f6941303d0c832c668dc0e136abfe657474c2154d1740f1c519911f26",
+  "scene": {
+   "env_version": "main_v1",
+   "brick_rgba": [
+    [
+     0.64,
+     0.29,
+     0.21,
+     1.0
+    ],
+    [
+     0.58,
+     0.26,
+     0.19,
+     1.0
+    ]
+   ],
+   "ctrl_interp": "linear",
+   "integrator": "implicitfast",
+   "arm_damping": "actuator",
+   "arm_kd": [],
+   "arm_joint_damping": [],
+   "mortar_stiffness": "impedance",
+   "grip_lock": true,
+   "lock_mu": 0.6,
+   "lock_amax": 7.4,
+   "lock_vlin": 0.005,
+   "lock_vang": 0.05,
+   "lock_settle": 0.1,
+   "lock_open_eps": 0.002,
+   "lock_drop": 0.01,
+   "lock_solref": [
+    0.004,
+    1.0
+   ],
+   "pedestal_h": 0.6,
+   "pedestal_half": 0.15,
+   "table_h": 0.35,
+   "table_x": [
+    -1.0,
+    1.0
+   ],
+   "table_y": [
+    -1.0,
+    -0.17
+   ],
+   "supply_slots": [
+    [
+     -0.91,
+     -0.25
+    ],
+    [
+     -0.65,
+     -0.25
+    ],
+    [
+     0.91,
+     -0.25
+    ],
+    [
+     0.65,
+     -0.25
+    ],
+    [
+     0.65,
+     -0.43
+    ],
+    [
+     -0.65,
+     -0.43
+    ],
+    [
+     -0.39,
+     -0.43
+    ],
+    [
+     -0.39,
+     -0.79
+    ],
+    [
+     0.65,
+     -0.61
+    ],
+    [
+     0.39,
+     -0.43
+    ],
+    [
+     0.39,
+     -0.61
+    ],
+    [
+     -0.65,
+     -0.61
+    ],
+    [
+     -0.39,
+     -0.61
+    ],
+    [
+     0.39,
+     -0.79
+    ],
+    [
+     0.13,
+     -0.79
+    ],
+    [
+     0.13,
+     -0.61
+    ]
+   ],
+   "scatter_pos": 0.01,
+   "scatter_yaw_deg": 10.0,
+   "mortar_sag": 0.001055520371543171,
+   "mortar_zeta": 1.0,
+   "mortar_friction": 0.75,
+   "bed_overhang": 0.002,
+   "cure_settle_steps": 40,
+   "hand_clear": 0.05,
+   "slot_tol_xy": 0.008,
+   "slot_tol_z": 0.003,
+   "slot_tol_yaw_deg": 10.0,
+   "slot_tol_tilt_deg": 10.0,
+   "timestep": 0.001,
+   "ctrl_dt": 0.05,
+   "impratio": 10.0,
+   "noslip_iterations": 3,
+   "img": 128,
+   "hi_w": 1280,
+   "hi_h": 960,
+   "gripper": {
+    "exclude_self": true,
+    "kp": 100.0,
+    "kv": 1.0,
+    "torque_limit": 4.0,
+    "close_ctrl": 0.7,
+    "open_ctrl": 0.0,
+    "eq_solref": [
+     0.005,
+     1.0
+    ],
+    "eq_solimp": [
+     0.95,
+     0.99,
+     0.001
+    ],
+    "parallel_pads": true,
+    "close_time": 0.5,
+    "open_time": 0.3
+   },
+   "grasp_clear": 0.005
+  },
+  "expert": {
+   "vmax": [
+    2.094,
+    2.094,
+    3.142,
+    3.142,
+    3.142,
+    3.142
+   ],
+   "vfrac": 0.95,
+   "amax": [
+    6.0,
+    6.0,
+    8.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "approach": 0.1,
+   "t_down": 0.5,
+   "t_up": 0.4,
+   "t_close": 0.75,
+   "tcp_same_pass": true,
+   "t_open": 0.25,
+   "hover": 0.003,
+   "place_gap": 0.0005,
+   "t_align": 0.25,
+   "t_hover": 0.2,
+   "servo_iters": 3,
+   "servo_steps": 3,
+   "min_move": 0.4,
+   "grip_empty": 0.4,
+   "slip_abort": 0.03,
+   "wait_bed": 6.0,
+   "grip_squeeze": 0.06,
+   "vert_lag": 0.45,
+   "lag_supply": 0.3,
+   "lag_wall": 0.35,
+   "t_unload": 0.1
+  },
+  "g1": {
+   "lift": 0.015,
+   "close_cmd_min": 0.2,
+   "t_closed_min": 0.3,
+   "t_settle": 0.3,
+   "t_load": 0.2,
+   "t_squeeze": 0.2,
+   "t_restore": 0.1,
+   "t_open": 0.4,
+   "thr_load": null,
+   "thr_angle": null
+  },
+  "assets": {
+   "ur10e_xml": "a8f709df340788033d497ff7d892fdecab4f6cc9c36299a00f57efa9f25e0744",
+   "gripper_xml": "4792761b61411052ced36116ee8a0553429c9756d095fddf3730bfedb67900f0",
+   "menagerie_source": "repo:   https://github.com/google-deepmind/mujoco_menagerie\ncommit: 62ab00f2bc44f6f20c1c9b7a13f3fb1dd41a4e35\nfolder: universal_robots_ur10e (copied unchanged)\nfetched: 2026-10-15",
+   "robosuite_source": "Robotiq 2F-140 gripper MuJoCo model, copied unchanged from robosuite\nrepo:   https://github.com/ARISE-Initiative/robosuite\ncommit: 5ce6643f3092639d08f7b0f90ed1c6a84f50552c\nfiles:  robosuite/models/assets/grippers/robotiq_gripper_140.xml\n        robosuite/models/assets/grippers/meshes/robotiq_140_gripper/\n        LICENSE (MIT)\nfetched: 2026-10-15"
+  }
+ },
+ "recheck_A": {
+  "n_walls_attempted": 10,
+  "n_spec_pass": 5,
+  "pass_rate": 0.5,
+  "item_fail_counts": {
+   "2_line_plane": 2,
+   "3_plumb": 5
+  },
+  "fail_details": [
+   {
+    "seed": 700200,
+    "aborted": null,
+    "exists": true,
+    "items": {
+     "2_line_plane": {
+      "value_mm": 2.0163579476586206,
+      "tol_mm": 2.0,
+      "slot": 13
+     },
+     "3_plumb": {
+      "value_mm": 2.593335292863763,
+      "tol_mm": 2.0,
+      "slot": 15
+     }
+    }
+   },
+   {
+    "seed": 700201,
+    "aborted": null,
+    "exists": true,
+    "items": {
+     "3_plumb": {
+      "value_mm": 2.1704824975249393,
+      "tol_mm": 2.0,
+      "slot": 15
+     }
+    }
+   },
+   {
+    "seed": 700206,
+    "aborted": null,
+    "exists": true,
+    "items": {
+     "2_line_plane": {
+      "value_mm": 6.633342936290083,
+      "tol_mm": 2.0,
+      "slot": 15
+     },
+     "3_plumb": {
+      "value_mm": 6.9693609666388046,
+      "tol_mm": 2.0,
+      "slot": 15
+     }
+    }
+   },
+   {
+    "seed": 700207,
+    "aborted": null,
+    "exists": true,
+    "items": {
+     "3_plumb": {
+      "value_mm": 2.637560573494846,
+      "tol_mm": 2.0,
+      "slot": 15
+     }
+    }
+   },
+   {
+    "seed": 700209,
+    "aborted": null,
+    "exists": true,
+    "items": {
+     "3_plumb": {
+      "value_mm": 2.162220628385003,
+      "tol_mm": 2.0,
+      "slot": 15
+     }
+    }
+   }
+  ],
+  "item_values_mm": {
+   "2_line_plane": {
+    "median": 1.7355501560913202,
+    "p95": 4.55569969140592,
+    "max": 6.633342936290083
+   },
+   "3_plumb": {
+    "median": 2.0179119879674134,
+    "p95": 5.020050789724019,
+    "max": 6.9693609666388046
+   },
+   "4_position": {
+    "median": 0.4468586969702537,
+    "p95": 0.45073372857861727,
+    "max": 0.45142250479213164
+   }
+  },
+  "bed_joint_mm": [
+   8.628462694861671,
+   9.510256608166102
+  ],
+  "brick_time_s": {
+   "n": 160,
+   "median": 8.775,
+   "p95": 9.450000000000001,
+   "max": 9.5,
+   "over_10s": 0,
+   "over_10s_slots": {},
+   "per_slot": {
+    "0": {
+     "median": 8.65,
+     "max": 8.65
+    },
+    "1": {
+     "median": 8.6,
+     "max": 8.6
+    },
+    "2": {
+     "median": 8.85,
+     "max": 8.85
+    },
+    "3": {
+     "median": 8.6,
+     "max": 8.6
+    },
+    "4": {
+     "median": 8.6,
+     "max": 8.6
+    },
+    "5": {
+     "median": 8.55,
+     "max": 8.55
+    },
+    "6": {
+     "median": 8.8,
+     "max": 8.8
+    },
+    "7": {
+     "median": 9.450000000000001,
+     "max": 9.450000000000001
+    },
+    "8": {
+     "median": 8.9,
+     "max": 8.9
+    },
+    "9": {
+     "median": 8.700000000000001,
+     "max": 8.700000000000001
+    },
+    "10": {
+     "median": 8.75,
+     "max": 8.75
+    },
+    "11": {
+     "median": 8.75,
+     "max": 8.75
+    },
+    "12": {
+     "median": 9.05,
+     "max": 9.1
+    },
+    "13": {
+     "median": 9.1,
+     "max": 9.1
+    },
+    "14": {
+     "median": 9.25,
+     "max": 9.25
+    },
+    "15": {
+     "median": 9.1,
+     "max": 9.5
+    }
+   }
+  },
+  "marks": {
+   "all_pass_walls_16_ok": true,
+   "problems": {}
+  },
+  "in_hand_drift_transport_mm": {
+   "median": 0.14843219704992616,
+   "p95": 0.19928980976154162,
+   "max": 0.5966827889075126
+  },
+  "grip_lock": {
+   "grasps": 160,
+   "grasps_locked": 160,
+   "locks": 162,
+   "releases_by_reason": {
+    "open": 160,
+    "torque": 2
+   },
+   "overload_releases": 2,
+   "lock_jump_mm_max": 0.0037908250417627016,
+   "lock_max_dev_mm": 0.19246559800742924,
+   "pad_normal_N_min": 37.60359501610756,
+   "grasp_offset_mm": {
+    "median": 12.655506224154644,
+    "max": 17.5716620850323
+   },
+   "in_hand_drift_max_mm": 2.1190019889864664,
+   "sag_at_cure_mm": {
+    "full": {
+     "n": 90,
+     "min": 1.008326009352437,
+     "median": 1.1718533866943115,
+     "max": 1.2314972873881993
+    },
+    "half": {
+     "n": 20,
+     "min": 0.4999833554366435,
+     "median": 0.4999833585292808,
+     "max": 0.49998335867644084
+    }
+   }
+  },
+  "cost": {
+   "wall_sim_seconds": 143.69500000000002,
+   "wall_compute_s_per_worker": {
+    "median": 40.74350082874298,
+    "max": 58.75411105155945
+   },
+   "workers": 10,
+   "collect_elapsed_s": 59.37239956855774,
+   "raw_mb_per_wall": 108.318062,
+   "dataset_mb_per_pass_wall": null,
+   "estimate_1000_pass_walls": {
+    "walls_to_attempt": 2000.0,
+    "collect_hours_at_this_parallelism": 3.2984666426976523,
+    "convert_hours": null,
+    "raw_gb": 216.636124,
+    "dataset_gb": null
+   }
+  },
+  "reproducibility": {
+   "collect_runs": [
+    {
+     "raw_dir": "outputs/wall3/recheck_main_v1_20261017",
+     "git_commit": "5e0312ec80c150ec7a3f90225e28e3ea3005471d",
+     "git_dirty_wall3": false,
+     "seeds_attempted": [
+      700200,
+      700201,
+      700202,
+      700203,
+      700204,
+      700205,
+      700206,
+      700207,
+      700208,
+      700209
+     ]
+    }
+   ],
+   "assets": {
+    "ur10e_xml": "a8f709df340788033d497ff7d892fdecab4f6cc9c36299a00f57efa9f25e0744",
+    "gripper_xml": "4792761b61411052ced36116ee8a0553429c9756d095fddf3730bfedb67900f0",
+    "menagerie_source": "repo:   https://github.com/google-deepmind/mujoco_menagerie\ncommit: 62ab00f2bc44f6f20c1c9b7a13f3fb1dd41a4e35\nfolder: universal_robots_ur10e (copied unchanged)\nfetched: 2026-10-15",
+    "robosuite_source": "Robotiq 2F-140 gripper MuJoCo model, copied unchanged from robosuite\nrepo:   https://github.com/ARISE-Initiative/robosuite\ncommit: 5ce6643f3092639d08f7b0f90ed1c6a84f50552c\nfiles:  robosuite/models/assets/grippers/robotiq_gripper_140.xml\n        robosuite/models/assets/grippers/meshes/robotiq_140_gripper/\n        LICENSE (MIT)\nfetched: 2026-10-15"
+   },
+   "raw_sha256": {
+    "700200": "4501951737479111a62612178d98e5ea99dd88108454d7ab0ce1ba9e2b0c03b8",
+    "700201": "d57a00c0765531e3bb7bcf7b7498f3688ca66893b4727fb0cb8db8fdcbf4e933",
+    "700202": "3a7294ba77fd004e84b35e47c1061fc883d2f27d43c0645b724e8a2387c10e57",
+    "700203": "8abd2833a94e6f1be3b46652ce173b8a228af78527399793014e608bed99949e",
+    "700204": "ea1bd3ae2cde553cb042e166081e3ecd6d2e939958826b2229c8b0442c423bef",
+    "700205": "cfad819d694debfd8e504c15b33bbd53ceb0c455badf5ba2dc43824568cbc231",
+    "700206": "f42cfb2e0042498ea0c420a6dc2fb51839ad1bfa7be0c3fa252b4a6169b26076",
+    "700207": "bc8b3740dcf95a6f93c0d48a774ed906115dec97266dde228fe718be5cf5951f",
+    "700208": "94b92100b530ed0ac1b84892cefdc849486dcd6e3ed94a13f388320dde91eb7d",
+    "700209": "c8c40e3b36b758ccf3f0f343ff4379e28a2cb68a78e5d562ca7fc66e6a1e36b4"
+   }
+  }
+ },
+ "freeze_B_mortar_reverted": {
+  "env_version": "main_v1",
+  "git_commit": "20475e7c96b6959b7223856530f3e942a28bc270",
+  "git_dirty_wall3": false,
+  "scene_sha256": "8fc351a133d890aa271b6fad73bfccd4ee0c8a83f7accc34d67ef5a084618184",
+  "expert_sha256": "a5ef1227c4dc656cfb5361858dd9d789f0a7d51b3d94a6e2a62db70fc96098f5",
+  "g1_sha256": "eea399b13d798ca42af69a15fbbb4430af50de4aa0a42220527f6720a6bdb36d",
+  "code_sha256": "ae5c8bfaefbbd852191ac7fbca8e21da8d279e6488a4f447129b72fea33c89e9",
+  "scene": {
+   "env_version": "main_v1",
+   "brick_rgba": [
+    [
+     0.64,
+     0.29,
+     0.21,
+     1.0
+    ],
+    [
+     0.58,
+     0.26,
+     0.19,
+     1.0
+    ]
+   ],
+   "ctrl_interp": "linear",
+   "integrator": "implicitfast",
+   "arm_damping": "actuator",
+   "arm_kd": [],
+   "arm_joint_damping": [],
+   "mortar_stiffness": "brick_sim",
+   "grip_lock": true,
+   "lock_mu": 0.6,
+   "lock_amax": 7.4,
+   "lock_vlin": 0.005,
+   "lock_vang": 0.05,
+   "lock_settle": 0.1,
+   "lock_open_eps": 0.002,
+   "lock_drop": 0.01,
+   "lock_solref": [
+    0.004,
+    1.0
+   ],
+   "pedestal_h": 0.6,
+   "pedestal_half": 0.15,
+   "table_h": 0.35,
+   "table_x": [
+    -1.0,
+    1.0
+   ],
+   "table_y": [
+    -1.0,
+    -0.17
+   ],
+   "supply_slots": [
+    [
+     -0.91,
+     -0.25
+    ],
+    [
+     -0.65,
+     -0.25
+    ],
+    [
+     0.91,
+     -0.25
+    ],
+    [
+     0.65,
+     -0.25
+    ],
+    [
+     0.65,
+     -0.43
+    ],
+    [
+     -0.65,
+     -0.43
+    ],
+    [
+     -0.39,
+     -0.43
+    ],
+    [
+     -0.39,
+     -0.79
+    ],
+    [
+     0.65,
+     -0.61
+    ],
+    [
+     0.39,
+     -0.43
+    ],
+    [
+     0.39,
+     -0.61
+    ],
+    [
+     -0.65,
+     -0.61
+    ],
+    [
+     -0.39,
+     -0.61
+    ],
+    [
+     0.39,
+     -0.79
+    ],
+    [
+     0.13,
+     -0.79
+    ],
+    [
+     0.13,
+     -0.61
+    ]
+   ],
+   "scatter_pos": 0.01,
+   "scatter_yaw_deg": 10.0,
+   "mortar_sag": 0.001055520371543171,
+   "mortar_zeta": 1.0,
+   "mortar_friction": 0.75,
+   "bed_overhang": 0.002,
+   "cure_settle_steps": 40,
+   "hand_clear": 0.05,
+   "slot_tol_xy": 0.008,
+   "slot_tol_z": 0.003,
+   "slot_tol_yaw_deg": 10.0,
+   "slot_tol_tilt_deg": 10.0,
+   "timestep": 0.001,
+   "ctrl_dt": 0.05,
+   "impratio": 10.0,
+   "noslip_iterations": 3,
+   "img": 128,
+   "hi_w": 1280,
+   "hi_h": 960,
+   "gripper": {
+    "exclude_self": true,
+    "kp": 100.0,
+    "kv": 1.0,
+    "torque_limit": 4.0,
+    "close_ctrl": 0.7,
+    "open_ctrl": 0.0,
+    "eq_solref": [
+     0.005,
+     1.0
+    ],
+    "eq_solimp": [
+     0.95,
+     0.99,
+     0.001
+    ],
+    "parallel_pads": true,
+    "close_time": 0.5,
+    "open_time": 0.3
+   },
+   "grasp_clear": 0.005
+  },
+  "expert": {
+   "vmax": [
+    2.094,
+    2.094,
+    3.142,
+    3.142,
+    3.142,
+    3.142
+   ],
+   "vfrac": 0.95,
+   "amax": [
+    6.0,
+    6.0,
+    8.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "approach": 0.1,
+   "t_down": 0.5,
+   "t_up": 0.4,
+   "t_close": 0.75,
+   "tcp_same_pass": true,
+   "t_open": 0.25,
+   "hover": 0.003,
+   "place_gap": 0.0005,
+   "t_align": 0.25,
+   "t_hover": 0.2,
+   "servo_iters": 3,
+   "servo_steps": 3,
+   "min_move": 0.4,
+   "grip_empty": 0.4,
+   "slip_abort": 0.03,
+   "wait_bed": 6.0,
+   "grip_squeeze": 0.06,
+   "vert_lag": 0.45,
+   "lag_supply": 0.3,
+   "lag_wall": 0.35,
+   "t_unload": 0.1
+  },
+  "g1": {
+   "lift": 0.015,
+   "close_cmd_min": 0.2,
+   "t_closed_min": 0.3,
+   "t_settle": 0.3,
+   "t_load": 0.2,
+   "t_squeeze": 0.2,
+   "t_restore": 0.1,
+   "t_open": 0.4,
+   "thr_load": null,
+   "thr_angle": null
+  },
+  "assets": {
+   "ur10e_xml": "a8f709df340788033d497ff7d892fdecab4f6cc9c36299a00f57efa9f25e0744",
+   "gripper_xml": "4792761b61411052ced36116ee8a0553429c9756d095fddf3730bfedb67900f0",
+   "menagerie_source": "repo:   https://github.com/google-deepmind/mujoco_menagerie\ncommit: 62ab00f2bc44f6f20c1c9b7a13f3fb1dd41a4e35\nfolder: universal_robots_ur10e (copied unchanged)\nfetched: 2026-10-15",
+   "robosuite_source": "Robotiq 2F-140 gripper MuJoCo model, copied unchanged from robosuite\nrepo:   https://github.com/ARISE-Initiative/robosuite\ncommit: 5ce6643f3092639d08f7b0f90ed1c6a84f50552c\nfiles:  robosuite/models/assets/grippers/robotiq_gripper_140.xml\n        robosuite/models/assets/grippers/meshes/robotiq_140_gripper/\n        LICENSE (MIT)\nfetched: 2026-10-15"
+  }
+ },
+ "recheck_B": {
+  "n_walls_attempted": 10,
+  "n_spec_pass": 9,
+  "pass_rate": 0.9,
+  "item_fail_counts": {
+   "2_line_plane": 1
+  },
+  "fail_details": [
+   {
+    "seed": 700206,
+    "aborted": null,
+    "exists": true,
+    "items": {
+     "2_line_plane": {
+      "value_mm": 2.071899257812078,
+      "tol_mm": 2.0,
+      "slot": 15
+     }
+    }
+   }
+  ],
+  "item_values_mm": {
+   "2_line_plane": {
+    "median": 0.46684336929910586,
+    "p95": 1.3678814127771028,
+    "max": 2.071899257812078
+   },
+   "3_plumb": {
+    "median": 0.5215207191417159,
+    "p95": 1.2735953209803186,
+    "max": 1.7593842441663288
+   },
+   "4_position": {
+    "median": 0.4467904536729628,
+    "p95": 0.45056313431522943,
+    "max": 0.4513590724964933
+   }
+  },
+  "bed_joint_mm": [
+   9.985676704808863,
+   9.996792152074413
+  ],
+  "brick_time_s": {
+   "n": 160,
+   "median": 8.775,
+   "p95": 9.450000000000001,
+   "max": 9.5,
+   "over_10s": 0,
+   "over_10s_slots": {},
+   "per_slot": {
+    "0": {
+     "median": 8.65,
+     "max": 8.65
+    },
+    "1": {
+     "median": 8.6,
+     "max": 8.6
+    },
+    "2": {
+     "median": 8.85,
+     "max": 8.85
+    },
+    "3": {
+     "median": 8.6,
+     "max": 8.6
+    },
+    "4": {
+     "median": 8.6,
+     "max": 8.6
+    },
+    "5": {
+     "median": 8.55,
+     "max": 8.55
+    },
+    "6": {
+     "median": 8.8,
+     "max": 8.8
+    },
+    "7": {
+     "median": 9.450000000000001,
+     "max": 9.450000000000001
+    },
+    "8": {
+     "median": 8.9,
+     "max": 8.9
+    },
+    "9": {
+     "median": 8.700000000000001,
+     "max": 8.700000000000001
+    },
+    "10": {
+     "median": 8.75,
+     "max": 8.75
+    },
+    "11": {
+     "median": 8.75,
+     "max": 8.75
+    },
+    "12": {
+     "median": 9.05,
+     "max": 9.1
+    },
+    "13": {
+     "median": 9.1,
+     "max": 9.1
+    },
+    "14": {
+     "median": 9.25,
+     "max": 9.25
+    },
+    "15": {
+     "median": 9.1,
+     "max": 9.5
+    }
+   }
+  },
+  "marks": {
+   "all_pass_walls_16_ok": true,
+   "problems": {}
+  },
+  "in_hand_drift_transport_mm": {
+   "median": 0.1485054041117289,
+   "p95": 0.19928980976154162,
+   "max": 0.5966827889075126
+  },
+  "grip_lock": {
+   "grasps": 160,
+   "grasps_locked": 160,
+   "locks": 162,
+   "releases_by_reason": {
+    "open": 160,
+    "torque": 2
+   },
+   "overload_releases": 2,
+   "lock_jump_mm_max": 0.0037908250417627016,
+   "lock_max_dev_mm": 0.19246559800742924,
+   "pad_normal_N_min": 37.60359501610756,
+   "grasp_offset_mm": {
+    "median": 12.655506224154754,
+    "max": 17.535619170061366
+   },
+   "in_hand_drift_max_mm": 1.9046424986795356,
+   "sag_at_cure_mm": {
+    "full": {
+     "n": 90,
+     "min": 0.004775781518285003,
+     "median": 0.00477596392728616,
+     "max": 0.004775963927450809
+    },
+    "half": {
+     "n": 20,
+     "min": 0.014323271524871277,
+     "median": 0.014323271525053423,
+     "max": 0.014323271525117608
+    }
+   }
+  },
+  "cost": {
+   "wall_sim_seconds": 143.69500000000002,
+   "wall_compute_s_per_worker": {
+    "median": 39.96764898300171,
+    "max": 58.23724126815796
+   },
+   "workers": 10,
+   "collect_elapsed_s": 58.91077518463135,
+   "raw_mb_per_wall": 108.1522126,
+   "dataset_mb_per_pass_wall": null,
+   "estimate_1000_pass_walls": {
+    "walls_to_attempt": 1111.111111111111,
+    "collect_hours_at_this_parallelism": 1.8182338019947946,
+    "convert_hours": null,
+    "raw_gb": 120.1691251111111,
+    "dataset_gb": null
+   }
+  },
+  "reproducibility": {
+   "collect_runs": [
+    {
+     "raw_dir": "outputs/wall3/recheck_main_v1_20261017b",
+     "git_commit": "20475e7c96b6959b7223856530f3e942a28bc270",
+     "git_dirty_wall3": false,
+     "seeds_attempted": [
+      700200,
+      700201,
+      700202,
+      700203,
+      700204,
+      700205,
+      700206,
+      700207,
+      700208,
+      700209
+     ]
+    }
+   ],
+   "assets": {
+    "ur10e_xml": "a8f709df340788033d497ff7d892fdecab4f6cc9c36299a00f57efa9f25e0744",
+    "gripper_xml": "4792761b61411052ced36116ee8a0553429c9756d095fddf3730bfedb67900f0",
+    "menagerie_source": "repo:   https://github.com/google-deepmind/mujoco_menagerie\ncommit: 62ab00f2bc44f6f20c1c9b7a13f3fb1dd41a4e35\nfolder: universal_robots_ur10e (copied unchanged)\nfetched: 2026-10-15",
+    "robosuite_source": "Robotiq 2F-140 gripper MuJoCo model, copied unchanged from robosuite\nrepo:   https://github.com/ARISE-Initiative/robosuite\ncommit: 5ce6643f3092639d08f7b0f90ed1c6a84f50552c\nfiles:  robosuite/models/assets/grippers/robotiq_gripper_140.xml\n        robosuite/models/assets/grippers/meshes/robotiq_140_gripper/\n        LICENSE (MIT)\nfetched: 2026-10-15"
+   },
+   "raw_sha256": {
+    "700200": "1e732d5403509b38c60b9db8f9a2ccbf3902391ec5ea09e429cc601c19b395bd",
+    "700201": "4baa54966cf5f0c6c8cb53304d8fc001e05ff6443754ef20f49b08082b333d4e",
+    "700202": "05d65bf61ebb42714e9951a4c1bb0ad06bb55986a6d6f6bb7f01d30605abd180",
+    "700203": "05356da4005a03f73886b597cfd58f65fc6c6f70c28818453861230e4777834b",
+    "700204": "749cfddfa241c12260598d3ed26283a45d37f32cadf2fc238ba6317ac4fe529f",
+    "700205": "71d54a20a103763ebdbb244c62cd71ba106afc8116c22a7d2b15f2c26f0e1263",
+    "700206": "b0a026d90624be745d3696faf5427390ea40f022bb8e335df252ca1289543094",
+    "700207": "9091ae36f3fb0d0fc304752d916b131af14cfeb4c72aabaa718798fa03cdbc61",
+    "700208": "8129019dc7ee4dc3ac591e0e75b24791e3501693521139b1a3cdda960b498e84",
+    "700209": "b3e13e23f68f61fb2584a2955961ca7fd9a382b160396f64b26504df816b197c"
+   }
+  }
+ },
+ "torque_release_diagnosis_700206_B": {
+  "locked_physics_steps": 57584,
+  "torque_cap_Nm": {
+   "median": 1.4,
+   "p5": 1.095,
+   "min": 0.0228
+  },
+  "steps_cap_below_0.1": 2,
+  "phases": [
+   "to_wall",
+   "place_align"
+  ],
+  "contacts_per_pad_when_low": "2 / 2, spread 0.6 mm (normally 5 ~ 8 per pad)",
+  "releases": [
+   {
+    "t": 1133,
+    "slot": 6,
+    "T_n": -0.311,
+    "cap": 0.023
+   },
+   {
+    "t": 2761,
+    "slot": 15,
+    "T_n": 0.111,
+    "cap": 0.026
+   }
+  ],
+  "after": "brick relocked in 0.45 s / 1.3 s; slot 15 relocked with 8.0 deg yaw offset, in-hand drift 1.90 mm, wall 700206 fails 2 (2.07 mm)"
+ }
+}
