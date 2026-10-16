@@ -30,7 +30,8 @@ class ExpertConfig:
     approach: float = 0.10                  # m above grasp / place
     t_down: float = 0.50                    # s, approach → grasp / hover
     t_up: float = 0.40                      # s, grasp → approach, release → approach
-    t_close: float = 0.45                   # s, gripper closing at the supply (command ramp to the hold command + settle)
+    t_close: float = 0.75                   # s, gripper closing at the supply (command ramp + settle; the grip lock needs the 0.5 s ramp + 0.1 s still)
+    tcp_same_pass: bool = True              # in-hand pose from one kinematics pass (False = pilot: TCP from qpos, brick from xpos)
     t_open: float = 0.25                    # s, gripper opening at the wall (ramp from just above the stalled closure)
     hover: float = 0.003                    # m, brick bottom above its support during the pre-release correction
     place_gap: float = 0.0005               # m, brick bottom above its support when released
@@ -51,6 +52,17 @@ class ExpertConfig:
 
     def to_dict(self):
         return asdict(self)
+
+
+# expert settings per environment version (pilot_20261016 reproduces the pilot demos exactly)
+EXPERT_VERSIONS = {
+    "pilot_20261016": dict(t_close=0.45, tcp_same_pass=False),
+    "main_v1": dict(),
+}
+
+
+def expert_config(version, **kw):
+    return ExpertConfig(**{**EXPERT_VERSIONS[version], **kw})
 
 
 def minjerk(n):
@@ -79,7 +91,7 @@ def smooth_trap(u):
 class WallExpert:
     def __init__(self, env: WallEnv, cfg: ExpertConfig | None = None):
         self.env = env
-        self.cfg = cfg or ExpertConfig()
+        self.cfg = cfg or expert_config(env.cfg.env_version)
         m = env.model
         self.ik = UR10eIK(m)
         self.dt = env.cfg.ctrl_dt
@@ -248,10 +260,16 @@ class WallExpert:
                 self.fail = f"slip:{phase}:{drift * 1000:.1f}mm"
 
     def _brick_in_tcp(self, i):
-        pt, Rt = self.env.tcp()
-        pb, qb = self.env.brick_pose(i)
-        Rb = _quat_rotmat(qb)
-        return Rt.T @ (pb - pt), Rt.T @ Rb
+        """Brick pose in the TCP frame. Both from the same kinematics pass (xpos/site_xpos are the pre-integration state of
+        the last physics step; mixing them with the post-integration qpos biased this by speed × 1 ms, up to ~2 mm)."""
+        if not self.cfg.tcp_same_pass:
+            pt, Rt = self.env.tcp()
+            pb, qb = self.env.brick_pose(i)
+            return Rt.T @ (pb - pt), Rt.T @ _quat_rotmat(qb)
+        d = self.env.data
+        pt, Rt = d.site_xpos[self.env.tcp_sid], d.site_xmat[self.env.tcp_sid].reshape(3, 3)
+        b = self.env.brick_bid[i]
+        return Rt.T @ (d.xpos[b] - pt), Rt.T @ d.xmat[b].reshape(3, 3)
 
     # ------------------------------------------------------------------ one brick
     def _brick(self, k):
@@ -378,7 +396,12 @@ class WallExpert:
         end = env.t
         pb_end, qb_end = env.brick_pose(k)
         static = bool(np.linalg.norm(env.brick_vel(k)[:3]) < 0.01)
-        return {"start": int(start), "end": int(end), "support_top_m": float(p_d[2] - H / 2), "duration_s": (end - start) * self.dt, "closure": float(closure),
+        ev = [e for e in env.lock_events if e["brick"] == k and start <= e["t"] <= end]
+        lock_info = {"locks": sum(e["event"] == "lock" for e in ev),
+                     "releases": [e["reason"] for e in ev if e["event"] == "release"],
+                     "lock_max_dev_mm": max([e.get("max_dev_while_locked_mm", 0.0) for e in ev if e["event"] == "release"] or [0.0]),
+                     "lock_events": ev}
+        return {"start": int(start), "end": int(end), "support_top_m": float(p_d[2] - H / 2), **lock_info, "duration_s": (end - start) * self.dt, "closure": float(closure),
                 "max_drift_mm": float(self.max_drift * 1000), "drift_transport_mm": float(self.drift_before_place * 1000),
                 "static_at_end": static,
                 "release_err_mm": ((np.asarray(pre[0]) - p_d - [0, 0, c.place_gap]) * 1000).round(3).tolist(),

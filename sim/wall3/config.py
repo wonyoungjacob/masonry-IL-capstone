@@ -61,6 +61,16 @@ class SceneConfig:
     arm_joint_damping: tuple = ()               # per-joint passive damping override, () = file values (10 10 5 2 2 2)
     mortar_stiffness: str = "brick_sim"         # "brick_sim": k = g / sag (pilot, ignores the constraint impedance);
                                                 # "impedance": k = (1 - d)/d · g / sag so the bed really sags `mortar_sag` (나3)
+    # grip lock (나2 결정 2026-10-17): weld the held brick to the gripper only while real friction could hold it
+    grip_lock: bool = True                      # pilot_20261016: False
+    lock_mu: float = 0.6                        # ② ③ friction used for the capacity (brick μ, smaller than the pad's 1.0)
+    lock_amax: float = 7.4                      # ② m/s², largest TCP acceleration during transport (나2 diagnosis)
+    lock_vlin: float = 0.005                    # ① m/s, brick ↔ gripper relative speed below which the grasp has settled
+    lock_vang: float = 0.05                     # ① rad/s
+    lock_settle: float = 0.1                    # ① s the relative speed must stay below the limits
+    lock_open_eps: float = 0.002                # ⑤ rad: finger command below the finger angle by this = opening order
+    lock_drop: float = 0.01                     # ⑤ rad: finger command dropping this far below its max since closing = opening
+    lock_solref: tuple = (0.004, 1.0)           # grip weld stiffness (as the cure weld)
     # robot (P3)
     pedestal_h: float = 0.60
     pedestal_half: float = 0.15                 # square pedestal half-size (m)
@@ -105,7 +115,7 @@ class SceneConfig:
 # brick_sim mortar stiffness). main_v1 = the dataclass defaults, filled in step by step by 나2 ~ 나4 and frozen in 나5.
 ENV_VERSIONS = {
     "pilot_20261016": dict(brick_rgba=((0.62, 0.62, 0.60, 1.0), (0.58, 0.58, 0.56, 1.0)), ctrl_interp="linear",
-                           mortar_stiffness="brick_sim", integrator="implicitfast", arm_damping="actuator"),
+                           mortar_stiffness="brick_sim", integrator="implicitfast", arm_damping="actuator", grip_lock=False),
     "main_v1": dict(),
 }
 

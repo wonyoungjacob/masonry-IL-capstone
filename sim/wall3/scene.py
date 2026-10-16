@@ -199,6 +199,11 @@ class WallEnv:
         # gripper on the flange, TCP site at the pad centre (90 mm closure), wrist camera
         att = s.site("attachment_site")
         G.attach(att, s, c.gripper)
+        # grip lock welds (나2 결정): brick ↔ gripper base, off until the lock conditions hold (like the cure welds)
+        for i in range(self.n):
+            e = s.add_equality(name=f"grip_{i}", type=mujoco.mjtEq.mjEQ_WELD, objtype=mujoco.mjtObj.mjOBJ_BODY,
+                               name1=f"brick_{i}", name2=G.PREFIX + "right_gripper", active=False)
+            e.solref = list(c.lock_solref)
         w3 = s.body("wrist_3_link")
         qa = np.asarray(att.quat, float)
         Ra = _quat_rotmat(qa / np.linalg.norm(qa))          # the UR10e file writes this quat unnormalised (-1 1 0 0)
@@ -238,6 +243,27 @@ class WallEnv:
         self.ft_force = m.sensor(G.PREFIX + "force_ee").adr[0]
         self.ft_torque = m.sensor(G.PREFIX + "torque_ee").adr[0]
         self.ft_site = m.site(G.PREFIX + "ft_frame").id
+        # grip lock lookup tables
+        self.grip_body = m.body(G.PREFIX + "right_gripper").id
+        self.grip_eq = [m.equality(f"grip_{i}").id for i in range(self.n)]
+        self.fj_qadr = m.joint(G.PREFIX + "finger_joint").qposadr[0]
+        left = {G.PREFIX + n for n in ("left_outer_knuckle", "left_inner_finger", "left_inner_knuckle")}
+        right = {G.PREFIX + n for n in ("right_outer_knuckle", "right_inner_finger", "right_inner_knuckle")}
+        self.geom_side = np.full(m.ngeom, -1, int)          # 0 left finger, 1 right finger, 2 other gripper, -1 not gripper
+        for g in range(m.ngeom):
+            bn = m.body(m.geom_bodyid[g]).name
+            if bn in left:
+                self.geom_side[g] = 0
+            elif bn in right:
+                self.geom_side[g] = 1
+            elif m.geom_bodyid[g] in self.gripper_bodies:
+                self.geom_side[g] = 2
+        self.geom_brick = np.full(m.ngeom, -1, int)
+        for i, gid in enumerate(self.brick_gid):
+            self.geom_brick[gid] = i
+        c = self.cfg
+        g = 9.81
+        self.lock_nmin = np.array([m.body_mass[b] * np.sqrt(g * g + c.lock_amax ** 2) / (2 * c.lock_mu) for b in self.brick_bid])
 
     def _is_desc(self, b, root):
         m = self.model
@@ -286,6 +312,11 @@ class WallEnv:
         self.settle_count = np.zeros(self.n, int)
         self.bed_count = {1: np.zeros(self.n, int), 2: np.zeros(self.n, int)}
         self.bed_laid = {1: -1, 2: -1}
+        self.lock_b = -1                      # brick currently welded to the gripper (-1 = none)
+        self.lock_events = []                 # lock / release records (info only, never a policy or G1 input)
+        self._close_t0, self._cmd_max = None, 0.0
+        self._cand, self._settle, self._rel_prev = -1, 0, None
+        self._lock_ref, self._lock_dev = None, 0.0
         self.t = 0
         mujoco.mj_forward(m, d)
         return self
@@ -305,6 +336,8 @@ class WallEnv:
             d.ctrl[self.arm_act] = c[:6]
             d.ctrl[self.grip_act] = [c[6], -c[6]]
             mujoco.mj_step(self.model, d)
+            if self.cfg.grip_lock:
+                self._grip_update(float(c[6]))
         self.prev_action = self.last_action
         self.last_action = new
         self.t += 1
@@ -435,6 +468,186 @@ class WallEnv:
             d.mocap_quat[self.bed_mocap[nm]] = [1, 0, 0, 0]
         mujoco.mj_forward(m, d)
         self.bed_laid[bnd] = self.t
+
+    # ------------------------------------------------------------------ grip lock (나2 결정, 현실성 조건 1 ~ 6)
+    def _rel_pose(self, b):
+        d = self.data
+        Rg = d.xmat[self.grip_body].reshape(3, 3)
+        return Rg.T @ (d.xpos[self.brick_bid[b]] - d.xpos[self.grip_body]), Rg.T @ d.xmat[self.brick_bid[b]].reshape(3, 3)
+
+    def _hand_contacts(self):
+        """Contacts between finger geoms and bricks: arrays (side, brick, normal force, world point)."""
+        d = self.data
+        n = d.ncon
+        if n == 0:
+            return None
+        g = d.contact.geom[:n]
+        adr = d.contact.efc_address[:n]
+        s1, s2 = self.geom_side[g[:, 0]], self.geom_side[g[:, 1]]
+        b1, b2 = self.geom_brick[g[:, 0]], self.geom_brick[g[:, 1]]
+        mA = (s1 >= 0) & (s1 <= 1) & (b2 >= 0) & (adr >= 0)
+        mB = (s2 >= 0) & (s2 <= 1) & (b1 >= 0) & (adr >= 0)
+        if not (mA.any() or mB.any()):
+            return None
+        side = np.r_[s1[mA], s2[mB]]
+        brick = np.r_[b2[mA], b1[mB]]
+        fn = np.r_[d.efc_force[adr[mA]], d.efc_force[adr[mB]]]
+        pos = np.r_[d.contact.pos[:n][mA], d.contact.pos[:n][mB]]
+        return side, brick, fn, pos
+
+    def _grip_update(self, ctrl):
+        c, d = self.cfg, self.data
+        dt = self.model.opt.timestep
+        qf = float(d.qpos[self.fj_qadr])
+        if ctrl > c.gripper.open_ctrl + 0.01:
+            if self._close_t0 is None:
+                self._close_t0, self._cmd_max = d.time, ctrl
+            self._cmd_max = max(self._cmd_max, ctrl)
+        else:
+            self._close_t0, self._cmd_max = None, 0.0
+        # ⑤ opening order: the finger command drops (0.01 rad below its maximum since closing) or asks the fingers to open
+        opening = ctrl < qf - c.lock_open_eps or (self._close_t0 is not None and ctrl < self._cmd_max - c.lock_drop)
+        if self.lock_b >= 0:
+            b = self.lock_b
+            p_rel, _ = self._rel_pose(b)
+            dev = float(np.linalg.norm(p_rel - self._lock_ref))
+            self._lock_dev = max(self._lock_dev, dev)
+            self._lock_steps += 1
+            if self._lock_steps == 1:                                   # ④ jump right after locking
+                self.lock_events[-1]["jump_mm"] = dev * 1000
+            if opening:
+                self._release("open")
+                return
+            reason = self._overload(b)
+            if reason:
+                self._release(reason[0], reason[1])
+            return
+        # ① the closing ramp is over
+        if self._close_t0 is None or d.time - self._close_t0 < c.gripper.close_time - 1e-9 or opening:
+            self._cand, self._settle, self._rel_prev = -1, 0, None
+            return
+        hc = self._hand_contacts()
+        if hc is None:
+            self._cand, self._settle, self._rel_prev = -1, 0, None
+            return
+        side, brick, fn, _ = hc
+        best, NL, NR = -1, 0.0, 0.0
+        for b in np.unique(brick):
+            l, r = fn[(brick == b) & (side == 0)].sum(), fn[(brick == b) & (side == 1)].sum()
+            if l > 0 and r > 0 and l + r > NL + NR:
+                best, NL, NR = int(b), float(l), float(r)
+        # ② both pads touch, each with at least N_min; never a brick already cured on the wall
+        if best < 0 or min(NL, NR) < self.lock_nmin[best] or self.cured[best]:
+            self._cand, self._settle, self._rel_prev = best, 0, None
+            return
+        p_rel, R_rel = self._rel_pose(best)
+        if best != self._cand or self._rel_prev is None:
+            self._cand, self._settle = best, 0
+        else:
+            v = np.linalg.norm(p_rel - self._rel_prev[0]) / dt
+            dR = self._rel_prev[1].T @ R_rel
+            w = np.arccos(np.clip((np.trace(dR) - 1) / 2, -1, 1)) / dt
+            self._settle = self._settle + 1 if (v <= c.lock_vlin and w <= c.lock_vang) else 0
+        self._rel_prev = (p_rel, R_rel)
+        if self._settle * dt >= c.lock_settle - 1e-9:                     # ① settled for lock_settle seconds
+            self._lock(best, NL, NR, hc)
+
+    def _lock(self, b, NL, NR, hc):
+        m, d = self.model, self.data
+        eq = self.grip_eq[b]
+        pb, Rb = d.xpos[self.brick_bid[b]], d.xmat[self.brick_bid[b]].reshape(3, 3)
+        pg, Rg = d.xpos[self.grip_body], d.xmat[self.grip_body].reshape(3, 3)
+        qrel = np.zeros(4)
+        mujoco.mju_mat2Quat(qrel, (Rb.T @ Rg).ravel())                    # ④ the current relative pose, no pull
+        anchor = Rg.T @ (pb - pg)                                       # weld point = brick centre, in the gripper frame
+        m.eq_data[eq, 0:3] = anchor
+        m.eq_data[eq, 3:6] = Rb.T @ (pg + Rg @ anchor - pb)             # MuJoCo weld: p1 + R1·relpos = p2 + R2·anchor (= 0 here)
+        m.eq_data[eq, 6:10] = qrel
+        m.eq_data[eq, 10] = 1.0
+        d.eq_active[eq] = 1
+        self.lock_b = b
+        self._lock_ref, self._lock_dev, self._lock_steps = self._rel_pose(b)[0], 0.0, 0
+        side, brick, fn, pos = hc
+        sel = brick == b
+        ctr = (fn[sel][:, None] * pos[sel]).sum(0) / fn[sel].sum()                  # pad contact centre
+        n_ax = d.site_xmat[self.tcp_sid].reshape(3, 3)[:, 1]
+        off = pb - ctr
+        off_plane = off - (off @ n_ax) * n_ax
+        ang = np.degrees(np.arccos(np.clip(abs(Rb[:, 0] @ d.site_xmat[self.tcp_sid].reshape(3, 3)[:, 0]), -1, 1)))
+        self.lock_events.append({"event": "lock", "t": int(self.t), "time": float(d.time), "brick": int(b), "N_left": NL, "N_right": NR,
+                                 "N_min": float(self.lock_nmin[b]), "grasp_offset_mm": float(np.linalg.norm(off_plane) * 1000),
+                                 "grasp_yaw_offset_deg": float(ang)})
+
+    def _overload(self, b):
+        """③ release when the hand's force along the pad plane or its twist about the pad axis exceeds what friction can hold.
+        Hand force/torque = constraint force on the brick's free joint (weld + all contacts) minus the non-hand contacts."""
+        m, d, c = self.model, self.data, self.cfg
+        dof = self.brick_dofadr[b]
+        pb, Rb = d.xpos[self.brick_bid[b]], d.xmat[self.brick_bid[b]].reshape(3, 3)
+        F = d.qfrc_constraint[dof:dof + 3].copy()
+        T = Rb @ d.qfrc_constraint[dof + 3:dof + 6]                     # free joint: angular dofs in the body frame
+        n = d.ncon
+        gid = self.brick_gid[b]
+        if n:
+            g = d.contact.geom[:n]
+            on = (g[:, 0] == gid) | (g[:, 1] == gid)
+            other = g[:, 0].copy(); other[g[:, 0] == gid] = g[g[:, 0] == gid, 1]
+            nonhand = on & (self.geom_side[other] < 0)
+            f6 = np.zeros(6)
+            for i in np.nonzero(nonhand)[0]:
+                mujoco.mj_contactForce(m, d, int(i), f6)
+                fw = d.contact.frame[i].reshape(3, 3).T @ f6[:3]
+                fw = fw if d.contact.geom2[i] == gid else -fw            # force on the brick
+                F -= fw
+                T -= np.cross(d.contact.pos[i] - pb, fw)
+        hc = self._hand_contacts()
+        if hc is None:
+            return ("no_contact", {})
+        side, brick, fn, pos = hc
+        sel = brick == b
+        side, fn, pos = side[sel], fn[sel], pos[sel]
+        NL, NR = fn[side == 0].sum(), fn[side == 1].sum()
+        n_ax = d.site_xmat[self.tcp_sid].reshape(3, 3)[:, 1]
+        Ft = F - (F @ n_ax) * n_ax
+        capF = c.lock_mu * (NL + NR)
+        if np.linalg.norm(Ft) > capF:
+            return ("force", {"F_t": float(np.linalg.norm(Ft)), "cap": float(capF), "N_left": float(NL), "N_right": float(NR)})
+        capT, ctrs = 0.0, []
+        for sd in (0, 1):
+            k = side == sd
+            if fn[k].sum() <= 0:
+                continue
+            ctr = (fn[k][:, None] * pos[k]).sum(0) / fn[k].sum()
+            ctrs.append(ctr)
+            r = pos[k] - ctr
+            r = r - np.outer(r @ n_ax, n_ax)
+            capT += c.lock_mu * float((fn[k] * np.linalg.norm(r, axis=1)).sum())
+        axis_pt = np.mean(ctrs, axis=0) if ctrs else pb
+        Tn = float((T + np.cross(pb - axis_pt, F)) @ n_ax)                # twist about the line through the pad contacts
+        if abs(Tn) > capT:
+            return ("torque", {"T_n": Tn, "cap": capT, "N_left": float(NL), "N_right": float(NR)})
+        return None
+
+    def lock_state(self):
+        """[locked 1/0, locked brick (-1 none), pad normal force left, right on the brick the fingers press hardest] (info only)."""
+        NL = NR = 0.0
+        hc = self._hand_contacts()
+        if hc is not None:
+            side, brick, fn, _ = hc
+            for b in np.unique(brick):
+                l, r = fn[(brick == b) & (side == 0)].sum(), fn[(brick == b) & (side == 1)].sum()
+                if l + r > NL + NR:
+                    NL, NR = float(l), float(r)
+        return np.array([self.lock_b >= 0, self.lock_b, NL, NR], np.float32)
+
+    def _release(self, reason, info=None):
+        d = self.data
+        b = self.lock_b
+        d.eq_active[self.grip_eq[b]] = 0
+        self.lock_events.append({"event": "release", "reason": reason, "t": int(self.t), "time": float(d.time), "brick": int(b),
+                                 "max_dev_while_locked_mm": float(self._lock_dev * 1000), **(info or {})})
+        self.lock_b = -1
+        self._cand, self._settle, self._rel_prev = -1, 0, None
 
     # ------------------------------------------------------------------ contacts
     def contacts(self):

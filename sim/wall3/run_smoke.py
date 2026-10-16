@@ -12,7 +12,7 @@ from functools import partial
 
 from wall3.config import scene_config
 from wall3.scene import WallEnv
-from wall3.expert import WallExpert, ExpertConfig
+from wall3.expert import WallExpert, expert_config
 from wall3.spec_metrics import evaluate_env, sensitivity
 
 SIM = Path(__file__).resolve().parents[1]
@@ -68,7 +68,7 @@ def main():
     with Pool(min(len(a.seeds), 16)) as p:
         res = p.map(partial(one, env_version=a.env_version), a.seeds)
     meta = {"git_commit": subprocess.check_output(["git", "-C", str(SIM), "rev-parse", "HEAD"], text=True).strip(),
-            "env_version": a.env_version, "scene": scene_config(a.env_version).to_dict(), "expert": ExpertConfig().to_dict()}
+            "env_version": a.env_version, "scene": scene_config(a.env_version).to_dict(), "expert": expert_config(a.env_version).to_dict()}
     (out / "smoke.json").write_text(json.dumps({"meta": meta, "walls": res}, indent=1, default=float, ensure_ascii=False))
     for r in res:
         times = [b["duration_s"] for b in r["bricks"] if "duration_s" in b]

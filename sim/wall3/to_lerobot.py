@@ -23,7 +23,7 @@ JOINTS = ["shoulder_pan", "shoulder_lift", "elbow", "wrist_1", "wrist_2", "wrist
 TASK = "Lay the next brick of the wall at its target position."
 
 
-def features(img=128):
+def features(img=128, lock=False):
     f = {f"observation.images.{c}": {"dtype": "video", "shape": (img, img, 3), "names": ["height", "width", "channels"]} for c in CAMS}
     f["observation.state"] = {"dtype": "float32", "shape": (7,), "names": JOINTS + ["gripper"]}
     f["observation.environment_state"] = {"dtype": "float32", "shape": (5,),
@@ -34,6 +34,8 @@ def features(img=128):
     f["info.brick_pose"] = {"dtype": "float32", "shape": (7,), "names": ["x", "y", "z", "qw", "qx", "qy", "qz"]}
     f["info.all_brick_poses"] = {"dtype": "float32", "shape": (112,), "names": [f"b{i}_{c}" for i in range(16) for c in "xyzwijk"]}
     f["info.phase"] = {"dtype": "float32", "shape": (1,), "names": ["phase_id"]}
+    if lock:                            # main_v1 grip lock state (not a policy input: 현실성 조건 6)
+        f["info.grip_lock"] = {"dtype": "float32", "shape": (4,), "names": ["locked", "lock_brick", "pad_n_left", "pad_n_right"]}
     return f
 
 
@@ -69,7 +71,9 @@ def build(raw_dirs, root: Path, repo_id: str, include_all: bool, max_walls: int 
         raise SystemExit("변환할 벽이 없음")
     # video_files_size_in_mb: LeRobot appends every episode to one growing mp4 per camera until this size; small files keep
     # the per-episode append cheap (the 48-wall pilot with the default slowed from 17 to 70 s per wall).
-    ds = LeRobotDataset.create(repo_id, fps=20, features=features(), root=str(root), robot_type="ur10e_robotiq2f140", use_videos=True,
+    with np.load(use[0]["_raw_dir"] / "raw" / use[0]["raw_file"]) as zf:
+        lock = "lock" in zf.files                                # main_v1 raw has the grip lock state, pilot raw does not
+    ds = LeRobotDataset.create(repo_id, fps=20, features=features(lock=lock), root=str(root), robot_type="ur10e_robotiq2f140", use_videos=True,
                                video_files_size_in_mb=video_mb)
     ep_meta, wall_meta = [], []
     ep = 0
@@ -78,6 +82,7 @@ def build(raw_dirs, root: Path, repo_id: str, include_all: bool, max_walls: int 
         with np.load(w["_raw_dir"] / "raw" / w["raw_file"]) as zf:      # decompress each array once (indexing an NpzFile
             z = {k: zf[k] for k in zf.files}                     # re-reads the whole array every time)
         assert np.array_equal(z["t"], np.arange(len(z["t"]))), "steps must be contiguous"
+        assert ("lock" in z) == lock, "raw files mix environments with and without the grip lock"
         for b in w["bricks"]:
             k = b["slot"]
             s = w["design"][k]
@@ -92,7 +97,8 @@ def build(raw_dirs, root: Path, repo_id: str, include_all: bool, max_walls: int 
                               "info.wrist_ft": z["ft"][i],
                               "info.brick_pose": z["bricks"][i][k],
                               "info.all_brick_poses": z["bricks"][i].reshape(-1),
-                              "info.phase": np.array([z["phase"][i]], np.float32)})
+                              "info.phase": np.array([z["phase"][i]], np.float32),
+                              **({"info.grip_lock": z["lock"][i]} if lock else {})})
             ds.save_episode()
             ep_meta.append({"episode_index": ep, "wall_index": wi, "seed": w["seed"], "slot": k, "course": s["course"],
                             "position": s["index"], "half": s["half"], "start_step": b["start"], "end_step": b["end"],
@@ -113,7 +119,7 @@ def build(raw_dirs, root: Path, repo_id: str, include_all: bool, max_walls: int 
                                                         "n_walls_raw": len(infos), "n_walls_used": len(use),
                                                         "seeds_used": [w["seed"] for w in use],
                                                         "seeds_not_used": [w["seed"] for w in infos if w not in use],
-                                                        "task": TASK, "features": features()}, indent=1, default=float))
+                                                        "task": TASK, "features": features(lock=lock)}, indent=1, default=float))
     return ep_meta
 
 

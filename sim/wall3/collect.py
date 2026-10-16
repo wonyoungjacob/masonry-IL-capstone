@@ -48,6 +48,8 @@ class StepLog:
     def __init__(self, env):
         self.env = env
         self.rows = {k: [] for k in ("t", "phase", "brick", "state", "action", "closure", "fingers", "ft", "bricks", "tcp")}
+        if env.cfg.grip_lock:
+            self.rows["lock"] = []          # info only (현실성 조건 6): locked, locked brick, pad normal force left / right
         self.img = {c: [] for c in CAMS}
 
     def __call__(self, env, action, phase, k):
@@ -68,6 +70,8 @@ class StepLog:
         import mujoco
         qt = np.zeros(4); mujoco.mju_mat2Quat(qt, R.ravel())
         self.rows["tcp"].append(np.r_[p, qt].astype(np.float32))
+        if "lock" in self.rows:
+            self.rows["lock"].append(env.lock_state())
         for c in CAMS:
             self.img[c].append(env.render(c))
 
@@ -145,10 +149,10 @@ def main():
         raise SystemExit(f"{out} 이미 있음: 덮어쓰지 않음")
     (out / "raw").mkdir(parents=True)
     from wall3.config import scene_config
-    from wall3.expert import ExpertConfig
+    from wall3.expert import expert_config
     meta = {"git_commit": subprocess.check_output(["git", "-C", str(SIM), "rev-parse", "HEAD"], text=True).strip(),
             "git_dirty": bool(subprocess.check_output(["git", "-C", str(SIM), "status", "--porcelain", "--", "wall3"], text=True).strip()),
-            "assets": asset_info(), "env_version": a.env_version, "scene": scene_config(a.env_version).to_dict(), "expert": ExpertConfig().to_dict(),
+            "assets": asset_info(), "env_version": a.env_version, "scene": scene_config(a.env_version).to_dict(), "expert": expert_config(a.env_version).to_dict(),
             "seeds": seeds, "phases": PHASES, "cams": CAMS, "started": time.strftime("%Y-%m-%d %H:%M:%S")}
     (out / "collect_config.json").write_text(json.dumps(meta, indent=1, default=float, ensure_ascii=False))
     jobs = [(s, str(out), bool(a.record_every) and (s - a.seed0) % a.record_every == 0, a.env_version) for s in seeds]
