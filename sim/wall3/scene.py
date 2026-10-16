@@ -346,7 +346,7 @@ class WallEnv:
         self.bed_laid = {1: -1, 2: -1}
         self.lock_b = -1                      # brick currently welded to the gripper (-1 = none)
         self.lock_events = []                 # lock / release records (info only, never a policy or G1 input)
-        self._close_t0, self._cmd_max = None, 0.0
+        self._close_t0, self._cmd_max, self._cmd_lock = None, 0.0, 0.0
         self._cand, self._settle, self._rel_prev = -1, 0, None
         self._lock_ref, self._lock_dev = None, 0.0
         self.t = 0
@@ -550,8 +550,11 @@ class WallEnv:
             self._cmd_max = max(self._cmd_max, ctrl)
         else:
             self._close_t0, self._cmd_max = None, 0.0
-        # ⑤ opening order: the finger command drops (0.01 rad below its maximum since closing) or asks the fingers to open
-        opening = ctrl < qf - c.lock_open_eps or (self._close_t0 is not None and ctrl < self._cmd_max - c.lock_drop)
+        # ⑤ opening order: the finger command asks the fingers to open, or drops 0.01 rad below the command that made the grip
+        # (the command at locking; before locking its maximum since closing). A short harder squeeze (G1 angle check) and the
+        # return to the holding command is not an opening.
+        ref = self._cmd_lock if self.lock_b >= 0 else self._cmd_max
+        opening = ctrl < qf - c.lock_open_eps or (self._close_t0 is not None and ctrl < ref - c.lock_drop)
         if self.lock_b >= 0:
             b = self.lock_b
             p_rel, _ = self._rel_pose(b)
@@ -596,6 +599,7 @@ class WallEnv:
         self._rel_prev = (p_rel, R_rel)
         if self._settle * dt >= c.lock_settle - 1e-9:                     # ① settled for lock_settle seconds
             self._lock(best, NL, NR, hc)
+            self._cmd_lock = ctrl
 
     def _lock(self, b, NL, NR, hc):
         m, d = self.model, self.data
