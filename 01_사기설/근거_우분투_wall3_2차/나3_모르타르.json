@@ -1,0 +1,308 @@
+{
+ "note": "나3 모르타르 강성 보정 시험. 침하 = 모르타르 판 접촉 거리 평균. peak = 정착 전 최대 침투(놓는 순간의 순간 침하)",
+ "formula": {
+  "before (pilot, brick_sim)": "k = g / sag",
+  "after (main_v1, impedance)": "k = (1 - d)(dmax/d)^2 g / (n s), s = 1.06 mm x m/m_full, d = d(s), n = 4 x slabs under the brick, b = 2 zeta sqrt(k/dmax)",
+  "k_full": 7.745,
+  "k_half": 153.29,
+  "k_pilot": 9293.99
+ },
+ "compare_3walls": {
+  "before_brick_sim": {
+   "fail": [
+    null,
+    null,
+    null
+   ],
+   "spec_pass": 3,
+   "walls": 3,
+   "sag_full_at_cure_mm": {
+    "n": 27,
+    "mean": 0.004775923436829777,
+    "min": 0.004775781608199416,
+    "max": 0.00477596392741803
+   },
+   "sag_half_at_cure_mm": {
+    "n": 6,
+    "mean": 0.014323271525006587,
+    "min": 0.014323271524885155,
+    "max": 0.014323271525082913
+   },
+   "sag_full_end_mm": {
+    "n": 27,
+    "mean": 0.004775923434061225,
+    "min": 0.004775781637838962,
+    "max": 0.0047759642921230494
+   },
+   "sag_half_end_mm": {
+    "n": 6,
+    "mean": 0.014323271705163404,
+    "min": 0.014323271533787756,
+    "max": 0.014323271918823509
+   },
+   "bed_joint_mm": [
+    9.985676705622296,
+    9.995327166917672
+   ],
+   "items_mm_max": {
+    "2_line_plane": 0.5063901955324558,
+    "3_plumb": 0.5812898996258031,
+    "4_position": 0.4546927950386248
+   },
+   "brick_time_s_max": 9.450000000000001,
+   "grasps_locked": [
+    48,
+    48
+   ],
+   "overload_releases": 0,
+   "in_hand_drift_max_mm": 0.7326416863409247,
+   "mark_problems": 0
+  },
+  "after_impedance (main_v1)": {
+   "fail": [
+    null,
+    null,
+    null
+   ],
+   "spec_pass": 2,
+   "walls": 3,
+   "sag_full_at_cure_mm": {
+    "n": 27,
+    "mean": 1.1745926587162607,
+    "min": 1.1168260766345623,
+    "max": 1.2334045968389942
+   },
+   "sag_half_at_cure_mm": {
+    "n": 6,
+    "mean": 0.4999833578048886,
+    "min": 0.4999833561684748,
+    "max": 0.4999833586659249
+   },
+   "sag_full_end_mm": {
+    "n": 27,
+    "mean": 1.1100013516281297,
+    "min": 1.0585775118151066,
+    "max": 1.1665955186276946
+   },
+   "sag_half_end_mm": {
+    "n": 6,
+    "mean": 0.5031358939129701,
+    "min": 0.5009858971158693,
+    "max": 0.5056528870373269
+   },
+   "bed_joint_mm": [
+    8.69750938655417,
+    9.50500185796898
+   ],
+   "items_mm_max": {
+    "2_line_plane": 2.02204728545875,
+    "3_plumb": 2.5828720984958364,
+    "4_position": 0.45476761491103357
+   },
+   "brick_time_s_max": 9.450000000000001,
+   "grasps_locked": [
+    48,
+    48
+   ],
+   "overload_releases": 0,
+   "in_hand_drift_max_mm": 0.7326416863409247,
+   "mark_problems": 0
+  }
+ },
+ "pilot_repro": {
+  "identical_to_pilot": true,
+  "locks": 0
+ },
+ "release_height_3walls": {
+  "after_impedance place_gap 0.5 mm": {
+   "fail": [
+    null,
+    null,
+    null
+   ],
+   "spec_pass": 2,
+   "walls": 3,
+   "sag_full_at_cure_mm": {
+    "n": 27,
+    "mean": 1.1745926587162607,
+    "min": 1.1168260766345623,
+    "max": 1.2334045968389942
+   },
+   "sag_half_at_cure_mm": {
+    "n": 6,
+    "mean": 0.4999833578048886,
+    "min": 0.4999833561684748,
+    "max": 0.4999833586659249
+   },
+   "sag_full_end_mm": {
+    "n": 27,
+    "mean": 1.1100013516281297,
+    "min": 1.0585775118151066,
+    "max": 1.1665955186276946
+   },
+   "sag_half_end_mm": {
+    "n": 6,
+    "mean": 0.5031358939129701,
+    "min": 0.5009858971158693,
+    "max": 0.5056528870373269
+   },
+   "sag_full_peak_mm": {
+    "n": 27,
+    "mean": 10.303930803044546,
+    "min": 9.72019904188032,
+    "max": 10.536921078679775
+   },
+   "sag_half_peak_mm": {
+    "n": 6,
+    "mean": 4.417415284881952,
+    "min": 4.275444538045131,
+    "max": 4.533580259744592
+   },
+   "bed_joint_mm": [
+    8.69750938655417,
+    9.50500185796898
+   ],
+   "items_mm_max": {
+    "2_line_plane": 2.02204728545875,
+    "3_plumb": 2.5828720984958364,
+    "4_position": 0.45476761491103357
+   },
+   "brick_time_s_max": 9.450000000000001,
+   "grasps_locked": [
+    48,
+    48
+   ],
+   "overload_releases": 0,
+   "in_hand_drift_max_mm": 0.7326416863409247,
+   "mark_problems": 0
+  },
+  "after_impedance place_gap 0 mm": {
+   "fail": [
+    null,
+    null,
+    null
+   ],
+   "spec_pass": 0,
+   "walls": 3,
+   "sag_full_at_cure_mm": {
+    "n": 27,
+    "mean": 1.1839806266798758,
+    "min": 1.0346120971910533,
+    "max": 1.2551230309699355
+   },
+   "sag_half_at_cure_mm": {
+    "n": 6,
+    "mean": 0.4999833557468705,
+    "min": 0.49998335403957006,
+    "max": 0.499983357329775
+   },
+   "sag_full_end_mm": {
+    "n": 27,
+    "mean": 1.0838863520248638,
+    "min": 0.9833516034514899,
+    "max": 1.1851312428389646
+   },
+   "sag_half_end_mm": {
+    "n": 6,
+    "mean": 0.49998333607446327,
+    "min": 0.49998333314422905,
+    "max": 0.4999833381532292
+   },
+   "sag_full_peak_mm": {
+    "n": 27,
+    "mean": 9.033669122336912,
+    "min": 5.589790593810589,
+    "max": 10.308334773044496
+   },
+   "sag_half_peak_mm": {
+    "n": 6,
+    "mean": 3.3779201613720975,
+    "min": 3.1945745027282215,
+    "max": 3.50540199290826
+   },
+   "bed_joint_mm": [
+    8.614585854581886,
+    9.50005669735561
+   ],
+   "items_mm_max": {
+    "2_line_plane": 2.2657488921797784,
+    "3_plumb": 3.5078655195159847,
+    "4_position": 0.2728693439051355
+   },
+   "brick_time_s_max": 9.450000000000001,
+   "grasps_locked": [
+    48,
+    48
+   ],
+   "overload_releases": 0,
+   "in_hand_drift_max_mm": 0.7196625069438649,
+   "mark_problems": 0
+  },
+  "after_impedance place_gap -0.5 mm": {
+   "fail": [
+    null,
+    null,
+    null
+   ],
+   "spec_pass": 1,
+   "walls": 3,
+   "sag_full_at_cure_mm": {
+    "n": 27,
+    "mean": 1.0966254675876657,
+    "min": 1.025634543981419,
+    "max": 1.1477622423318685
+   },
+   "sag_half_at_cure_mm": {
+    "n": 6,
+    "mean": 0.49998335213022066,
+    "min": 0.49998334805671,
+    "max": 0.4999833557596629
+   },
+   "sag_full_end_mm": {
+    "n": 27,
+    "mean": 1.0746068113797453,
+    "min": 1.0071219190273883,
+    "max": 1.1222506217944586
+   },
+   "sag_half_end_mm": {
+    "n": 6,
+    "mean": 0.49998333543866286,
+    "min": 0.4999833315134294,
+    "max": 0.49998333874240725
+   },
+   "sag_full_peak_mm": {
+    "n": 27,
+    "mean": 2.983679255729347,
+    "min": 1.4732746893610793,
+    "max": 4.840591534707627
+   },
+   "sag_half_peak_mm": {
+    "n": 6,
+    "mean": 2.048845837731766,
+    "min": 1.949087674094771,
+    "max": 2.105919446221605
+   },
+   "bed_joint_mm": [
+    8.753139283959127,
+    9.50001677483648
+   ],
+   "items_mm_max": {
+    "2_line_plane": 2.3517694495082715,
+    "3_plumb": 2.559818972946104,
+    "4_position": 0.19743500418345494
+   },
+   "brick_time_s_max": 9.450000000000001,
+   "grasps_locked": [
+    48,
+    48
+   ],
+   "overload_releases": 0,
+   "in_hand_drift_max_mm": 0.7202186354938213,
+   "mark_problems": 0
+  }
+ },
+ "outputs": [
+  "sim/outputs/wall3/test_mortar_20261017b",
+  "sim/outputs/wall3/test_mortar_20261017_gap"
+ ]
+}

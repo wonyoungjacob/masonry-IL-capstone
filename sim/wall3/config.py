@@ -59,7 +59,7 @@ class SceneConfig:
                                                 # damping (Euler integrates joint damping implicitly) (나2)
     arm_kd: tuple = ()                          # per-joint actuator damping override (N·m·s/rad), () = file values (500 each)
     arm_joint_damping: tuple = ()               # per-joint passive damping override, () = file values (10 10 5 2 2 2)
-    mortar_stiffness: str = "brick_sim"         # "brick_sim": k = g / sag (pilot, ignores the constraint impedance);
+    mortar_stiffness: str = "impedance"         # "brick_sim": k = g / sag (pilot, ignores the constraint impedance);
                                                 # "impedance": k = (1 - d)/d · g / sag so the bed really sags `mortar_sag` (나3)
     # grip lock (나2 결정 2026-10-17): weld the held brick to the gripper only while real friction could hold it
     grip_lock: bool = True                      # pilot_20261016: False

@@ -43,19 +43,37 @@ def _quat_rotmat(q):
     return R.reshape(3, 3)
 
 
-def mortar_solref(c):
-    """Direct-form (stiffness, damping) of the bed contact pairs, mass-normalised.
+MORTAR_SOLIMP = (0.95, 0.99, 0.001, 0.5, 2.0)
+CONTACTS_PER_SLAB = 4                      # MuJoCo box-box: 4 corner contacts per bed slab under a resting brick (checked in 나3)
 
-    brick_sim (pilot): k = g / sag. In MuJoCo the static penetration of a soft constraint is (1 − d)/d · a0 / k with the
-    impedance d = solimp dmax (0.99 here), so the real sag was ~1 % of `mortar_sag` (≈ 0.01 mm).
-    impedance (main_v1): k = (1 − d)/d · g / sag, b = 2 ζ √(k / d), so a brick resting on the bed sinks `mortar_sag`.
+
+def impedance(r, solimp=MORTAR_SOLIMP):
+    """MuJoCo's constraint impedance d at penetration r (engine getimpedance)."""
+    dmin, dmax, width, mid, power = solimp
+    x = min(abs(r) / width, 1.0)
+    if x >= 1.0:
+        return dmax
+    y = x ** power / mid ** (power - 1) if x <= mid else 1 - (1 - x) ** power / (1 - mid) ** (power - 1)
+    return dmin + y * (dmax - dmin)
+
+
+def mortar_solref(c, mass_ratio=1.0, n_contacts=1):
+    """Direct-form (stiffness, damping) of the bed contact pairs of one brick, mass-normalised.
+
+    brick_sim (pilot): k = g / sag, which ignores the constraint impedance: the real sag was ~0.005 mm.
+    impedance (main_v1, 나3): a brick resting on n contacts of impedance d sinks r = (1 − d)(dmax/d)² g / (n k)
+    (each contact: R = (1 − d)/d · 1/m, reference acceleration −K d r with K = k/dmax²; the n rows share the weight).
+    So k = (1 − d)(dmax/d)² g / (n s) with d = d(s) gives the target sag s. One physical stiffness for all bricks:
+    s = mortar_sag · m / m_full, so a half brick sinks in proportion to its weight. `mass_ratio` = m / m_full,
+    `n_contacts` = contacts that carry the brick (CONTACTS_PER_SLAB × slabs under it). b = 2 ζ √(k / dmax).
     """
     if c.mortar_stiffness == "brick_sim":
         k = 9.81 / c.mortar_sag
         return k, 2.0 * c.mortar_zeta * np.sqrt(k)
     if c.mortar_stiffness == "impedance":
-        dmax = 0.99
-        k = (1 - dmax) / dmax * 9.81 / c.mortar_sag
+        s = c.mortar_sag * mass_ratio
+        d, dmax = impedance(s), MORTAR_SOLIMP[1]
+        k = (1 - d) * (dmax / d) ** 2 * 9.81 / (n_contacts * s)
         return k, 2.0 * c.mortar_zeta * np.sqrt(k / dmax)
     raise ValueError(f"unknown mortar_stiffness {c.mortar_stiffness!r}")
 
@@ -163,7 +181,7 @@ class WallEnv:
             b.add_geom(name=f"brick_{i}", type=mujoco.mjtGeom.mjGEOM_BOX, size=[d["L"] / 2, W / 2, H / 2],
                        mass=d["L"] * W * H * RHO, friction=fr, rgba=col, condim=3)
         # mortar beds: boundary 1 (on course 1) and 2 (on course 2); one slab per lower brick + one per head joint
-        k, bdamp = mortar_solref(c)
+        m_full = L_FULL * W * H * RHO
         tb = JOINT
         self.beds = {}
         for bnd in (1, 2):
@@ -185,11 +203,13 @@ class WallEnv:
                 names.append(nm)
             for nm in names:
                 for i in upper:
+                    k, bdamp = mortar_solref(c, self.design[i]["L"] * W * H * RHO / m_full,
+                                             CONTACTS_PER_SLAB * self._slabs_under(i))
                     p = s.add_pair(geomname1=nm, geomname2=f"brick_{i}")
                     p.condim = 4
                     p.friction = [c.mortar_friction, c.mortar_friction, 0.005, 0.0001, 0.0001]
                     p.solref = [-k, -bdamp]
-                    p.solimp = [0.95, 0.99, 0.001, 0.5, 2]
+                    p.solimp = list(MORTAR_SOLIMP)
             self.beds[bnd] = dict(lower=lower, slabs=names[:len(lower)], joints=names[len(lower):])
         # cure welds (mortarB): brick -> world, activated at run time
         for i in range(self.n):
@@ -265,6 +285,17 @@ class WallEnv:
         g = 9.81
         self.lock_nmin = np.array([m.body_mass[b] * np.sqrt(g * g + c.lock_amax ** 2) / (2 * c.lock_mu) for b in self.brick_bid])
 
+    def _slabs_under(self, i):
+        """Bed geoms (lower-brick slabs + head joints) under slot i in the design."""
+        s = self.design[i]
+        lower = [self.design[j] for j in range(self.n) if self.design[j]["course"] == s["course"] - 1]
+        lower.sort(key=lambda d: d["x"])
+        n = sum(abs(lo["x"] - s["x"]) < (lo["L"] + s["L"]) / 2 for lo in lower)
+        for a, b in zip(lower[:-1], lower[1:]):
+            xj = ((a["x"] + a["L"] / 2) + (b["x"] - b["L"] / 2)) / 2
+            n += abs(xj - s["x"]) < s["L"] / 2
+        return int(n)
+
     def _is_desc(self, b, root):
         m = self.model
         while b != 0:
@@ -309,6 +340,7 @@ class WallEnv:
         # mj_resetData restores eq_active0: cure welds off, gripper coupling equalities on
         self.cured = np.zeros(self.n, bool)
         self.cure_t = np.full(self.n, -1)
+        self.sag_at_cure = np.full(self.n, np.nan)        # m, bed penetration when the brick cured (나3 check; nan = course 1)
         self.settle_count = np.zeros(self.n, int)
         self.bed_count = {1: np.zeros(self.n, int), 2: np.zeros(self.n, int)}
         self.bed_laid = {1: -1, 2: -1}
@@ -437,6 +469,19 @@ class WallEnv:
                 d.eq_active[eq] = 1
                 self.cured[i] = True
                 self.cure_t[i] = self.t
+                self.sag_at_cure[i] = self.bed_sag(i)
+
+    def bed_sag(self, i):
+        """Mean penetration (m, positive = sunk) of brick i into the mortar bed slabs, nan if it does not touch a bed."""
+        d = self.data
+        n = d.ncon
+        if n == 0:
+            return np.nan
+        g = d.contact.geom[:n]
+        beds = np.array(list(self.bed_gid.values()))
+        gid = self.brick_gid[i]
+        sel = ((g[:, 0] == gid) & np.isin(g[:, 1], beds)) | ((g[:, 1] == gid) & np.isin(g[:, 0], beds))
+        return float(-d.contact.dist[:n][sel].mean()) if sel.any() else np.nan
 
     def _update_bed(self, bnd):
         """Lay the mortar bed on course `bnd` once every brick of it is in its slot, static for 2 s and the hand is off."""

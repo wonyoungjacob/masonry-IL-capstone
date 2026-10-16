@@ -436,6 +436,8 @@ class WallExpert:
         out["n_touch_events"] = len(self.touch)
         out["bed_laid_t"] = {str(k): int(v) for k, v in env.bed_laid.items()}
         out["cured"] = env.cured.tolist()
+        out["sag_at_cure_mm"] = [None if np.isnan(v) else float(v * 1000) for v in env.sag_at_cure]
+        out["sag_end_mm"] = [None if np.isnan(v) else float(v * 1000) for v in (env.bed_sag(i) for i in range(env.n))]
         return out
 
 
