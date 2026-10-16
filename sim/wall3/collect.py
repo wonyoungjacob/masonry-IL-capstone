@@ -19,7 +19,8 @@ PHASES = ["to_supply", "grasp_descend", "grasp_close", "grasp_lift", "to_wall", 
           "place_servo", "place_lower", "place_unload", "place_open", "retreat", "to_retract", "settle"]
 CAMS = ("front", "top", "wrist")
 PILOT = (700000, 709999)        # pilot block: 700000 ~ 700049 first, then continued from 700050 (2026-10-16:
-                                 # 50 *passing* walls). 710000 ~ (main), 720000 ~ (val), 730000 ~ (test) stay untouched
+                                 # 50 *passing* walls); 700200 ~ 700209 = 2차 나5 recheck
+MAIN = (710000, 719999)         # main collection block (2차 나6): frozen main_v1 only. 720000 ~ (val), 730000 ~ (test) stay untouched
 
 
 def sha256(path, chunk=1 << 20):
@@ -142,8 +143,10 @@ def main():
     ap.add_argument("--env-version", required=True, help="pilot_20261016 | main_v1 (wall3.config.ENV_VERSIONS)")
     a = ap.parse_args()
     seeds = list(range(a.seed0, a.seed0 + a.n))
-    if seeds[0] < PILOT[0] or seeds[-1] > PILOT[1]:
-        raise SystemExit("이 작업은 파일럿 시작값(700000 ~ 709999)만 쓴다 (710000 ~ 본 수집·검증·시험 예약)")
+    in_pilot = PILOT[0] <= seeds[0] and seeds[-1] <= PILOT[1]
+    in_main = MAIN[0] <= seeds[0] and seeds[-1] <= MAIN[1] and a.env_version == "main_v1"
+    if not (in_pilot or in_main):
+        raise SystemExit("시작값은 파일럿 블록(700000 ~ 709999) 또는 main_v1 본 수집 블록(710000 ~ 719999)만 (720000 ~ 검증·시험 예약)")
     out = Path(a.out)
     if out.exists():
         raise SystemExit(f"{out} 이미 있음: 덮어쓰지 않음")
