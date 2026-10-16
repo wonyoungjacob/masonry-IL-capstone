@@ -75,6 +75,10 @@ class WallEnv:
         s.visual.global_.offwidth = c.hi_w
         s.visual.global_.offheight = c.hi_h
         s.visual.quality.shadowsize = 2048
+        # viewer camera marker size = meansize (0.50 m here, set by the floor/table) × scale.camera. The default 0.3 drew a
+        # 15 cm box that looked like the wrist camera overlapping the gripper; the camera itself is a point 47.5 mm clear of
+        # the nearest gripper geometry and has no body. Visual only: images, physics and data are unchanged.
+        s.visual.scale.camera = 0.03
         s.visual.headlight.ambient = [0.25, 0.25, 0.25]
         s.visual.headlight.diffuse = [0.35, 0.35, 0.35]
         s.visual.headlight.specular = [0.05, 0.05, 0.05]
@@ -112,7 +116,9 @@ class WallEnv:
         for i, d in enumerate(self.design):
             b = wb.add_body(name=f"brick_{i}", pos=[0, 0, 0])
             b.add_freejoint(name=f"brick_{i}_free")
-            col = [0.62, 0.62, 0.60, 1] if i % 2 == 0 else [0.58, 0.58, 0.56, 1]
+            # red brick colour common on Korean sites (적벽돌), two close shades so neighbours stay distinguishable.
+            # Colour only (2026-10-16): density 2,000 kg/m3, friction 0.6 and size unchanged; mortar colour unchanged.
+            col = [0.64, 0.29, 0.21, 1] if i % 2 == 0 else [0.58, 0.26, 0.19, 1]
             b.add_geom(name=f"brick_{i}", type=mujoco.mjtGeom.mjGEOM_BOX, size=[d["L"] / 2, W / 2, H / 2],
                        mass=d["L"] * W * H * RHO, friction=fr, rgba=col, condim=3)
         # mortar beds: boundary 1 (on course 1) and 2 (on course 2); one slab per lower brick + one per head joint
