@@ -15,14 +15,16 @@ ITEMS = ("1_bed_joint", "2_line_plane", "3_plumb", "4_position", "5_thickness")
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--raw", required=True)
+    ap.add_argument("--raw", required=True, nargs="+")
     ap.add_argument("--root", required=True)
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
-    raw = Path(a.raw)
-    walls = [json.loads(p.read_text()) for p in sorted(raw.glob("raw/wall_*.json"), key=lambda p: int(p.stem.split("_")[1]))]
-    cfg = json.loads((raw / "collect_config.json").read_text())
-    summ = json.loads((raw / "collect_summary.json").read_text())
+    raws = [Path(r) for r in a.raw]
+    walls = sorted([json.loads(p.read_text()) for r in raws for p in r.glob("raw/wall_*.json")], key=lambda w: w["seed"])
+    cfgs = [json.loads((r / "collect_config.json").read_text()) for r in raws]
+    summs = [json.loads((r / "collect_summary.json").read_text()) for r in raws]
+    cfg = cfgs[0]
+    summ = {"elapsed_s": sum(s["elapsed_s"] for s in summs), "workers": summs[0]["workers"]}
     n = len(walls)
     passed = [w for w in walls if w["eval"]["spec_pass"] and not w.get("fail")]
     fails = [w for w in walls if not (w["eval"]["spec_pass"] and not w.get("fail"))]
@@ -74,7 +76,7 @@ def main():
     sim_s = float(np.mean([w["steps"] for w in walls])) * 0.05
     workers = summ["workers"]
     out = {
-        "n_walls": n, "n_spec_pass": len(passed), "pass_rate": len(passed) / n, "n_aborted": sum(bool(w.get("fail")) for w in walls),
+        "n_walls_attempted": n, "seeds_attempted": [walls[0]["seed"], walls[-1]["seed"]], "n_spec_pass": len(passed), "pass_rate": len(passed) / n, "n_aborted": sum(bool(w.get("fail")) for w in walls),
         "abort_reasons": [w["fail"] for w in walls if w.get("fail")],
         "item_fail_counts": dict(item_fail), "item_fail_slots": {k: dict(v) for k, v in item_fail_slot.items() if v},
         "fail_details": reasons,
@@ -99,8 +101,9 @@ def main():
                      "raw_gb": (1000 / (len(passed) / n)) * np.mean(raw_bytes) / 1e9 if passed else None,
                      "dataset_gb": (ds_bytes / len(passed)) * 1000 / 1e9 if ds_bytes and passed else None}},
         "dataset": {"root": a.root, "verify": verify},
-        "reproducibility": {"git_commit": cfg["git_commit"], "git_dirty_wall3": cfg["git_dirty"], "assets": cfg["assets"],
-                            "seeds": [cfg["seeds"][0], cfg["seeds"][-1]], "raw_sha256": {str(w["seed"]): w["raw_sha256"] for w in walls}},
+        "reproducibility": {"collect_runs": [{"raw_dir": str(r), "git_commit": c["git_commit"], "git_dirty_wall3": c["git_dirty"],
+                                              "seeds_attempted": [w["seed"] for w in s["walls"]]} for r, c, s in zip(raws, cfgs, summs)],
+                            "assets": cfg["assets"], "raw_sha256": {str(w["seed"]): w["raw_sha256"] for w in walls}},
     }
     Path(a.out).write_text(json.dumps(out, indent=1, ensure_ascii=False, default=float))
     print(json.dumps({k: v for k, v in out.items() if k not in ("fail_details", "reproducibility", "dataset")}, indent=1, ensure_ascii=False, default=float))
