@@ -8,7 +8,8 @@
   벽돌 16장 참값 자세, 대본 단계. 에피소드·벽 메타데이터(벽 번호, 자리 단·순서, 시작값, IoU, 판정)는 meta/wall3_*.json.
 - 다 만든 뒤 LeRobot으로 다시 읽어 프레임 수·카메라·목표 정보를 검사하고, 파일 해시를 남긴다.
 
-실행: cd sim && source venv/bin/activate && python -m wall3.to_lerobot --raw outputs/wall3/<수집> --root data/wall3_pilot_<YYYYMMDD> [--all]
+실행: cd sim && source venv/bin/activate && python -m wall3.to_lerobot --raw outputs/wall3/<수집> [<수집2> ...] --root data/wall3_pilot_<YYYYMMDD>
+      [--max-walls 50] [--all]
       (activate가 torchcodec용 LD_LIBRARY_PATH를 설정한다)
 """
 import argparse, hashlib, json, time
@@ -48,19 +49,33 @@ def sha256(path):
     return h.hexdigest()
 
 
-def build(raw_dir: Path, root: Path, repo_id: str, include_all: bool):
+def build(raw_dirs, root: Path, repo_id: str, include_all: bool, max_walls: int = 0, video_mb: int = 20):
     from lerobot.datasets.lerobot_dataset import LeRobotDataset
-    walls = sorted(raw_dir.glob("raw/wall_*.json"), key=lambda p: int(p.stem.split("_")[1]))
-    infos = [json.loads(p.read_text()) for p in walls]
+    infos = []
+    for rd in raw_dirs:
+        for p in rd.glob("raw/wall_*.json"):
+            w = json.loads(p.read_text())
+            w["_raw_dir"] = rd
+            infos.append(w)
+    infos.sort(key=lambda w: w["seed"])
+    if len({w["seed"] for w in infos}) != len(infos):
+        raise SystemExit("같은 시작값이 두 번 들어 있음")
     use = [w for w in infos if include_all or (w["eval"]["spec_pass"] and not w.get("fail"))]
+    if max_walls:
+        if len(use) < max_walls:
+            raise SystemExit(f"합격 벽 {len(use)}개 < 요청 {max_walls}개")
+        use = use[:max_walls]                                    # first passing walls in seed order
     if not use:
         raise SystemExit("변환할 벽이 없음")
-    ds = LeRobotDataset.create(repo_id, fps=20, features=features(), root=str(root), robot_type="ur10e_robotiq2f140", use_videos=True)
+    # video_files_size_in_mb: LeRobot appends every episode to one growing mp4 per camera until this size; small files keep
+    # the per-episode append cheap (the 48-wall pilot with the default slowed from 17 to 70 s per wall).
+    ds = LeRobotDataset.create(repo_id, fps=20, features=features(), root=str(root), robot_type="ur10e_robotiq2f140", use_videos=True,
+                               video_files_size_in_mb=video_mb)
     ep_meta, wall_meta = [], []
     ep = 0
     t0 = time.time()
     for wi, w in enumerate(use):
-        with np.load(raw_dir / "raw" / w["raw_file"]) as zf:      # decompress each array once (indexing an NpzFile
+        with np.load(w["_raw_dir"] / "raw" / w["raw_file"]) as zf:      # decompress each array once (indexing an NpzFile
             z = {k: zf[k] for k in zf.files}                     # re-reads the whole array every time)
         assert np.array_equal(z["t"], np.arange(len(z["t"]))), "steps must be contiguous"
         for b in w["bricks"]:
@@ -86,14 +101,18 @@ def build(raw_dir: Path, root: Path, repo_id: str, include_all: bool):
                             "wall_spec_pass": w["eval"]["spec_pass"]})
             ep += 1
         wall_meta.append({"wall_index": wi, "seed": w["seed"], "spec_pass": w["eval"]["spec_pass"], "eval": w["eval"],
-                          "raw_file": w["raw_file"], "raw_sha256": w["raw_sha256"], "marks": [[b["slot"], b["start"], b["end"]] for b in w["bricks"]]})
+                          "raw_dir": str(w["_raw_dir"]), "raw_file": w["raw_file"], "raw_sha256": w["raw_sha256"], "marks": [[b["slot"], b["start"], b["end"]] for b in w["bricks"]]})
         print(f"wall {w['seed']}: 16 episodes ({ep} total, {time.time() - t0:.0f} s)", flush=True)
     ds.finalize()
     meta = root / "meta"
     (meta / "wall3_episodes.json").write_text(json.dumps(ep_meta, indent=1, default=float))
     (meta / "wall3_walls.json").write_text(json.dumps(wall_meta, indent=1, default=float))
-    (meta / "wall3_source.json").write_text(json.dumps({"raw_dir": str(raw_dir), "collect_config": json.loads((raw_dir / "collect_config.json").read_text()),
-                                                        "include_all": include_all, "n_walls_raw": len(infos), "n_walls_used": len(use),
+    (meta / "wall3_source.json").write_text(json.dumps({"raw_dirs": [str(r) for r in raw_dirs],
+                                                        "collect_configs": [json.loads((r / "collect_config.json").read_text()) for r in raw_dirs],
+                                                        "include_all": include_all, "max_walls": max_walls, "video_files_size_in_mb": video_mb,
+                                                        "n_walls_raw": len(infos), "n_walls_used": len(use),
+                                                        "seeds_used": [w["seed"] for w in use],
+                                                        "seeds_not_used": [w["seed"] for w in infos if w not in use],
                                                         "task": TASK, "features": features()}, indent=1, default=float))
     return ep_meta
 
@@ -132,17 +151,19 @@ def verify(root: Path, repo_id: str, ep_meta):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--raw", required=True, help="collect.py output folder")
+    ap.add_argument("--raw", required=True, nargs="+", help="collect.py output folder(s)")
     ap.add_argument("--root", required=True, help="new dataset folder (sim/data/wall3_pilot_<YYYYMMDD>)")
     ap.add_argument("--repo-id", default="")
     ap.add_argument("--all", action="store_true", help="include walls that failed the spec (smoke check only)")
+    ap.add_argument("--max-walls", type=int, default=0, help="use the first N passing walls in seed order (0 = all)")
+    ap.add_argument("--video-mb", type=int, default=20, help="LeRobot video_files_size_in_mb")
     a = ap.parse_args()
     root = Path(a.root)
     if root.exists():
         raise SystemExit(f"{root} 이미 있음: 덮어쓰지 않음")
     repo_id = a.repo_id or f"local/{root.name}"
     t0 = time.time()
-    ep_meta = build(Path(a.raw), root, repo_id, a.all)
+    ep_meta = build([Path(r) for r in a.raw], root, repo_id, a.all, a.max_walls, a.video_mb)
     t_build = time.time() - t0
     rep = verify(root, repo_id, ep_meta)
     files = sorted(p for p in root.rglob("*") if p.is_file() and p.name != "wall3_hashes.json")

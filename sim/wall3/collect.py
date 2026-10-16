@@ -6,6 +6,7 @@
 중단된 벽은 저장하지 않는다(벽마다 끝까지 돈 뒤 임시 파일 → 이름 바꾸기). 같은 출력 폴더가 있으면 멈춘다.
 
 실행: cd sim && MUJOCO_GL=egl venv/bin/python -m wall3.collect --seed0 700000 --n 50 --out outputs/wall3/<이름> [--record-every 10]
+      합격 벽 개수를 채울 때까지: --target-pass K (시작값을 seed0부터 차례로, 모자란 개수만큼씩 묶어 시도, 최대 --n번)
 """
 import argparse, hashlib, json, os, subprocess, time
 from multiprocessing import Pool
@@ -17,7 +18,8 @@ SIM = Path(__file__).resolve().parents[1]
 PHASES = ["to_supply", "grasp_descend", "grasp_close", "grasp_lift", "to_wall", "wait_bed", "place_align", "place_descend",
           "place_servo", "place_lower", "place_unload", "place_open", "retreat", "to_retract", "settle"]
 CAMS = ("front", "top", "wrist")
-PILOT = (700000, 700049)
+PILOT = (700000, 709999)        # pilot block: 700000 ~ 700049 first, then continued from 700050 (2026-10-16:
+                                 # 50 *passing* walls). 710000 ~ (main), 720000 ~ (val), 730000 ~ (test) stay untouched
 
 
 def sha256(path, chunk=1 << 20):
@@ -131,10 +133,11 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--workers", type=int, default=12)
     ap.add_argument("--record-every", type=int, default=0, help="record every N-th wall to video/ (0 = none)")
+    ap.add_argument("--target-pass", type=int, default=0, help="stop once this many walls pass the spec (0 = run all --n)")
     a = ap.parse_args()
     seeds = list(range(a.seed0, a.seed0 + a.n))
     if seeds[0] < PILOT[0] or seeds[-1] > PILOT[1]:
-        raise SystemExit("이 작업은 파일럿 시작값(700000 ~ 700049)만 쓴다")
+        raise SystemExit("이 작업은 파일럿 시작값(700000 ~ 709999)만 쓴다 (710000 ~ 본 수집·검증·시험 예약)")
     out = Path(a.out)
     if out.exists():
         raise SystemExit(f"{out} 이미 있음: 덮어쓰지 않음")
@@ -150,13 +153,23 @@ def main():
     t0 = time.time()
     res = []
     with Pool(a.workers) as p:
-        for r in p.imap_unordered(one_wall, jobs):
-            res.append(r)
-            print(f"[{len(res):3d}/{len(jobs)}] seed {r['seed']} fail {r['fail']} spec {r['spec_pass']} frames {r['frames']} "
-                  f"raw {r['raw_bytes'] / 1e6:.0f} MB {r['time_s']:.0f} s  (elapsed {time.time() - t0:.0f} s)", flush=True)
+        nxt = 0
+        while nxt < len(jobs):
+            if a.target_pass:
+                need = a.target_pass - sum(r["spec_pass"] for r in res)
+                if need <= 0:
+                    break
+                batch = jobs[nxt: nxt + min(need, a.workers)]       # only as many walls as still needed
+            else:
+                batch = jobs[nxt:]
+            nxt += len(batch)
+            for r in p.imap_unordered(one_wall, batch):
+                res.append(r)
+                print(f"[{len(res):3d}] seed {r['seed']} fail {r['fail']} spec {r['spec_pass']} frames {r['frames']} "
+                      f"raw {r['raw_bytes'] / 1e6:.0f} MB {r['time_s']:.0f} s  (elapsed {time.time() - t0:.0f} s)", flush=True)
     res.sort(key=lambda r: r["seed"])
     summ = {"n": len(res), "n_pass": sum(r["spec_pass"] for r in res), "n_fail_run": sum(bool(r["fail"]) for r in res),
-            "elapsed_s": time.time() - t0, "workers": a.workers, "walls": res, "finished": time.strftime("%Y-%m-%d %H:%M:%S")}
+            "elapsed_s": time.time() - t0, "workers": a.workers, "target_pass": a.target_pass, "walls": res, "finished": time.strftime("%Y-%m-%d %H:%M:%S")}
     (out / "collect_summary.json").write_text(json.dumps(summ, indent=1, default=float, ensure_ascii=False))
     print(f"done: {summ['n_pass']}/{summ['n']} spec pass, {summ['n_fail_run']} aborted, {summ['elapsed_s']:.0f} s")
 
