@@ -114,8 +114,8 @@ class WallExpert:
         return tau
 
     def _send(self, q, qd, qdd, grip, held, phase):
-        tau = self._ff(q, qd, qdd, held)
-        ctrl = q + (tau + KD * qd) / KP
+        tau = self._ff(q, qd, qdd, held)          # includes joint (passive) damping when the servo damping lives in the joint
+        ctrl = q + (tau + self.env.arm_kd * qd) / self.env.arm_kp
         action = np.r_[ctrl, grip]
         if self.on_step is not None:
             self.on_step(self.env, action, phase, self.brick_k)

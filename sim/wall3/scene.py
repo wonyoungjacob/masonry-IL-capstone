@@ -106,6 +106,30 @@ class WallEnv:
         mat = s.add_material(name="grid", texrepeat=[10, 10], texuniform=True, reflectance=0.02)
         mat.textures[mujoco.mjtTextureRole.mjTEXROLE_RGB] = "grid"
         s.body("base").pos = [0.0, 0.0, c.pedestal_h]
+        if c.integrator == "euler":
+            s.option.integrator = mujoco.mjtIntegrator.mjINT_EULER
+        elif c.integrator == "rk4":
+            s.option.integrator = mujoco.mjtIntegrator.mjINT_RK4
+        elif c.integrator == "implicit":
+            s.option.integrator = mujoco.mjtIntegrator.mjINT_IMPLICIT
+        elif c.integrator != "implicitfast":
+            raise ValueError(f"unknown integrator {c.integrator!r}")
+        if c.arm_joint_damping:                    # passive joint damping override (Euler integrates it implicitly)
+            for a, dj in zip(ARM_ACTS, c.arm_joint_damping):
+                j = s.joint(s.actuator(a).target)
+                j.damping = [float(dj)] + list(j.damping[1:])
+        if c.arm_kd:                               # servo damping override per joint (actuator velocity bias)
+            for a, kd in zip(ARM_ACTS, c.arm_kd):
+                s.actuator(a).biasprm[2] = -float(kd)
+        if c.arm_damping == "joint":              # move the servo damping into the joint (same torque −kd·q̇)
+            for a in ARM_ACTS:
+                act = s.actuator(a)
+                kd = -float(act.biasprm[2])
+                act.biasprm[2] = 0.0
+                j = s.joint(act.target)
+                j.damping = [float(j.damping[0]) + kd] + list(j.damping[1:])
+        elif c.arm_damping != "actuator":
+            raise ValueError(f"unknown arm_damping {c.arm_damping!r}")
         wb = s.worldbody
         wb.add_light(name="sun", pos=[0.4, 0.2, 2.5], dir=[-0.15, 0.1, -1], type=mujoco.mjtLightType.mjLIGHT_DIRECTIONAL,
                      castshadow=1, diffuse=[0.45, 0.45, 0.45], specular=[0.1, 0.1, 0.1])
@@ -209,6 +233,8 @@ class WallEnv:
         self.bed_mocap = {nm: m.body_mocapid[m.body(nm).id] for bnd in self.beds.values() for nm in bnd["slabs"] + bnd["joints"]}
         self.bed_gid = {nm: m.geom(nm).id for nm in self.bed_mocap}
         self.n_sub = int(round(self.cfg.ctrl_dt / m.opt.timestep))
+        self.arm_kp = m.actuator_gainprm[self.arm_act, 0].copy()
+        self.arm_kd = -m.actuator_biasprm[self.arm_act, 2].copy()      # 0 when the damping lives in the joints
         self.ft_force = m.sensor(G.PREFIX + "force_ee").adr[0]
         self.ft_torque = m.sensor(G.PREFIX + "torque_ee").adr[0]
         self.ft_site = m.site(G.PREFIX + "ft_frame").id
@@ -251,6 +277,7 @@ class WallEnv:
         d.ctrl[self.grip_act] = G.grip_ctrl(False, self.cfg.gripper)
         self.last_action = np.r_[q, self.cfg.gripper.open_ctrl]
         self.prev_action = self.last_action.copy()
+        self.lp_y, self.lp_v = self.last_action.copy(), np.zeros_like(self.last_action)
         for nm, mid in self.bed_mocap.items():
             d.mocap_pos[mid] = [0, 0, -1]
         # mj_resetData restores eq_active0: cure welds off, gripper coupling equalities on
@@ -289,8 +316,23 @@ class WallEnv:
     def _interp(self, old, new):
         """Actuator targets for the n_sub physics steps of one control step (cfg.ctrl_interp)."""
         n = self.n_sub
+        s = np.arange(1, n + 1) / n
         if self.cfg.ctrl_interp == "linear":            # pilot_20261016
-            return [old + (new - old) * (j / n) for j in range(1, n + 1)]
+            return [old + (new - old) * x for x in s]
+        if self.cfg.ctrl_interp == "hermite":           # cubic Hermite, tangents = previous / current step (C1 across steps)
+            m0, m1 = old - self.prev_action, new - old
+            h00, h10, h01, h11 = 2 * s**3 - 3 * s**2 + 1, s**3 - 2 * s**2 + s, -2 * s**3 + 3 * s**2, s**3 - s**2
+            return [h00[j] * old + h10[j] * m0 + h01[j] * new + h11[j] * m1 for j in range(n)]
+        if self.cfg.ctrl_interp == "lowpass":           # linear target through a critically damped 2nd-order filter
+            w, dt = 2 * np.pi * 15.0, self.model.opt.timestep
+            out = []
+            for x in s:
+                u = old + (new - old) * x
+                acc = w * w * (u - self.lp_y) - 2 * w * self.lp_v
+                self.lp_v = self.lp_v + acc * dt
+                self.lp_y = self.lp_y + self.lp_v * dt
+                out.append(self.lp_y.copy())
+            return out
         raise ValueError(f"unknown ctrl_interp {self.cfg.ctrl_interp!r}")
 
     # ------------------------------------------------------------------ state

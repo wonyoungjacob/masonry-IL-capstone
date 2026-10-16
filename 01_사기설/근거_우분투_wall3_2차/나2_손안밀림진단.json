@@ -1,0 +1,726 @@
+{
+ "trace_pilot_physics_seed700000_brick2_to_wall": {
+  "n_physics_steps": 1500,
+  "total_slip_mm": 16.12,
+  "path_slip_mm": 37.57,
+  "tcp_acc_max_ms2": 7.4,
+  "pad_normal_force_sum_mean_N": 82.5,
+  "pad_tangential_force_sum_mean_N": 43.7,
+  "fraction_of_steps_with_a_contact_at_the_cone": 0.83,
+  "slip_um_per_physics_step_by_substep": {
+   "0": 24.7,
+   "1": 25.1,
+   "2": 25.0,
+   "5": 24.7,
+   "10": 24.5,
+   "25": 25.0,
+   "48": 25.8,
+   "49": 25.7
+  },
+  "note": "printed by diag_slip --trace (the run's JSON was not written: the comparison step crashed afterwards)"
+ },
+ "compare": [
+  {
+   "variant": "A_implicitfast_linear (pilot)",
+   "config": {
+    "integrator": "implicitfast",
+    "arm_damping": "actuator",
+    "ctrl_interp": "linear"
+   },
+   "seed": 700000,
+   "fail": null,
+   "drift_max_mm": 20.56,
+   "transport_drift_mm": [
+    18.04,
+    14.71,
+    20.56,
+    13.62,
+    6.64,
+    7.43
+   ]
+  },
+  {
+   "variant": "A_implicitfast_linear (pilot)",
+   "config": {
+    "integrator": "implicitfast",
+    "arm_damping": "actuator",
+    "ctrl_interp": "linear"
+   },
+   "seed": 700001,
+   "fail": null,
+   "drift_max_mm": 20.67,
+   "transport_drift_mm": [
+    18.03,
+    14.06,
+    20.67,
+    12.22,
+    8.93,
+    6.89
+   ]
+  },
+  {
+   "variant": "B_implicitfast_hermite",
+   "config": {
+    "integrator": "implicitfast",
+    "arm_damping": "actuator",
+    "ctrl_interp": "hermite"
+   },
+   "seed": 700000,
+   "fail": null,
+   "drift_max_mm": 20.73,
+   "transport_drift_mm": [
+    17.73,
+    14.63,
+    20.73,
+    13.72,
+    6.68,
+    7.47
+   ]
+  },
+  {
+   "variant": "B_implicitfast_hermite",
+   "config": {
+    "integrator": "implicitfast",
+    "arm_damping": "actuator",
+    "ctrl_interp": "hermite"
+   },
+   "seed": 700001,
+   "fail": null,
+   "drift_max_mm": 20.89,
+   "transport_drift_mm": [
+    17.84,
+    14.2,
+    20.89,
+    12.32,
+    9.1,
+    6.93
+   ]
+  },
+  {
+   "variant": "C_implicitfast_lowpass",
+   "config": {
+    "integrator": "implicitfast",
+    "arm_damping": "actuator",
+    "ctrl_interp": "lowpass"
+   },
+   "seed": 700000,
+   "fail": null,
+   "drift_max_mm": 21.18,
+   "transport_drift_mm": [
+    18.46,
+    15.42,
+    21.18,
+    14.0,
+    6.87,
+    7.91
+   ]
+  },
+  {
+   "variant": "C_implicitfast_lowpass",
+   "config": {
+    "integrator": "implicitfast",
+    "arm_damping": "actuator",
+    "ctrl_interp": "lowpass"
+   },
+   "seed": 700001,
+   "fail": null,
+   "drift_max_mm": 21.44,
+   "transport_drift_mm": [
+    18.31,
+    14.79,
+    21.44,
+    12.61,
+    9.27,
+    7.37
+   ]
+  },
+  {
+   "variant": "D_euler_jointdamping_linear",
+   "config": {
+    "integrator": "euler",
+    "arm_damping": "joint",
+    "ctrl_interp": "linear"
+   },
+   "seed": 700000,
+   "fail": {
+    "brick": 0,
+    "reason": "grasp_lost",
+    "t": 65
+   },
+   "drift_max_mm": null,
+   "transport_drift_mm": [
+    NaN
+   ]
+  },
+  {
+   "variant": "D_euler_jointdamping_linear",
+   "config": {
+    "integrator": "euler",
+    "arm_damping": "joint",
+    "ctrl_interp": "linear"
+   },
+   "seed": 700001,
+   "fail": {
+    "brick": 0,
+    "reason": "grasp_lost",
+    "t": 65
+   },
+   "drift_max_mm": null,
+   "transport_drift_mm": [
+    NaN
+   ]
+  },
+  {
+   "variant": "E_euler_jointdamping_hermite",
+   "config": {
+    "integrator": "euler",
+    "arm_damping": "joint",
+    "ctrl_interp": "hermite"
+   },
+   "seed": 700000,
+   "fail": {
+    "brick": 0,
+    "reason": "grasp_lost",
+    "t": 65
+   },
+   "drift_max_mm": null,
+   "transport_drift_mm": [
+    NaN
+   ]
+  },
+  {
+   "variant": "E_euler_jointdamping_hermite",
+   "config": {
+    "integrator": "euler",
+    "arm_damping": "joint",
+    "ctrl_interp": "hermite"
+   },
+   "seed": 700001,
+   "fail": {
+    "brick": 0,
+    "reason": "grasp_lost",
+    "t": 65
+   },
+   "drift_max_mm": null,
+   "transport_drift_mm": [
+    NaN
+   ]
+  },
+  {
+   "variant": "F_euler_wristkd150_linear",
+   "config": {
+    "integrator": "euler",
+    "arm_damping": "actuator",
+    "arm_kd": [
+     500,
+     500,
+     500,
+     150,
+     150,
+     150
+    ],
+    "ctrl_interp": "linear"
+   },
+   "seed": 700000,
+   "fail": null,
+   "drift_max_mm": 11.18,
+   "transport_drift_mm": [
+    10.13,
+    8.96,
+    11.18,
+    7.74,
+    4.61,
+    4.67
+   ]
+  },
+  {
+   "variant": "F_euler_wristkd150_linear",
+   "config": {
+    "integrator": "euler",
+    "arm_damping": "actuator",
+    "arm_kd": [
+     500,
+     500,
+     500,
+     150,
+     150,
+     150
+    ],
+    "ctrl_interp": "linear"
+   },
+   "seed": 700001,
+   "fail": null,
+   "drift_max_mm": 11.29,
+   "transport_drift_mm": [
+    10.26,
+    8.59,
+    11.29,
+    6.99,
+    5.75,
+    4.29
+   ]
+  },
+  {
+   "variant": "G_implicit_linear",
+   "config": {
+    "integrator": "implicit",
+    "arm_damping": "actuator",
+    "ctrl_interp": "linear"
+   },
+   "seed": 700000,
+   "fail": null,
+   "drift_max_mm": 20.55,
+   "transport_drift_mm": [
+    18.01,
+    14.7,
+    20.55,
+    13.63,
+    6.62,
+    7.42
+   ]
+  },
+  {
+   "variant": "G_implicit_linear",
+   "config": {
+    "integrator": "implicit",
+    "arm_damping": "actuator",
+    "ctrl_interp": "linear"
+   },
+   "seed": 700001,
+   "fail": null,
+   "drift_max_mm": 20.73,
+   "transport_drift_mm": [
+    17.96,
+    13.9,
+    20.73,
+    12.2,
+    8.98,
+    6.89
+   ]
+  },
+  {
+   "variant": "H_euler_nopassive_wristkd152",
+   "config": {
+    "integrator": "euler",
+    "arm_damping": "actuator",
+    "arm_kd": [
+     510,
+     510,
+     505,
+     152,
+     152,
+     152
+    ],
+    "arm_joint_damping": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "ctrl_interp": "linear"
+   },
+   "seed": 700000,
+   "fail": null,
+   "drift_max_mm": 11.17,
+   "transport_drift_mm": [
+    9.85,
+    8.95,
+    11.17,
+    7.81,
+    4.58,
+    4.65
+   ]
+  },
+  {
+   "variant": "H_euler_nopassive_wristkd152",
+   "config": {
+    "integrator": "euler",
+    "arm_damping": "actuator",
+    "arm_kd": [
+     510,
+     510,
+     505,
+     152,
+     152,
+     152
+    ],
+    "arm_joint_damping": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "ctrl_interp": "linear"
+   },
+   "seed": 700001,
+   "fail": null,
+   "drift_max_mm": 11.23,
+   "transport_drift_mm": [
+    10.25,
+    8.88,
+    11.23,
+    7.02,
+    5.76,
+    4.27
+   ]
+  },
+  {
+   "variant": "I_implicitfast_nopassive",
+   "config": {
+    "integrator": "implicitfast",
+    "arm_damping": "actuator",
+    "arm_kd": [
+     510,
+     510,
+     505,
+     502,
+     502,
+     502
+    ],
+    "arm_joint_damping": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "ctrl_interp": "linear"
+   },
+   "seed": 700000,
+   "fail": null,
+   "drift_max_mm": 20.56,
+   "transport_drift_mm": [
+    18.04,
+    14.71,
+    20.56,
+    13.62,
+    6.64,
+    7.43
+   ]
+  },
+  {
+   "variant": "I_implicitfast_nopassive",
+   "config": {
+    "integrator": "implicitfast",
+    "arm_damping": "actuator",
+    "arm_kd": [
+     510,
+     510,
+     505,
+     502,
+     502,
+     502
+    ],
+    "arm_joint_damping": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "ctrl_interp": "linear"
+   },
+   "seed": 700001,
+   "fail": null,
+   "drift_max_mm": 20.67,
+   "transport_drift_mm": [
+    18.03,
+    14.06,
+    20.67,
+    12.22,
+    8.93,
+    6.89
+   ]
+  },
+  {
+   "variant": "J_euler_wristkd150_noslip20",
+   "config": {
+    "integrator": "euler",
+    "arm_damping": "actuator",
+    "arm_kd": [
+     500,
+     500,
+     500,
+     150,
+     150,
+     150
+    ],
+    "ctrl_interp": "linear",
+    "noslip_iterations": 20
+   },
+   "seed": 700000,
+   "fail": null,
+   "drift_max_mm": 10.8,
+   "transport_drift_mm": [
+    9.75,
+    9.52,
+    10.8,
+    7.62,
+    4.63,
+    4.72
+   ]
+  },
+  {
+   "variant": "J_euler_wristkd150_noslip20",
+   "config": {
+    "integrator": "euler",
+    "arm_damping": "actuator",
+    "arm_kd": [
+     500,
+     500,
+     500,
+     150,
+     150,
+     150
+    ],
+    "ctrl_interp": "linear",
+    "noslip_iterations": 20
+   },
+   "seed": 700001,
+   "fail": null,
+   "drift_max_mm": 10.98,
+   "transport_drift_mm": [
+    9.92,
+    8.61,
+    10.98,
+    7.12,
+    5.79,
+    4.31
+   ]
+  },
+  {
+   "variant": "K_euler_wristkd150_noslip100",
+   "config": {
+    "integrator": "euler",
+    "arm_damping": "actuator",
+    "arm_kd": [
+     500,
+     500,
+     500,
+     150,
+     150,
+     150
+    ],
+    "ctrl_interp": "linear",
+    "noslip_iterations": 100
+   },
+   "seed": 700000,
+   "fail": null,
+   "drift_max_mm": 10.77,
+   "transport_drift_mm": [
+    9.2,
+    8.35,
+    10.77,
+    7.27,
+    4.5,
+    4.52
+   ]
+  },
+  {
+   "variant": "K_euler_wristkd150_noslip100",
+   "config": {
+    "integrator": "euler",
+    "arm_damping": "actuator",
+    "arm_kd": [
+     500,
+     500,
+     500,
+     150,
+     150,
+     150
+    ],
+    "ctrl_interp": "linear",
+    "noslip_iterations": 100
+   },
+   "seed": 700001,
+   "fail": null,
+   "drift_max_mm": 10.87,
+   "transport_drift_mm": [
+    9.41,
+    8.14,
+    10.87,
+    6.62,
+    5.51,
+    4.24
+   ]
+  },
+  {
+   "variant": "L_rk4_wristkd150",
+   "config": {
+    "integrator": "rk4",
+    "arm_damping": "actuator",
+    "arm_kd": [
+     500,
+     500,
+     500,
+     150,
+     150,
+     150
+    ],
+    "ctrl_interp": "linear"
+   },
+   "seed": 700000,
+   "fail": null,
+   "drift_max_mm": 13.03,
+   "transport_drift_mm": [
+    10.48,
+    9.06,
+    13.03,
+    7.29,
+    3.54,
+    3.63
+   ]
+  },
+  {
+   "variant": "L_rk4_wristkd150",
+   "config": {
+    "integrator": "rk4",
+    "arm_damping": "actuator",
+    "arm_kd": [
+     500,
+     500,
+     500,
+     150,
+     150,
+     150
+    ],
+    "ctrl_interp": "linear"
+   },
+   "seed": 700001,
+   "fail": null,
+   "drift_max_mm": 13.16,
+   "transport_drift_mm": [
+    10.42,
+    8.67,
+    13.16,
+    6.41,
+    4.82,
+    3.22
+   ]
+  },
+  {
+   "variant": "M_euler_wristkd150_dt0.5ms (diagnostic only)",
+   "config": {
+    "integrator": "euler",
+    "arm_damping": "actuator",
+    "arm_kd": [
+     500,
+     500,
+     500,
+     150,
+     150,
+     150
+    ],
+    "ctrl_interp": "linear",
+    "timestep": 0.0005
+   },
+   "seed": 700000,
+   "fail": null,
+   "drift_max_mm": 12.09,
+   "transport_drift_mm": [
+    10.06,
+    8.91,
+    12.09,
+    7.45,
+    4.07,
+    4.14
+   ]
+  },
+  {
+   "variant": "M_euler_wristkd150_dt0.5ms (diagnostic only)",
+   "config": {
+    "integrator": "euler",
+    "arm_damping": "actuator",
+    "arm_kd": [
+     500,
+     500,
+     500,
+     150,
+     150,
+     150
+    ],
+    "ctrl_interp": "linear",
+    "timestep": 0.0005
+   },
+   "seed": 700001,
+   "fail": null,
+   "drift_max_mm": 12.15,
+   "transport_drift_mm": [
+    10.29,
+    8.53,
+    12.15,
+    6.7,
+    5.29,
+    3.75
+   ]
+  },
+  {
+   "variant": "N_rk4_kd500",
+   "config": {
+    "integrator": "rk4",
+    "arm_damping": "actuator",
+    "ctrl_interp": "linear"
+   },
+   "seed": 700000,
+   "fail": {
+    "brick": 1,
+    "reason": "slip:place_servo:33.4mm",
+    "t": 275
+   },
+   "drift_max_mm": 16.45,
+   "transport_drift_mm": [
+    16.45,
+    NaN
+   ]
+  },
+  {
+   "variant": "N_rk4_kd500",
+   "config": {
+    "integrator": "rk4",
+    "arm_damping": "actuator",
+    "ctrl_interp": "linear"
+   },
+   "seed": 700001,
+   "fail": {
+    "brick": 0,
+    "reason": "slip:place_descend:31.2mm",
+    "t": 98
+   },
+   "drift_max_mm": null,
+   "transport_drift_mm": [
+    NaN
+   ]
+  }
+ ],
+ "grip_force_euler_wristkd150_drift_max_mm_seed700000_700001": {
+  "4Nm_squeeze0.06 (~45 N)": [
+   11.18,
+   11.29
+  ],
+  "10Nm_squeeze0.20": [
+   11.42,
+   11.63
+  ],
+  "10Nm_saturated (~115 N)": [
+   11.62,
+   11.81
+  ]
+ },
+ "rig_full_brick": {
+  "move_euler_mm": 0.27,
+  "move_implicitfast_mm": 11.58,
+  "static_lateral_4ms2_3s_euler_mm": 0.49,
+  "static_lateral_4ms2_3s_implicitfast_mm": 0.36
+ },
+ "correlation_euler_F_seed700000_brick2": {
+  "slip_vs_angular_velocity": 0.82,
+  "slip_vs_linear_velocity": 0.8,
+  "slip_vs_brick_acceleration": 0.07
+ }
+}

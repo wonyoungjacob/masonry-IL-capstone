@@ -52,7 +52,13 @@ class SceneConfig:
     # environment version (2차 지시 나1). Build with scene_config(version); the dataclass defaults are main_v1.
     env_version: str = "main_v1"
     brick_rgba: tuple = ((0.64, 0.29, 0.21, 1.0), (0.58, 0.26, 0.19, 1.0))   # 적벽돌 색 (2026-10-16), two shades
-    ctrl_interp: str = "linear"                 # how a 20 Hz target is spread over the 50 physics steps (나2)
+    ctrl_interp: str = "linear"                 # how a 20 Hz target is spread over the 50 physics steps (나2):
+                                                # linear | hermite (C1: tangents from the previous action) | lowpass
+    integrator: str = "implicitfast"            # UR10e Menagerie file's integrator | euler | implicit | rk4 (나2)
+    arm_damping: str = "actuator"               # UR10e servo damping kd 500 in the actuator (file) | joint: same kd as joint
+                                                # damping (Euler integrates joint damping implicitly) (나2)
+    arm_kd: tuple = ()                          # per-joint actuator damping override (N·m·s/rad), () = file values (500 each)
+    arm_joint_damping: tuple = ()               # per-joint passive damping override, () = file values (10 10 5 2 2 2)
     mortar_stiffness: str = "brick_sim"         # "brick_sim": k = g / sag (pilot, ignores the constraint impedance);
                                                 # "impedance": k = (1 - d)/d · g / sag so the bed really sags `mortar_sag` (나3)
     # robot (P3)
@@ -99,7 +105,7 @@ class SceneConfig:
 # brick_sim mortar stiffness). main_v1 = the dataclass defaults, filled in step by step by 나2 ~ 나4 and frozen in 나5.
 ENV_VERSIONS = {
     "pilot_20261016": dict(brick_rgba=((0.62, 0.62, 0.60, 1.0), (0.58, 0.58, 0.56, 1.0)), ctrl_interp="linear",
-                           mortar_stiffness="brick_sim"),
+                           mortar_stiffness="brick_sim", integrator="implicitfast", arm_damping="actuator"),
     "main_v1": dict(),
 }
 
