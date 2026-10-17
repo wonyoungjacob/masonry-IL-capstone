@@ -1,0 +1,530 @@
+{
+ "freeze": {
+  "env_version": "main_v1",
+  "git_commit": "482da46ec70f5db09d11c3b5f9f2dd80ef4897b9",
+  "git_dirty_wall3": false,
+  "scene_sha256": "10909a503935beef2b26ed12088d2a0e6d7383d55923407590cc4cebbe6eb864",
+  "expert_sha256": "a5ef1227c4dc656cfb5361858dd9d789f0a7d51b3d94a6e2a62db70fc96098f5",
+  "g1_sha256": "eea399b13d798ca42af69a15fbbb4430af50de4aa0a42220527f6720a6bdb36d",
+  "code_sha256": "78381a7a8b2255c623c1a4fd54e38e7daa9908792022abc269e0d18270719623",
+  "scene": {
+   "env_version": "main_v1",
+   "brick_rgba": [
+    [
+     0.64,
+     0.29,
+     0.21,
+     1.0
+    ],
+    [
+     0.58,
+     0.26,
+     0.19,
+     1.0
+    ]
+   ],
+   "ctrl_interp": "linear",
+   "integrator": "implicitfast",
+   "arm_damping": "actuator",
+   "arm_kd": [],
+   "arm_joint_damping": [],
+   "mortar_stiffness": "brick_sim",
+   "grip_lock": true,
+   "lock_mu": 0.6,
+   "lock_amax": 7.4,
+   "lock_vlin": 0.005,
+   "lock_vang": 0.05,
+   "lock_settle": 0.1,
+   "lock_cap_window": 10,
+   "lock_open_eps": 0.002,
+   "lock_drop": 0.01,
+   "lock_solref": [
+    0.004,
+    1.0
+   ],
+   "pedestal_h": 0.6,
+   "pedestal_half": 0.15,
+   "table_h": 0.35,
+   "table_x": [
+    -1.0,
+    1.0
+   ],
+   "table_y": [
+    -1.0,
+    -0.17
+   ],
+   "supply_slots": [
+    [
+     -0.91,
+     -0.25
+    ],
+    [
+     -0.65,
+     -0.25
+    ],
+    [
+     0.91,
+     -0.25
+    ],
+    [
+     0.65,
+     -0.25
+    ],
+    [
+     0.65,
+     -0.43
+    ],
+    [
+     -0.65,
+     -0.43
+    ],
+    [
+     -0.39,
+     -0.43
+    ],
+    [
+     -0.39,
+     -0.79
+    ],
+    [
+     0.65,
+     -0.61
+    ],
+    [
+     0.39,
+     -0.43
+    ],
+    [
+     0.39,
+     -0.61
+    ],
+    [
+     -0.65,
+     -0.61
+    ],
+    [
+     -0.39,
+     -0.61
+    ],
+    [
+     0.39,
+     -0.79
+    ],
+    [
+     0.13,
+     -0.79
+    ],
+    [
+     0.13,
+     -0.61
+    ]
+   ],
+   "scatter_pos": 0.01,
+   "scatter_yaw_deg": 10.0,
+   "mortar_sag": 0.001055520371543171,
+   "mortar_zeta": 1.0,
+   "mortar_friction": 0.75,
+   "bed_overhang": 0.002,
+   "cure_settle_steps": 40,
+   "hand_clear": 0.05,
+   "slot_tol_xy": 0.008,
+   "slot_tol_z": 0.003,
+   "slot_tol_yaw_deg": 10.0,
+   "slot_tol_tilt_deg": 10.0,
+   "timestep": 0.001,
+   "ctrl_dt": 0.05,
+   "impratio": 10.0,
+   "noslip_iterations": 3,
+   "img": 128,
+   "hi_w": 1280,
+   "hi_h": 960,
+   "gripper": {
+    "exclude_self": true,
+    "kp": 100.0,
+    "kv": 1.0,
+    "torque_limit": 4.0,
+    "close_ctrl": 0.7,
+    "open_ctrl": 0.0,
+    "eq_solref": [
+     0.005,
+     1.0
+    ],
+    "eq_solimp": [
+     0.95,
+     0.99,
+     0.001
+    ],
+    "parallel_pads": true,
+    "close_time": 0.5,
+    "open_time": 0.3
+   },
+   "grasp_clear": 0.005
+  },
+  "expert": {
+   "vmax": [
+    2.094,
+    2.094,
+    3.142,
+    3.142,
+    3.142,
+    3.142
+   ],
+   "vfrac": 0.95,
+   "amax": [
+    6.0,
+    6.0,
+    8.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "approach": 0.1,
+   "t_down": 0.5,
+   "t_up": 0.4,
+   "t_close": 0.75,
+   "tcp_same_pass": true,
+   "t_open": 0.25,
+   "hover": 0.003,
+   "place_gap": 0.0005,
+   "t_align": 0.25,
+   "t_hover": 0.2,
+   "servo_iters": 3,
+   "servo_steps": 3,
+   "min_move": 0.4,
+   "grip_empty": 0.4,
+   "slip_abort": 0.03,
+   "wait_bed": 6.0,
+   "grip_squeeze": 0.06,
+   "vert_lag": 0.45,
+   "lag_supply": 0.3,
+   "lag_wall": 0.35,
+   "t_unload": 0.1
+  },
+  "g1": {
+   "lift": 0.015,
+   "close_cmd_min": 0.2,
+   "t_closed_min": 0.3,
+   "t_settle": 0.3,
+   "t_load": 0.2,
+   "t_squeeze": 0.2,
+   "t_restore": 0.1,
+   "t_open": 0.4,
+   "thr_load": null,
+   "thr_angle": null
+  },
+  "assets": {
+   "ur10e_xml": "a8f709df340788033d497ff7d892fdecab4f6cc9c36299a00f57efa9f25e0744",
+   "gripper_xml": "4792761b61411052ced36116ee8a0553429c9756d095fddf3730bfedb67900f0",
+   "menagerie_source": "repo:   https://github.com/google-deepmind/mujoco_menagerie\ncommit: 62ab00f2bc44f6f20c1c9b7a13f3fb1dd41a4e35\nfolder: universal_robots_ur10e (copied unchanged)\nfetched: 2026-10-15",
+   "robosuite_source": "Robotiq 2F-140 gripper MuJoCo model, copied unchanged from robosuite\nrepo:   https://github.com/ARISE-Initiative/robosuite\ncommit: 5ce6643f3092639d08f7b0f90ed1c6a84f50552c\nfiles:  robosuite/models/assets/grippers/robotiq_gripper_140.xml\n        robosuite/models/assets/grippers/meshes/robotiq_140_gripper/\n        LICENSE (MIT)\nfetched: 2026-10-15"
+  }
+ },
+ "recheck": {
+  "n_walls_attempted": 10,
+  "n_spec_pass": 10,
+  "pass_rate": 1.0,
+  "item_fail_counts": {},
+  "item_values_mm": {
+   "2_line_plane": {
+    "median": 0.46302502674827184,
+    "p95": 0.4948958999660418,
+    "max": 0.5074151577343589
+   },
+   "3_plumb": {
+    "median": 0.48585328469527567,
+    "p95": 0.6469562593742372,
+    "max": 0.6798533037529753
+   },
+   "4_position": {
+    "median": 0.4467904536729628,
+    "p95": 0.45056313431522943,
+    "max": 0.4513590724964933
+   }
+  },
+  "bed_joint_mm": [
+   9.985676704808863,
+   9.995330348661943
+  ],
+  "brick_time_s": {
+   "n": 160,
+   "median": 8.775,
+   "p95": 9.450000000000001,
+   "max": 9.450000000000001,
+   "over_10s": 0,
+   "over_10s_slots": {},
+   "per_slot": {
+    "0": {
+     "median": 8.65,
+     "max": 8.65
+    },
+    "1": {
+     "median": 8.6,
+     "max": 8.6
+    },
+    "2": {
+     "median": 8.85,
+     "max": 8.85
+    },
+    "3": {
+     "median": 8.6,
+     "max": 8.6
+    },
+    "4": {
+     "median": 8.6,
+     "max": 8.6
+    },
+    "5": {
+     "median": 8.55,
+     "max": 8.55
+    },
+    "6": {
+     "median": 8.8,
+     "max": 8.8
+    },
+    "7": {
+     "median": 9.450000000000001,
+     "max": 9.450000000000001
+    },
+    "8": {
+     "median": 8.9,
+     "max": 8.9
+    },
+    "9": {
+     "median": 8.700000000000001,
+     "max": 8.700000000000001
+    },
+    "10": {
+     "median": 8.75,
+     "max": 8.75
+    },
+    "11": {
+     "median": 8.75,
+     "max": 8.75
+    },
+    "12": {
+     "median": 9.05,
+     "max": 9.1
+    },
+    "13": {
+     "median": 9.1,
+     "max": 9.1
+    },
+    "14": {
+     "median": 9.25,
+     "max": 9.25
+    },
+    "15": {
+     "median": 9.1,
+     "max": 9.4
+    }
+   }
+  },
+  "marks": {
+   "all_pass_walls_16_ok": true,
+   "problems": {}
+  },
+  "in_hand_drift_transport_mm": {
+   "median": 0.14850348301105248,
+   "p95": 0.199130077827442,
+   "max": 0.22350639513811077
+  },
+  "grip_lock": {
+   "grasps": 160,
+   "grasps_locked": 160,
+   "locks": 160,
+   "releases_by_reason": {
+    "open": 160
+   },
+   "overload_releases": 0,
+   "lock_jump_mm_max": 0.0037908250417627016,
+   "lock_max_dev_mm": 0.19246559800742924,
+   "pad_normal_N_min": 37.60359501610756,
+   "grasp_offset_mm": {
+    "median": 12.644469658112978,
+    "max": 14.450513249430076
+   },
+   "in_hand_drift_max_mm": 0.7740148911507311,
+   "sag_at_cure_mm": {
+    "full": {
+     "n": 90,
+     "min": 0.004775781518285003,
+     "median": 0.0047759639272933994,
+     "max": 0.004775963927450809
+    },
+    "half": {
+     "n": 20,
+     "min": 0.014323271524871277,
+     "median": 0.014323271525053423,
+     "max": 0.014323271525117608
+    }
+   }
+  },
+  "cost": {
+   "wall_sim_seconds": 143.685,
+   "wall_compute_s_per_worker": {
+    "median": 40.3115496635437,
+    "max": 58.108742237091064
+   },
+   "workers": 10,
+   "collect_elapsed_s": 58.938865661621094,
+   "raw_mb_per_wall": 108.13699679999999,
+   "dataset_mb_per_pass_wall": null,
+   "estimate_1000_pass_walls": {
+    "walls_to_attempt": 1000.0,
+    "collect_hours_at_this_parallelism": 1.6371907128228083,
+    "convert_hours": null,
+    "raw_gb": 108.1369968,
+    "dataset_gb": null
+   }
+  },
+  "reproducibility": {
+   "collect_runs": [
+    {
+     "raw_dir": "outputs/wall3/recheck_main_v1_20261018",
+     "git_commit": "482da46ec70f5db09d11c3b5f9f2dd80ef4897b9",
+     "git_dirty_wall3": false,
+     "seeds_attempted": [
+      700200,
+      700201,
+      700202,
+      700203,
+      700204,
+      700205,
+      700206,
+      700207,
+      700208,
+      700209
+     ]
+    }
+   ],
+   "assets": {
+    "ur10e_xml": "a8f709df340788033d497ff7d892fdecab4f6cc9c36299a00f57efa9f25e0744",
+    "gripper_xml": "4792761b61411052ced36116ee8a0553429c9756d095fddf3730bfedb67900f0",
+    "menagerie_source": "repo:   https://github.com/google-deepmind/mujoco_menagerie\ncommit: 62ab00f2bc44f6f20c1c9b7a13f3fb1dd41a4e35\nfolder: universal_robots_ur10e (copied unchanged)\nfetched: 2026-10-15",
+    "robosuite_source": "Robotiq 2F-140 gripper MuJoCo model, copied unchanged from robosuite\nrepo:   https://github.com/ARISE-Initiative/robosuite\ncommit: 5ce6643f3092639d08f7b0f90ed1c6a84f50552c\nfiles:  robosuite/models/assets/grippers/robotiq_gripper_140.xml\n        robosuite/models/assets/grippers/meshes/robotiq_140_gripper/\n        LICENSE (MIT)\nfetched: 2026-10-15"
+   },
+   "raw_sha256": {
+    "700200": "47ce979760618f93e572b9ff1ae68226d5b5cdc9d32d434d1b44398a1bb5d408",
+    "700201": "c812f44e7ed54c3757d00130a0954851d3ec96e8cc5362df16859389a2db6993",
+    "700202": "9701ff0a593dfb01d2fa05616134f475c870c0ce57410d32b590f0adab1f1a77",
+    "700203": "1d971f819c66033d530ba16f18c6f06d154d650dcf060961a5fc743c0bee2141",
+    "700204": "a0692035ae52acc39bc32ff712bc55eab2dee1bc1cc6f7f5870242ffe95476a0",
+    "700205": "2918aef32c7d084b2f3d3defe3e1763731d0eb9f7911a914c0b00d48a2303238",
+    "700206": "9ac8c403a85693c222e9acbb5d565c861c93b9e9890654a6ff60fc6e0168c07a",
+    "700207": "b0496162dedc34a427e2487ccee688abd2d28a6302bcfbb7280b63390dc7a054",
+    "700208": "7ae1095ff74a7b875d00a6ca74b48865478d787b0e113ca337b9db3f4dfa6160",
+    "700209": "94624f935a5b0863a463a3b5536f2c741b6fbfc36d046ffc87551ad00ebf9fe7"
+   }
+  }
+ },
+ "collect_scheduling_test": {
+  "n": 3,
+  "n_pass": 3,
+  "n_clean_pass": 3,
+  "n_overload_walls": 0,
+  "n_overload_walls_spec_pass": 0,
+  "n_fail_run": 0,
+  "stopped": null,
+  "seeds_attempted": [
+   700300,
+   700302
+  ],
+  "elapsed_s": 37.67629027366638,
+  "workers": 4,
+  "target_pass": 3,
+  "stop_rules": {
+   "overload_frac": 0.01,
+   "pass_rate_below": 0.5,
+   "min_n": 2
+  },
+  "walls": [
+   {
+    "seed": 700300,
+    "fail": null,
+    "spec_pass": true,
+    "clean_pass": true,
+    "overload_releases": 0,
+    "frames": 2874,
+    "raw_bytes": 108100249,
+    "time_s": 37.16851782798767
+   },
+   {
+    "seed": 700301,
+    "fail": null,
+    "spec_pass": true,
+    "clean_pass": true,
+    "overload_releases": 0,
+    "frames": 2873,
+    "raw_bytes": 108159942,
+    "time_s": 37.29037022590637
+   },
+   {
+    "seed": 700302,
+    "fail": null,
+    "spec_pass": true,
+    "clean_pass": true,
+    "overload_releases": 0,
+    "frames": 2873,
+    "raw_bytes": 108186600,
+    "time_s": 37.1135356426239
+   }
+  ],
+  "finished": "2026-10-18 02:35:09"
+ },
+ "conversion_equivalence_test": {
+  "data": "recheck_main_v1_20261017b 앞 4벽",
+  "oneshot": {
+   "num_episodes": 64,
+   "num_frames": 11333,
+   "expected_episodes": 64,
+   "expected_frames": 11333,
+   "camera_keys": [
+    "observation.images.front",
+    "observation.images.top",
+    "observation.images.wrist"
+   ],
+   "problems": [],
+   "checked_frames": 192,
+   "ok": true,
+   "raw_check": {
+    "rows": 11333,
+    "episodes_checked": 64,
+    "walls_checked": 4,
+    "problems": [],
+    "ok": true
+   },
+   "content_sha256": "e7a885a61fbaf48f8ae47e5398eb1a23f66175e0d58a1fd79cc78185162adb2e",
+   "dataset_sha256": "0360d49f8f8f1dd989a9b371652ab4764eb7e64b111ef871b0f75326b3d8de99",
+   "bytes": 53417154,
+   "build_s": 76.17847394943237
+  },
+  "merged_2_parts": {
+   "num_episodes": 64,
+   "num_frames": 11333,
+   "expected_episodes": 64,
+   "expected_frames": 11333,
+   "camera_keys": [
+    "observation.images.front",
+    "observation.images.top",
+    "observation.images.wrist"
+   ],
+   "problems": [],
+   "checked_frames": 192,
+   "ok": true,
+   "raw_check": {
+    "rows": 11333,
+    "episodes_checked": 64,
+    "walls_checked": 4,
+    "problems": [],
+    "ok": true
+   },
+   "content_sha256": "e7a885a61fbaf48f8ae47e5398eb1a23f66175e0d58a1fd79cc78185162adb2e",
+   "dataset_sha256": "2f2fa537d020cd632dec9913feecf570378e786f3ffab63a4813495e3dac25f2",
+   "bytes": 53168027,
+   "build_s": 2.97515869140625
+  },
+  "video_frames_compared": "11,333 x 3 cams, differing 0",
+  "episode_meta_equal": true,
+  "wall_meta_equal": true
+ }
+}
