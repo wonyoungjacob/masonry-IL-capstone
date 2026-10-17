@@ -51,7 +51,7 @@ def sha256(path):
     return h.hexdigest()
 
 
-def build(raw_dirs, root: Path, repo_id: str, include_all: bool, max_walls: int = 0, video_mb: int = 20):
+def build(raw_dirs, root: Path, repo_id: str, include_all: bool, max_walls: int = 0, video_mb: int = 20, part=None):
     from lerobot.datasets.lerobot_dataset import LeRobotDataset
     infos = []
     for rd in raw_dirs:
@@ -62,11 +62,17 @@ def build(raw_dirs, root: Path, repo_id: str, include_all: bool, max_walls: int 
     infos.sort(key=lambda w: w["seed"])
     if len({w["seed"] for w in infos}) != len(infos):
         raise SystemExit("같은 시작값이 두 번 들어 있음")
-    use = [w for w in infos if include_all or (w["eval"]["spec_pass"] and not w.get("fail"))]
+    # clean pass (추가 지시 2): spec pass, finished, no expert overload release (pilot raw has no such key → 0)
+    use = [w for w in infos if include_all or (w["eval"]["spec_pass"] and not w.get("fail") and not w.get("overload_releases", 0))]
     if max_walls:
         if len(use) < max_walls:
             raise SystemExit(f"합격 벽 {len(use)}개 < 요청 {max_walls}개")
         use = use[:max_walls]                                    # first passing walls in seed order
+    selected = use
+    if part is not None:                                         # 나7: contiguous slice i of n (seed order), merged later
+        i, n = part
+        bounds = np.linspace(0, len(use), n + 1).round().astype(int)
+        use = use[bounds[i]:bounds[i + 1]]
     if not use:
         raise SystemExit("변환할 벽이 없음")
     # video_files_size_in_mb: LeRobot appends every episode to one growing mp4 per camera until this size; small files keep
@@ -116,11 +122,100 @@ def build(raw_dirs, root: Path, repo_id: str, include_all: bool, max_walls: int 
     (meta / "wall3_source.json").write_text(json.dumps({"raw_dirs": [str(r) for r in raw_dirs],
                                                         "collect_configs": [json.loads((r / "collect_config.json").read_text()) for r in raw_dirs],
                                                         "include_all": include_all, "max_walls": max_walls, "video_files_size_in_mb": video_mb,
-                                                        "n_walls_raw": len(infos), "n_walls_used": len(use),
+                                                        "n_walls_raw": len(infos), "n_walls_used": len(use), "part": part,
                                                         "seeds_used": [w["seed"] for w in use],
-                                                        "seeds_not_used": [w["seed"] for w in infos if w not in use],
+                                                        "seeds_not_used": [w["seed"] for w in infos if w not in selected],
                                                         "task": TASK, "features": features(lock=lock)}, indent=1, default=float))
     return ep_meta
+
+
+def _table(root: Path):
+    """All non-video columns of a dataset as numpy arrays, rows in global index order."""
+    import pyarrow.parquet as pq
+    import pyarrow as pa
+    files = sorted((root / "data").rglob("*.parquet"))
+    t = pa.concat_tables([pq.read_table(f) for f in files]).combine_chunks()
+    order = np.argsort(t.column("index").to_numpy())
+    out = {}
+    for name in t.column_names:
+        col = t.column(name).combine_chunks()
+        if pa.types.is_list(col.type) or pa.types.is_fixed_size_list(col.type):
+            v = col.flatten().to_numpy(zero_copy_only=False)
+            out[name] = v.reshape(len(col), -1)[order]
+        else:
+            out[name] = col.to_numpy(zero_copy_only=False)[order]
+    return out
+
+
+def content_sha256(root: Path):
+    """Hash of every non-video column in global index order (independent of how rows are split into files)."""
+    tab = _table(root)
+    h = hashlib.sha256()
+    for k in sorted(tab):
+        a = np.ascontiguousarray(tab[k])
+        h.update(k.encode()); h.update(str(a.dtype).encode()); h.update(a.tobytes())
+    return h.hexdigest()
+
+
+def check_raw(root: Path, ep_meta, wall_meta):
+    """Every episode's rows equal the raw recording slice (what a one-shot conversion writes), in wall/seed order."""
+    tab = _table(root)
+    problems = []
+    if not np.array_equal(tab["index"], np.arange(len(tab["index"]))):
+        problems.append("index not contiguous")
+    by_wall = {}
+    for e in ep_meta:
+        by_wall.setdefault(e["wall_index"], []).append(e)
+    pos = 0
+    keys = {"action": "action", "observation.state": "state", "info.wrist_ft": "ft", "info.grip_lock": "lock"}
+    for w in wall_meta:
+        with np.load(Path(w["raw_dir"]) / "raw" / w["raw_file"]) as zf:
+            z = {k: zf[k] for k in ("action", "state", "ft", "closure", "phase", "bricks", "lock") if k in zf.files}
+        for e in by_wall[w["wall_index"]]:
+            a, b = e["start_step"], e["end_step"]
+            sl = slice(pos, pos + (b - a))
+            if not np.array_equal(tab["episode_index"][sl], np.full(b - a, e["episode_index"])):
+                problems.append(f"episode {e['episode_index']} rows")
+            for col, rk in keys.items():
+                if col in tab and not np.array_equal(tab[col][sl], z[rk][a:b].reshape(b - a, -1)):
+                    problems.append(f"episode {e['episode_index']} {col}")
+            if not np.array_equal(tab["info.gripper_closure"][sl].ravel(), z["closure"][a:b]):
+                problems.append(f"episode {e['episode_index']} closure")
+            if not np.array_equal(tab["info.brick_pose"][sl], z["bricks"][a:b, e["slot"]]):
+                problems.append(f"episode {e['episode_index']} brick pose")
+            if not np.allclose(tab["observation.environment_state"][sl], np.asarray(e["target"], np.float32)[None], atol=0):
+                problems.append(f"episode {e['episode_index']} target")
+            pos += b - a
+    if pos != len(tab["index"]):
+        problems.append(f"rows {len(tab['index'])} != episodes {pos}")
+    return {"rows": int(len(tab["index"])), "episodes_checked": len(ep_meta), "walls_checked": len(wall_meta), "problems": problems[:50],
+            "ok": not problems}
+
+
+def merge(part_roots, root: Path, repo_id: str, video_mb: int = 20):
+    """나7: aggregate part datasets (in the given order) into one and rebuild the wall3 meta with global indices."""
+    from lerobot.datasets.aggregate import aggregate_datasets
+    part_roots = [Path(r) for r in part_roots]
+    aggregate_datasets([f"local/{r.name}" for r in part_roots], repo_id, roots=part_roots, aggr_root=root,
+                       video_files_size_in_mb=video_mb)
+    ep_meta, wall_meta, src = [], [], []
+    for r in part_roots:
+        e = json.loads((r / "meta" / "wall3_episodes.json").read_text())
+        w = json.loads((r / "meta" / "wall3_walls.json").read_text())
+        de, dw = len(ep_meta), len(wall_meta)
+        ep_meta += [dict(x, episode_index=x["episode_index"] + de, wall_index=x["wall_index"] + dw) for x in e]
+        wall_meta += [dict(x, wall_index=x["wall_index"] + dw) for x in w]
+        src.append(json.loads((r / "meta" / "wall3_source.json").read_text()))
+    seeds = [w["seed"] for w in wall_meta]
+    if seeds != sorted(seeds) or len(set(seeds)) != len(seeds):
+        raise SystemExit("parts are not in seed order")
+    meta = root / "meta"
+    (meta / "wall3_episodes.json").write_text(json.dumps(ep_meta, indent=1, default=float))
+    (meta / "wall3_walls.json").write_text(json.dumps(wall_meta, indent=1, default=float))
+    (meta / "wall3_source.json").write_text(json.dumps({"merged_from": [str(r) for r in part_roots], "parts": src, "seeds_used": seeds,
+                                                        "n_walls_used": len(seeds), "video_files_size_in_mb": video_mb,
+                                                        "task": TASK, "features": src[0]["features"]}, indent=1, default=float))
+    return ep_meta, wall_meta
 
 
 def verify(root: Path, repo_id: str, ep_meta):
@@ -157,21 +252,30 @@ def verify(root: Path, repo_id: str, ep_meta):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--raw", required=True, nargs="+", help="collect.py output folder(s)")
+    ap.add_argument("--raw", nargs="+", default=None, help="collect.py output folder(s)")
     ap.add_argument("--root", required=True, help="new dataset folder (sim/data/wall3_pilot_<YYYYMMDD>)")
     ap.add_argument("--repo-id", default="")
     ap.add_argument("--all", action="store_true", help="include walls that failed the spec (smoke check only)")
     ap.add_argument("--max-walls", type=int, default=0, help="use the first N passing walls in seed order (0 = all)")
     ap.add_argument("--video-mb", type=int, default=20, help="LeRobot video_files_size_in_mb")
+    ap.add_argument("--part", type=int, nargs=2, default=None, metavar=("I", "N"), help="convert only slice I of N (seed order)")
+    ap.add_argument("--merge", nargs="+", default=None, help="part dataset folders to merge into --root (in seed order)")
     a = ap.parse_args()
     root = Path(a.root)
     if root.exists():
         raise SystemExit(f"{root} 이미 있음: 덮어쓰지 않음")
     repo_id = a.repo_id or f"local/{root.name}"
     t0 = time.time()
-    ep_meta = build([Path(r) for r in a.raw], root, repo_id, a.all, a.max_walls, a.video_mb)
+    if a.merge:
+        ep_meta, wall_meta = merge(a.merge, root, repo_id, a.video_mb)
+    else:
+        ep_meta = build([Path(r) for r in a.raw or []], root, repo_id, a.all, a.max_walls, a.video_mb, tuple(a.part) if a.part else None)
+        wall_meta = json.loads((root / "meta" / "wall3_walls.json").read_text())
     t_build = time.time() - t0
     rep = verify(root, repo_id, ep_meta)
+    rep["raw_check"] = check_raw(root, ep_meta, wall_meta)
+    rep["content_sha256"] = content_sha256(root)
+    rep["ok"] = rep["ok"] and rep["raw_check"]["ok"]
     files = sorted(p for p in root.rglob("*") if p.is_file() and p.name != "wall3_hashes.json")
     hashes = {str(p.relative_to(root)): sha256(p) for p in files}
     total = hashlib.sha256("".join(f"{k}:{v}\n" for k, v in hashes.items()).encode()).hexdigest()
