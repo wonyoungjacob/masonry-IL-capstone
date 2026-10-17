@@ -69,6 +69,7 @@ class SceneConfig:
     lock_vlin: float = 0.005                    # ① m/s, brick ↔ gripper relative speed below which the grasp has settled
     lock_vang: float = 0.05                     # ① rad/s
     lock_settle: float = 0.1                    # ① s the relative speed must stay below the limits
+    lock_cap_window: int = 10                   # ③ twist limit = max over the last 10 physics steps (10 ms; 추가 지시 2)
     lock_open_eps: float = 0.002                # ⑤ rad: finger command below the finger angle by this = opening order
     lock_drop: float = 0.01                     # ⑤ rad: finger command dropping this far below its max since closing = opening
     lock_solref: tuple = (0.004, 1.0)           # grip weld stiffness (as the cure weld)

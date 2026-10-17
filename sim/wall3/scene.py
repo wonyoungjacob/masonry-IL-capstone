@@ -7,6 +7,7 @@
 - 카메라: front(벽 앞면 쪽에서 고정), top(벽 위 고정), wrist(손목), 정책용 128×128. 검측용 top 고해상도 RGB-D(1280×960).
   overview(녹화용 자유 시점 대신 쓰는 고정 시점, 정책 입력 아님).
 """
+from collections import deque
 from pathlib import Path
 
 import mujoco
@@ -616,6 +617,7 @@ class WallEnv:
         d.eq_active[eq] = 1
         self.lock_b = b
         self._lock_ref, self._lock_dev, self._lock_steps = self._rel_pose(b)[0], 0.0, 0
+        self._capT_hist = deque(maxlen=self.cfg.lock_cap_window)
         side, brick, fn, pos = hc
         sel = brick == b
         ctr = (fn[sel][:, None] * pos[sel]).sum(0) / fn[sel].sum()                  # pad contact centre
@@ -673,8 +675,13 @@ class WallEnv:
             capT += c.lock_mu * float((fn[k] * np.linalg.norm(r, axis=1)).sum())
         axis_pt = np.mean(ctrs, axis=0) if ctrs else pb
         Tn = float((T + np.cross(pb - axis_pt, F)) @ n_ax)                # twist about the line through the pad contacts
-        if abs(Tn) > capT:
-            return ("torque", {"T_n": Tn, "cap": capT, "N_left": float(NL), "N_right": float(NR)})
+        # 추가 지시 2: the twist *limit* is the largest of the last lock_cap_window physics steps (MuJoCo's box-box contact
+        # generation can drop the pad contacts to 2 close points for one step while the real pad face is unchanged);
+        # the applied twist and the force check stay per step. A grasp whose contacts really shrink is released after the window.
+        self._capT_hist.append(capT)
+        capW = max(self._capT_hist)
+        if abs(Tn) > capW:
+            return ("torque", {"T_n": Tn, "cap": capW, "cap_now": capT, "N_left": float(NL), "N_right": float(NR)})
         return None
 
     def lock_state(self):
