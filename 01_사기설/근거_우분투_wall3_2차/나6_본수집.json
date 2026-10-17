@@ -1,0 +1,326 @@
+{
+ "run": {
+  "git_commit": "482da46ec70f5db09d11c3b5f9f2dd80ef4897b9",
+  "git_dirty_wall3": false,
+  "env_version": "main_v1",
+  "args": {
+   "seed0": 710000,
+   "n": 1500,
+   "out": "outputs/wall3/main_20261018",
+   "workers": 32,
+   "record_every": 100,
+   "target_pass": 1000,
+   "env_version": "main_v1",
+   "stop_overload_frac": 0.01,
+   "stop_pass_rate_below": 0.900001,
+   "stop_min_n": 100
+  },
+  "nproc": 32,
+  "started": "2026-10-18 02:36:54",
+  "finished": "2026-10-18 03:16:00",
+  "elapsed_s": 2345.7125124931335
+ },
+ "counts": {
+  "n": 1003,
+  "n_pass": 1003,
+  "n_clean_pass": 1000,
+  "n_overload_walls": 3,
+  "n_overload_walls_spec_pass": 3,
+  "n_fail_run": 0,
+  "stopped": null,
+  "seeds_attempted": [
+   710000,
+   711002
+  ]
+ },
+ "overload_walls": [
+  {
+   "seed": 710306,
+   "spec_pass": true,
+   "events": [
+    {
+     "event": "release",
+     "reason": "torque",
+     "t": 617,
+     "time": 30.871000000014746,
+     "brick": 3,
+     "max_dev_while_locked_mm": 0.34604558747231373,
+     "T_n": 0.08962680330662855,
+     "cap": 0.03223343504154613,
+     "cap_now": 0.025946058849889354,
+     "N_left": 48.18985523851674,
+     "N_right": 44.15561666385837,
+     "slot": 3
+    },
+    {
+     "event": "release",
+     "reason": "torque",
+     "t": 647,
+     "time": 32.359000000015286,
+     "brick": 3,
+     "max_dev_while_locked_mm": 0.06341102643758756,
+     "T_n": 1.244575084139685,
+     "cap": 1.1023832199450867,
+     "cap_now": 1.1023832199450867,
+     "N_left": 40.496757224587405,
+     "N_right": 42.87427788035836,
+     "slot": 3
+    }
+   ]
+  },
+  {
+   "seed": 710666,
+   "spec_pass": true,
+   "events": [
+    {
+     "event": "release",
+     "reason": "torque",
+     "t": 646,
+     "time": 32.31700000001538,
+     "brick": 3,
+     "max_dev_while_locked_mm": 0.01263057963649024,
+     "T_n": 1.2858044733946659,
+     "cap": 1.2591215268309626,
+     "cap_now": 1.2228684909143928,
+     "N_left": 40.5009408219433,
+     "N_right": 41.88657394659304,
+     "slot": 3
+    }
+   ]
+  },
+  {
+   "seed": 710850,
+   "spec_pass": true,
+   "events": [
+    {
+     "event": "release",
+     "reason": "torque",
+     "t": 647,
+     "time": 32.35800000001529,
+     "brick": 3,
+     "max_dev_while_locked_mm": 0.050560742492638984,
+     "T_n": 1.266140688600253,
+     "cap": 1.188163655434579,
+     "cap_now": 1.131850223025653,
+     "N_left": 46.49558349559779,
+     "N_right": 36.374351862854034,
+     "slot": 3
+    }
+   ]
+  }
+ ],
+ "late_or_no_lock": {
+  "definition": "first lock > 80 control steps after the brick start (after the lift)",
+  "n": 5,
+  "of_grasps": 16048,
+  "list": [
+   {
+    "seed": 710306,
+    "slot": 3,
+    "first_lock_step": 85,
+    "transport_drift_mm": 8.84,
+    "clean": false
+   },
+   {
+    "seed": 710462,
+    "slot": 3,
+    "first_lock_step": null,
+    "transport_drift_mm": 12.76,
+    "clean": true
+   },
+   {
+    "seed": 710548,
+    "slot": 3,
+    "first_lock_step": 121,
+    "transport_drift_mm": 12.86,
+    "clean": true
+   },
+   {
+    "seed": 710666,
+    "slot": 3,
+    "first_lock_step": 124,
+    "transport_drift_mm": 12.97,
+    "clean": false
+   },
+   {
+    "seed": 710850,
+    "slot": 3,
+    "first_lock_step": 121,
+    "transport_drift_mm": 13.28,
+    "clean": false
+   }
+  ],
+  "cause_710462": "condition ① still window (0.1 s at 5 mm/s · 0.05 rad/s) kept resetting during the supply close (reached 87/100 steps); the expert lifts at 0.75 s, then the brick creeps in hand during transport until it is still at the wall"
+ },
+ "summary": {
+  "pass_rate": 1.0,
+  "item_fail_counts": {},
+  "item_values_mm": {
+   "2_line_plane": {
+    "median": 0.4566094044214062,
+    "p95": 0.5136931827079362,
+    "max": 0.9250029098624986
+   },
+   "3_plumb": {
+    "median": 0.5068124181013545,
+    "p95": 0.6795868561129348,
+    "max": 1.3128464260550032
+   },
+   "4_position": {
+    "median": 0.4469448889556915,
+    "p95": 0.45532263389628236,
+    "max": 1.0421781305991473
+   }
+  },
+  "bed_joint_mm": [
+   9.985676702063149,
+   9.995337692191326
+  ],
+  "iou_mean": {
+   "median": 0.9921736244358897,
+   "min": 0.9916367535455584
+  },
+  "sensitivity_pass": {
+   "1mm": 1002,
+   "2mm": 1003,
+   "3mm": 1003
+  },
+  "brick_time_s": {
+   "n": 16048,
+   "median": 8.8,
+   "p95": 9.450000000000001,
+   "max": 9.450000000000001,
+   "over_10s": 0,
+   "over_10s_slots": {},
+   "per_slot": {
+    "0": {
+     "median": 8.65,
+     "max": 8.65
+    },
+    "1": {
+     "median": 8.6,
+     "max": 8.6
+    },
+    "2": {
+     "median": 8.85,
+     "max": 8.85
+    },
+    "3": {
+     "median": 8.6,
+     "max": 8.6
+    },
+    "4": {
+     "median": 8.6,
+     "max": 8.8
+    },
+    "5": {
+     "median": 8.55,
+     "max": 8.55
+    },
+    "6": {
+     "median": 8.8,
+     "max": 8.8
+    },
+    "7": {
+     "median": 9.450000000000001,
+     "max": 9.450000000000001
+    },
+    "8": {
+     "median": 8.9,
+     "max": 8.9
+    },
+    "9": {
+     "median": 8.700000000000001,
+     "max": 8.700000000000001
+    },
+    "10": {
+     "median": 8.75,
+     "max": 8.75
+    },
+    "11": {
+     "median": 8.75,
+     "max": 8.75
+    },
+    "12": {
+     "median": 9.05,
+     "max": 9.1
+    },
+    "13": {
+     "median": 9.1,
+     "max": 9.1
+    },
+    "14": {
+     "median": 9.25,
+     "max": 9.25
+    },
+    "15": {
+     "median": 9.1,
+     "max": 9.4
+    }
+   }
+  },
+  "marks": {
+   "all_pass_walls_16_ok": true,
+   "problems": {}
+  },
+  "in_hand_drift_transport_mm": {
+   "median": 0.15571583304906328,
+   "p95": 0.19932140593160752,
+   "max": 13.283864471506973
+  },
+  "grip_lock": {
+   "grasps": 16048,
+   "grasps_locked": 16047,
+   "locks": 16048,
+   "releases_by_reason": {
+    "open": 16044,
+    "torque": 4
+   },
+   "overload_releases": 4,
+   "lock_jump_mm_max": 0.00504252202641835,
+   "lock_max_dev_mm": 0.34604558747231373,
+   "pad_normal_N_min": 37.121089850830366,
+   "grasp_offset_mm": {
+    "median": 12.623961814528345,
+    "max": 23.26755324513526
+   },
+   "in_hand_drift_max_mm": 13.283864471506973,
+   "sag_at_cure_mm": {
+    "full": {
+     "n": 9027,
+     "min": 0.004775780866157586,
+     "median": 0.004775963927290002,
+     "max": 0.004775963927463187
+    },
+    "half": {
+     "n": 2006,
+     "min": 0.014323271524857399,
+     "median": 0.014323271525055158,
+     "max": 0.014323271525148833
+    }
+   }
+  },
+  "robot_contact_events": 0,
+  "beds_laid": {
+   "all": true
+  },
+  "cost": {
+   "wall_sim_seconds": 143.67013958125625,
+   "wall_compute_s_per_worker": {
+    "median": 72.28540253639221,
+    "max": 123.87038969993591
+   },
+   "workers": 32,
+   "collect_elapsed_s": 2345.7125124931335,
+   "raw_mb_per_wall": 108.12507093120638,
+   "dataset_mb_per_pass_wall": null,
+   "estimate_1000_pass_walls": {
+    "walls_to_attempt": 1000.0,
+    "collect_hours_at_this_parallelism": 0.6496378953398508,
+    "convert_hours": null,
+    "raw_gb": 108.12507093120638,
+    "dataset_gb": null
+   }
+  }
+ }
+}
