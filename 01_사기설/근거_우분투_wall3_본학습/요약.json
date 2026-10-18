@@ -1,0 +1,143 @@
+{
+ "dataset": {
+  "root": "data/wall3_main_20261018",
+  "episodes": 16000,
+  "frames": 2833397,
+  "dataset_sha256": "c1a3e994cf5705188780597ef567201160c0e3e660baac780b134895962d7e4e",
+  "content_sha256": "519e729941be4c7c41fcab52e7eb5fc29fb6a058bac269c6d7189b06a0030e19",
+  "bytes": 13225672865,
+  "walls": 1000,
+  "seeds": [
+   710000,
+   711004
+  ],
+  "excluded_seeds": [
+   710462,
+   710548
+  ],
+  "freeze_commit": "482da46"
+ },
+ "setting": {
+  "backend": "torchcodec",
+  "workers": 8,
+  "concurrent": 2,
+  "chosen": "10-19 02:52:07"
+ },
+ "bench": {
+  "rows": [
+   {
+    "policy": "act",
+    "backend": "pyav",
+    "workers": 4,
+    "batches": 30,
+    "seconds": 2.7913200855255127,
+    "samples_per_s": 343.9232945652179
+   },
+   {
+    "policy": "act",
+    "backend": "pyav",
+    "workers": 8,
+    "batches": 30,
+    "seconds": 2.1948800086975098,
+    "samples_per_s": 437.38154076572283
+   },
+   {
+    "policy": "act",
+    "backend": "torchcodec",
+    "workers": 4,
+    "batches": 30,
+    "seconds": 1.9477989673614502,
+    "samples_per_s": 492.86400500583807
+   },
+   {
+    "policy": "act",
+    "backend": "torchcodec",
+    "workers": 8,
+    "batches": 30,
+    "seconds": 1.3385009765625,
+    "samples_per_s": 717.2202462380301
+   },
+   {
+    "policy": "diffusion",
+    "backend": "pyav",
+    "workers": 4,
+    "batches": 30,
+    "seconds": 2.7690236568450928,
+    "samples_per_s": 346.6925960082923
+   },
+   {
+    "policy": "diffusion",
+    "backend": "pyav",
+    "workers": 8,
+    "batches": 30,
+    "seconds": 2.2548537254333496,
+    "samples_per_s": 425.74823775564516
+   },
+   {
+    "policy": "diffusion",
+    "backend": "torchcodec",
+    "workers": 4,
+    "batches": 30,
+    "seconds": 1.8638036251068115,
+    "samples_per_s": 515.0757231438392
+   },
+   {
+    "policy": "diffusion",
+    "backend": "torchcodec",
+    "workers": 8,
+    "batches": 30,
+    "seconds": 1.2386021614074707,
+    "samples_per_s": 775.0672733439408
+   }
+  ],
+  "score": {
+   "pyav/4": 0.46341451270727835,
+   "pyav/8": 0.5795668265337994,
+   "torchcodec/4": 0.6758712791600492,
+   "torchcodec/8": 1.0
+  },
+  "choice": {
+   "backend": "torchcodec",
+   "workers": 8
+  }
+ },
+ "stop": null,
+ "runs": [
+  {
+   "name": "act_s1000",
+   "policy": "act",
+   "seed": 1000,
+   "result": "not started"
+  },
+  {
+   "name": "diffusion_s1000",
+   "policy": "diffusion",
+   "seed": 1000,
+   "result": "not started"
+  },
+  {
+   "name": "act_s2000",
+   "policy": "act",
+   "seed": 2000,
+   "result": "not started"
+  },
+  {
+   "name": "diffusion_s2000",
+   "policy": "diffusion",
+   "seed": 2000,
+   "result": "not started"
+  },
+  {
+   "name": "act_s3000",
+   "policy": "act",
+   "seed": 3000,
+   "result": "not started"
+  },
+  {
+   "name": "diffusion_s3000",
+   "policy": "diffusion",
+   "seed": 3000,
+   "result": "not started"
+  }
+ ]
+}
