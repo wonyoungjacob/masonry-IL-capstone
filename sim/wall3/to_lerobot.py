@@ -51,7 +51,7 @@ def sha256(path):
     return h.hexdigest()
 
 
-def build(raw_dirs, root: Path, repo_id: str, include_all: bool, max_walls: int = 0, video_mb: int = 20, part=None):
+def build(raw_dirs, root: Path, repo_id: str, include_all: bool, max_walls: int = 0, video_mb: int = 20, part=None, exclude=()):
     from lerobot.datasets.lerobot_dataset import LeRobotDataset
     infos = []
     for rd in raw_dirs:
@@ -64,6 +64,10 @@ def build(raw_dirs, root: Path, repo_id: str, include_all: bool, max_walls: int 
         raise SystemExit("같은 시작값이 두 번 들어 있음")
     # clean pass (추가 지시 2): spec pass, finished, no expert overload release (pilot raw has no such key → 0)
     use = [w for w in infos if include_all or (w["eval"]["spec_pass"] and not w.get("fail") and not w.get("overload_releases", 0))]
+    missing = set(exclude) - {w["seed"] for w in infos}
+    if missing:
+        raise SystemExit(f"제외할 시작값이 원자료에 없음: {sorted(missing)}")
+    use = [w for w in use if w["seed"] not in set(exclude)]          # walls dropped by a recorded decision (--exclude-seeds)
     if max_walls:
         if len(use) < max_walls:
             raise SystemExit(f"합격 벽 {len(use)}개 < 요청 {max_walls}개")
@@ -123,6 +127,7 @@ def build(raw_dirs, root: Path, repo_id: str, include_all: bool, max_walls: int 
                                                         "collect_configs": [json.loads((r / "collect_config.json").read_text()) for r in raw_dirs],
                                                         "include_all": include_all, "max_walls": max_walls, "video_files_size_in_mb": video_mb,
                                                         "n_walls_raw": len(infos), "n_walls_used": len(use), "part": part,
+                                                        "excluded_seeds": sorted(exclude),
                                                         "seeds_used": [w["seed"] for w in use],
                                                         "seeds_not_used": [w["seed"] for w in infos if w not in selected],
                                                         "task": TASK, "features": features(lock=lock)}, indent=1, default=float))
@@ -260,6 +265,7 @@ def main():
     ap.add_argument("--video-mb", type=int, default=20, help="LeRobot video_files_size_in_mb")
     ap.add_argument("--part", type=int, nargs=2, default=None, metavar=("I", "N"), help="convert only slice I of N (seed order)")
     ap.add_argument("--merge", nargs="+", default=None, help="part dataset folders to merge into --root (in seed order)")
+    ap.add_argument("--exclude-seeds", type=int, nargs="*", default=[], help="walls to leave out (record the reason in the report)")
     a = ap.parse_args()
     root = Path(a.root)
     if root.exists():
@@ -269,7 +275,8 @@ def main():
     if a.merge:
         ep_meta, wall_meta = merge(a.merge, root, repo_id, a.video_mb)
     else:
-        ep_meta = build([Path(r) for r in a.raw or []], root, repo_id, a.all, a.max_walls, a.video_mb, tuple(a.part) if a.part else None)
+        ep_meta = build([Path(r) for r in a.raw or []], root, repo_id, a.all, a.max_walls, a.video_mb, tuple(a.part) if a.part else None,
+                        tuple(a.exclude_seeds))
         wall_meta = json.loads((root / "meta" / "wall3_walls.json").read_text())
     t_build = time.time() - t0
     rep = verify(root, repo_id, ep_meta)
