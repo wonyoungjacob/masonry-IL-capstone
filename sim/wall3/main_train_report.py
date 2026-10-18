@@ -47,7 +47,7 @@ def run_info(train: Path, pol, seed):
             out["_curve"] = a[:, :2].tolist()
     ck = train / name / "checkpoints" / "last" / "pretrained_model"
     if (ck / "model.safetensors").exists():
-        out["checkpoint"] = str(ck.resolve().relative_to(SIM))
+        out["checkpoint"] = str(ck.resolve().relative_to(SIM)) if ck.resolve().is_relative_to(SIM) else str(ck.resolve())
         out["checkpoint_step_dirs"] = sorted(p.name for p in (train / name / "checkpoints").iterdir() if p.name != "last")
         out["model_sha256"] = sha256(ck / "model.safetensors")
         cfg = json.loads((ck / "config.json").read_text())
@@ -85,6 +85,7 @@ def main():
     ap.add_argument("--dataset", required=True)
     ap.add_argument("--out-dir", required=True)
     ap.add_argument("--final", action="store_true")
+    ap.add_argument("--journal", default=str(REPO / "실험일지.md"), help="lab log the --final entry goes to")
     a = ap.parse_args()
     train, ds, out = Path(a.train), Path(a.dataset), Path(a.out_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -151,7 +152,7 @@ def main():
           "| 2 | 정상 동작 확인 시작값 700300 · 700301 | 파일럿 블록 미사용 값 | 이 두 값은 2차 작업 때 수집 일정 시험(대본, `outputs/wall3/collect_sched_test_20261018`, 어느 데이터셋에도 안 들어감)에 한 번 쓰였음. 정책 롤아웃에는 처음 |", ""]
     (out / "보고서.md").write_text("\n".join(L))
     if a.final:
-        j = REPO / "실험일지.md"
+        j = Path(a.journal)
         u = j.read_text()
         done = [r for r in runs if r.get("result") == "done"]
         lines = [f"- {r['name']}: {(r['end'] - r['start']) / 3600:.1f} h, 손실 {r['loss_first']:.3f} → {r['loss_last']:.4f}"
@@ -160,8 +161,9 @@ def main():
         entry = (f"# 실험일지\n\n## {time.strftime('%Y-%m-%d')} — 3층 벽체 본 학습 6번 (ACT·Diffusion × seed 1000·2000·3000, 10만 스텝) (Ubuntu, Claude Code)\n\n"
                  f"상세 `01_사기설/근거_우분투_wall3_본학습/보고서.md`. 데이터 `{d['root']}` (에피소드 {d['episodes']:,}, 내용 해시 `{(d['content_sha256'] or '')[:12]}…`).\n"
                  f"- 끝난 학습 {len(done)} / 6" + (f", 멈춤: {stop}" if stop else "") + f", 데이터 로딩 {setting.get('backend')} · 작업자 {setting.get('workers')} · 동시 {setting.get('concurrent')}\n"
-                 + "\n".join(lines) + "\n\n---\n")
-        assert u.startswith("# 실험일지\n")
+                 + "\n".join(lines) + "\n\n---\n\n")
+        if not u.startswith("# 실험일지\n"):
+            u = "# 실험일지\n" + u
         j.write_text(entry + u[len("# 실험일지\n"):].lstrip("\n"))
     print(json.dumps({r["name"]: r.get("result") for r in runs}))
 
