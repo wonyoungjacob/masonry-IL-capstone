@@ -12,7 +12,7 @@ reset 해 다시 집게 함(벽돌당 시간 제한 안에서 횟수 제한 없�
 실행: cd sim && source venv/bin/activate && MUJOCO_GL=egl PYTHONPATH=. python -m wall3.rollout --ckpt <pretrained_model> \\
         --env-version pilot_20261016 --seeds 700100 ... --out outputs/wall3/<이름> [--record-first] [--n-action-steps N]
 """
-import argparse, json, subprocess, sys, time
+import argparse, hashlib, json, subprocess, sys, time
 from pathlib import Path
 
 import numpy as np
@@ -21,7 +21,8 @@ SIM = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SIM))
 CAMS = ("front", "top", "wrist")
 LIMIT_S = 17.0
-ALLOWED = [(700053, 700199)]          # pilot block, unused seeds (2차 지시: 700100 ~ 700119 for the mini rollouts)
+ALLOWED = [(700053, 700199),          # pilot block, unused seeds (2차 지시: 700100 ~ 700119 for the mini rollouts)
+           (700300, 700301)]          # 본학습 지시 5절: sanity check after each main training (not a result)
 
 
 def obs_of(env, k, cfg_in, torch):
@@ -157,7 +158,8 @@ def main():
     meta = {"ckpt": a.ckpt, "env_version": a.env_version, "policy_type": pcfg.type, "n_action_steps": pcfg.n_action_steps,
             "input_features": {k: list(v.shape) for k, v in pcfg.input_features.items()},
             "git_commit": subprocess.check_output(["git", "-C", str(SIM), "rev-parse", "HEAD"], text=True).strip(), "limit_s": LIMIT_S,
-            "g1": ({**g1.cfg.to_dict(), "tare_N": g1.f0} if g1 is not None else None)}
+            "g1": ({**g1.cfg.to_dict(), "tare_N": g1.f0} if g1 is not None else None),
+            "scene_sha256": hashlib.sha256(json.dumps(env.cfg.to_dict(), sort_keys=True, default=float).encode()).hexdigest()}
     res = []
     for i, seed in enumerate(a.seeds):
         rec = None
