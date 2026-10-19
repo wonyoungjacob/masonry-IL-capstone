@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """사회기반시스템종합설계 14조 · 진행 회의 (2026-10-19) 발표 자료.
-흐름: 배경 → 문제 → 목적 → 방법 → 검증 계획 → 결과(소형 1 + 대형 2) → 기여 → 일정 → 부록(상세 세팅 2) → 참고문헌. 표지 포함 15장.
+흐름: 배경 → 문제 → 목적 → 연구 방법 → 소형 실험(환경·평가·결과 1장) → 대형 실험(환경 세팅 · 평가 방법 · 예상 결과 각 1장) → 기여 → 일정 → 부록(상세 세팅 2) → 참고문헌. 표지 포함 15장.
 - 디자인: 랩미팅 v3와 같은 Meta(minimax) 토큰 + 컨설팅 원칙(1장 1메시지, 개조식, 카드·표·프로세스·빅넘버, 고대비).
 - 글꼴: Pretendard. 본문 16pt, 보조 14pt(차콜) 이상. 쪽 아래 인용 줄(11pt)과 참고문헌(10.5pt)만 예외.
 - 사진·영상이 아직 없는 자리는 주황 점선 '사진 필요 / 영상 필요' 상자로 표시하고, 넣을 내용을 상자 안에 적는다.
@@ -36,8 +36,8 @@ W, H = 13.333, 7.5
 M = 0.5
 NAV_H = 0.52
 N_SLIDES = 15
-SECTIONS = ["배경", "문제", "목적", "방법", "검증", "결과", "기여", "일정", "부록"]
-ACTIVE = {2: "배경", 3: "배경", 4: "문제", 5: "목적", 6: "방법", 7: "검증", 8: "결과", 9: "결과", 10: "결과",
+SECTIONS = ["배경", "문제", "목적", "방법", "소형", "대형", "기여", "일정", "부록"]
+ACTIVE = {2: "배경", 3: "배경", 4: "문제", 5: "목적", 6: "방법", 7: "소형", 8: "대형", 9: "대형", 10: "대형",
           11: "기여", 12: "일정", 13: "부록", 14: "부록", 15: "부록"}
 MEDIA = []           # (page, kind, repo_path, 설명)
 PH = []              # (page, kind, title, desc) 채울 상자
@@ -560,18 +560,18 @@ for k, (q, how, body) in enumerate(rqs):
     text(s, rx + 0.15, RY5 + 0.56, RW5 - 0.3, 6.92 - RY5 - 0.62, body.split("\n"), 15, "inkdeep", spacing=1.08, after=1)
 footnote(s)
 
-# ═══════════════════════════ 6 방법
-s = new(); T = chrome(s, 6, "대본 교사 → 모방학습 정책 → 정책 밖 검측", "방법")
+# ═══════════════════════════ 6 연구 방법 (소형·대형 공통)
+s = new(); T = chrome(s, 6, "대본 교사 → 모방학습 정책 → 정책 밖 검측", "연구 방법 · 소형·대형 공통")
 SW = (W - 2 * M - 2 * 0.42) / 3; SH = 4.32
 c9 = cite("zhao", "huang"); c10 = cite("chi")
 stages = [("① 시연 생성 · 교사", ("영상", "대본 시연 1장", "새 환경 · 집기~철수 · 실시간"),
-           ["**방식**: 역기구학 대본", "**정보**: 정답 좌표 (시연에만)", "**선별**: 시방 합격 벽만", "**규모**: 벽 1,000개", "**단위**: 벽돌 1장 = 에피소드 1개"],
+           ["**방식**: 역기구학 대본", "**정보**: 정답 좌표 (시연에만)", "**선별**: 성공·합격 시연만", "**규모**: 소형 200 · 대형 벽 1,000개", "**단위**: 벽돌 1장 = 에피소드 1개"],
            f"스크립트 시연 86% > 사람 50% {c9}"),
           ("② 정책 학습 · 학생", ("사진", "정책 입력 3시점", "front · top · wrist 128² 캡처"),
-           [f"**정책**: ACT {cite('zhao')} · Diffusion {c10}", "**입력**: 카메라 3대 + 관절 + 목표 자세", "**출력**: 관절 목표 + 집게, 20 Hz", "**학습량**: 10만 스텝 × 배치 32 (동일)", "**반복**: 학습 seed 3 · 마지막 체크포인트"],
+           [f"**정책**: ACT {cite('zhao')} · Diffusion {c10}", "**입력**: 카메라 3대 + 관절 (+ 목표)", "**출력**: 관절 목표 + 집게, 20 Hz", "**학습량**: 두 정책 같은 스텝·배치", "**반복**: 학습 seed · 마지막 체크포인트"],
            "두 정책 비교 → 결론이 정책 선택에 안 묶임"),
           ("③ 정책 밖 검측 · 실행", ("영상", "G1·G2·G3 장면", "새 환경 · 들기 확인 · 보정 · 재배치"),
-           ["**G1**: 들고 멈춘 뒤 하중 + 각도", "**G2**: 놓기 직전 카메라 → 보정", "**G3**: 놓은 뒤 카메라 → 1회 재배치", "**문턱**: 검증 배치로 정해 동결", "**정답 좌표**: 실행 중 미사용"],
+           ["**G1**: 들고 멈춘 뒤 하중 + 각도", "**G2**: 놓기 직전 위치 → 보정", "**G3**: 놓은 뒤 위치 → 1회 재배치", "**문턱**: 검증 배치로 정해 동결", "**위치**: 소형 정답 좌표 → 대형 카메라"],
            "정책 가중치 고정 → 검측 효과만 분리")]
 for k, (hd, phd, lines, why) in enumerate(stages):
     sx = M + k * (SW + 0.42)
@@ -592,136 +592,159 @@ for k, (lab, body) in enumerate([("왜 시뮬레이션", f"같은 배치 반복 
     text(s, bx + 0.16, BY6, SW - 0.32, 6.92 - BY6, [f"**{lab}**", body], 14, "inkdeep", spacing=1.02, after=1, anchor=MSO_ANCHOR.MIDDLE)
 footnote(s)
 
-# ═══════════════════════════ 7 검증 계획
-s = new(); T = chrome(s, 7, "2×2×2 요인 설계 · KCS 41 34 00 허용오차로 판정", "검증 계획")
-LW7 = 6.55
-text(s, M, T - 0.04, LW7, 0.36, "8조건 · 같은 정책 가중치 · 같은 시험 배치 · 검측만 켬/끔", 15, "charcoal", True)
+# ═══════════════════════════ 7 소형 실험: 환경 · 평가 · 결과 (한 장)
+s = new(); T = chrome(s, 7, "소형 실험: 정책 밖 검측으로 완성률 2배 이상", "소형 실험 · 환경 · 평가 · 결과")
+CWa, CWb, GAP7 = 3.45, 3.75, 0.2
+CWc = W - 2 * M - CWa - CWb - 2 * GAP7
+CH7 = 6.92 - (T - 0.04)
+xa = M; xb = xa + CWa + GAP7; xc = xb + CWb + GAP7
+for x_, w_, lab in [(xa, CWa, "① 실험 환경"), (xb, CWb, "② 평가 방법"), (xc, CWc, "③ 결과")]:
+    card(s, x_, T - 0.04, w_, CH7, fill="canvas", line="hair", radius=0.18)
+    pill(s, x_ + 0.15, T + 0.08, pw(lab, 14), 0.36, lab, "inkdeep", "white", 14)
+# ① 환경
+src7 = G + "cover_cover_az60_placing_top.png"
+im7 = rounded_img(src7, AS + "p07_small_env.png", 36, crop=(150, 150, 1130, 830))
+iw7, ih7 = picture(s, im7, xa + 0.15, T + 0.56, w=CWa - 0.3)
+use(7, "사진", src7, "소형 환경 장면 원본 (SO-ARM100 · 2+1 적층)"); use(7, "사진", im7, "크롭·둥근 모서리판")
+ey7 = T + 0.56 + ih7 + 0.12
+text(s, xa + 0.15, ey7, CWa - 0.3, 6.86 - ey7,
+     ["**로봇**: SO-ARM100 (5축 + 집게)", "**과제**: 블록 3개 2+1 적층", "**블록**: 90×42.6×27 mm (축소)", "**배치**: ±30 mm · ±60°",
+      "**시연**: 대본 200개", "**학습**: ACT 4만 · Diffusion 6만"], 14, "ink", spacing=1.04, after=2)
+# ② 평가 (당시 방식) + 한계
+ev7 = ["**위치·높이**: 4.5 mm 이내", "**방향·기울기**: 5° · 10° 이내", "**기준 근거**: 블록 길이의 5 % (임의)", "**설계**: 검측 누적 추가 A → D",
+       "**위치 정보**: 시뮬레이터 정답 좌표", "**평가**: 시험 배치 40·48회 · seed 1"]
+text(s, xb + 0.15, T + 0.56, CWb - 0.3, 2.5, ev7, 14, "ink", spacing=1.06, after=5)
+LY7 = T + 3.05
+card(s, xb + 0.12, LY7, CWb - 0.24, 6.8 - LY7, fill="criticalsoft", line=None, radius=0.14)
+text(s, xb + 0.26, LY7 + 0.08, CWb - 0.5, 0.34, "**한계 → 대형 실험에서 보완**", 15, "critical")
+text(s, xb + 0.26, LY7 + 0.46, CWb - 0.5, 6.8 - LY7 - 0.5,
+     ["5 % 임의 → **시방 허용오차**", "누적 추가 → **2×2×2 요인 설계**", "정답 좌표 → **카메라**", "seed 1 → **3** · 시험 배치 잠금"], 14, "inkdeep", spacing=1.04, after=3)
+# ③ 결과
+bar_chart(s, xc + 0.08, T + 0.48, CWc - 0.16, 2.5, ["A 단독", "B +G1", "C +G2", "D +G3"],
+          [("Diffusion", [35, 30, 72, 75], "primary"), ("ACT", [0, 0, 29, 54], "inkdeep")])
+text(s, xc + 0.15, T + 3.0, CWc - 0.3, 0.3, "B는 27·25회 · C·D 위치 = 정답 좌표(상한)", 14, "charcoal")
+bw7 = (CWc - 0.3 - 0.12) / 2
+for j, (lab, big) in enumerate([("Diffusion A → D", "35 → 75%"), ("ACT A → D", "0 → 54%")]):
+    bx = xc + 0.15 + j * (bw7 + 0.12)
+    card(s, bx, T + 3.36, bw7, 0.9, fill="primarysoft", line=None, radius=0.14)
+    mtext(s, bx + 0.1, T + 3.38, bw7 - 0.2, 0.86, [(lab, 13 if len(lab) > 12 else 14, "inkdeep", True), (big, 22, "primary", True)],
+          align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, spacing=1.0, after=1)
+text(s, xc + 0.15, T + 4.32, CWc - 0.3, 0.92,
+     ["**G1 단독**: 효과 없음 → **위치 보정이 핵심**", "**카메라 위치 추정**: 평균 0.43 mm", "대본 + 검측: 정답 좌표 48/50 · 카메라 45/50"], 14, "inkdeep", spacing=1.02, after=2)
+
+# ═══════════════════════════ 8 대형 실험 ① 실험 환경 세팅
+s = new(); T = chrome(s, 8, "UR10e · 실척 벽돌 3단 16장 환경 구축", "대형 실험 ① 실험 환경 세팅")
+LW8 = 6.7
+ph(s, 8, M, T - 0.04, LW8, 4.0, "사진·영상", "새 실험 환경 화면 (첨부하신 PNG)",
+   "UR10e · 받침대 0.6 m · 적벽돌 3단 · 뒤쪽 공급대\n영상이면: 대본이 16장 쌓는 장면 5배속 · 30초", 16)
+CHY8 = T + 4.06
+chips8 = [("SO-ARM100", "**UR10e**"), ("블록 3개", "**벽돌 16장**"), ("축소 모형", "**실척**"), ("시연 200", "**벽 1,000개**")]
+cw8 = (LW8 - 3 * 0.12) / 4
+text(s, M, CHY8 - 0.02, LW8, 0.3, "소형 → 대형", 14, "charcoal", True)
+for k, (a_, b_) in enumerate(chips8):
+    cx = M + k * (cw8 + 0.12)
+    card(s, cx, CHY8 + 0.3, cw8, 6.92 - CHY8 - 0.3, fill="soft", line=None, radius=0.14)
+    text(s, cx + 0.06, CHY8 + 0.3, cw8 - 0.12, 6.92 - CHY8 - 0.3, [a_, "→ " + b_], 15, "inkdeep", align=PP_ALIGN.CENTER, spacing=1.04, after=1, anchor=MSO_ANCHOR.MIDDLE)
+RX8 = M + LW8 + 0.35; RW8 = W - M - RX8
+text(s, RX8, T - 0.06, RW8, 0.34, "3단 일자 벽 · L 990 × H 191 mm · 줄눈 10 mm", 15, "charcoal", True)
+wh8 = wall(s, RX8 + 0.2, T + 0.38, RW8 - 0.4)
+cks = cite("ks")
+table(s, RX8, T + 0.5 + wh8 + 0.16, RW8, [["항목", "설정"],
+    ["로봇", "UR10e · 받침대 0.6 m"],
+    ["집게", "Robotiq 2F-140"],
+    ["벽돌", f"190×90×57 mm · 1.95 kg {cks}"],
+    ["벽", "온장 14 + 반장 2 (16자리)"],
+    ["공급", "로봇 뒤 · ±10 mm · ±10°"],
+    ["카메라", "앞 · 위 · 손목 · 128²"],
+    ["시연", "합격 벽 1,000개 · 에피소드 16,000"],
+    ["학습", "10만 스텝 × 32 · seed 3"]],
+    [1.15, 4.0], 14, row_h=0.36, head_h=0.36)
+footnote(s)
+
+# ═══════════════════════════ 9 대형 실험 ② 평가 방법
+s = new(); T = chrome(s, 9, "2×2×2 요인 설계 · KCS 41 34 00 허용오차로 판정", "대형 실험 ② 평가 방법")
+SY9 = T - 0.04; SH9 = 0.74
+card(s, M, SY9, W - 2 * M, SH9, fill="criticalsoft", line=None, radius=0.14)
+text(s, M + 0.15, SY9, 1.75, SH9, ["**소형 대비**", "**보완 4가지**"], 14, "critical", spacing=1.0, after=0, anchor=MSO_ANCHOR.MIDDLE)
+imp9 = [("성공 기준", "5 % 임의 → **시방 허용오차**"), ("설계", "누적 추가 → **요인 설계**"), ("위치 정보", "정답 좌표 → **카메라**"), ("반복", "seed 1 → **3** · 시험 배치 잠금")]
+iw9 = (W - 2 * M - 1.95 - 3 * 0.1 - 0.1) / 4
+for k, (a_, b_) in enumerate(imp9):
+    ix = M + 1.95 + k * (iw9 + 0.1)
+    card(s, ix, SY9 + 0.08, iw9, SH9 - 0.16, fill="canvas", line=None, radius=0.12)
+    mtext(s, ix + 0.08, SY9 + 0.08, iw9 - 0.16, SH9 - 0.16, [(a_, 13, "charcoal", True), (b_, 14, "inkdeep", False)],
+          align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, spacing=1.0, after=0)
+BT9 = SY9 + SH9 + 0.12
+LW9 = 6.55
+text(s, M, BT9, LW9, 0.32, "8조건 · 같은 정책 가중치 · 같은 시험 배치 · 검측만 켬/끔", 14, "charcoal", True)
 conds = [(0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1), (1, 1, 0), (1, 0, 1), (0, 1, 1), (1, 1, 1)]
-TW = (LW7 - 3 * 0.14) / 4; TH = 1.02
+TW = (LW9 - 3 * 0.14) / 4; TH = 0.86
 for i, on in enumerate(conds):
     r_, c_ = divmod(i, 4)
-    tx_ = M + c_ * (TW + 0.14); ty_ = T + 0.4 + r_ * (TH + 0.12)
+    tx_ = M + c_ * (TW + 0.14); ty_ = BT9 + 0.36 + r_ * (TH + 0.1)
     hl = i in (0, 7)
     card(s, tx_, ty_, TW, TH, fill="primarysoft" if hl else "canvas", line="primary" if hl else "hair", radius=0.14, line_w=1.25 if hl else 0.75)
-    text(s, tx_ + 0.12, ty_ + 0.05, TW - 0.24, 0.4, f"**{i + 1}**" + ("  정책 단독" if i == 0 else ("  전체" if i == 7 else "")), 16, "inkdeep")
-    gate_pills(s, tx_ + 0.12, ty_ + 0.56, on, size=12, pw_=(TW - 0.24 - 0.12) / 3, ph_=0.3)
-AY = T + 0.4 + 2 * (TH + 0.12) + 0.06
-AW = (LW7 - 3 * 0.12) / 4; AH = 1.0
-for i, (hd, body) in enumerate([("주효과", "켬 − 끔\n4쌍 평균"), ("상호작용", "함께 켤 때\n추가분"),
-                                ("짝 비교", "같은 초기\n배치끼리"), ("신뢰구간", "Wilson\n95 %")]):
+    text(s, tx_ + 0.12, ty_ + 0.03, TW - 0.24, 0.36, f"**{i + 1}**" + ("  정책 단독" if i == 0 else ("  전체" if i == 7 else "")), 15, "inkdeep")
+    gate_pills(s, tx_ + 0.12, ty_ + 0.46, on, size=12, pw_=(TW - 0.24 - 0.12) / 3, ph_=0.3)
+AY = BT9 + 0.36 + 2 * (TH + 0.1) + 0.04
+AW = (LW9 - 3 * 0.12) / 4; AH = 0.86
+for i, (hd, body) in enumerate([("주효과", "켬 − 끔 평균"), ("상호작용", "추가 효과"),
+                                ("짝 비교", "같은 배치끼리"), ("신뢰구간", "Wilson 95 %")]):
     ax = M + i * (AW + 0.12)
     card(s, ax, AY, AW, AH, fill="soft", line=None, radius=0.12)
-    text(s, ax + 0.12, AY, AW - 0.24, AH, [f"**{hd}**"] + body.split("\n"), 15, "inkdeep", spacing=1.0, after=1, anchor=MSO_ANCHOR.MIDDLE)
-PY7 = AY + AH + 0.14
-pf = [("검증 배치", "720000번대"), ("문턱 동결", "G1 · G2 · G3"), ("시험 배치", "730000번대 · 잠금")]
-pcw = (LW7 + 0.16) / 3
+    text(s, ax + 0.1, AY, AW - 0.2, AH, [f"**{hd}**", body], 14, "inkdeep", spacing=1.0, after=1, anchor=MSO_ANCHOR.MIDDLE)
+PY9 = AY + AH + 0.12
+pf = [("검증 배치", "720000번대"), ("문턱 동결", "G1 · G2 · G3"), ("시험 배치", "730000번대 잠금")]
+pcw = (LW9 + 0.16) / 3
 for k, (a_, b_) in enumerate(pf):
-    chevron(s, M + k * (pcw - 0.08), PY7, pcw, 6.92 - PY7, a_ + "\n" + b_, "inkdeep" if k == 2 else "soft", "white" if k == 2 else "inkdeep", 15, first=(k == 0))
-RX7 = M + LW7 + 0.35; RW7 = W - M - RX7
+    chevron(s, M + k * (pcw - 0.08), PY9, pcw, 6.92 - PY9, a_ + "\n" + b_, "inkdeep" if k == 2 else "soft", "white" if k == 2 else "inkdeep", 15, first=(k == 0))
+RX9 = M + LW9 + 0.35; RW9 = W - M - RX9
 ck = cite("kcs34")
-th7 = table(s, RX7, T - 0.04, RW7, [["시방 항목 " + ck, "원천 허용오차", "이 벽 기준"],
+th9 = table(s, RX9, BT9, RW9, [["시방 항목 " + ck, "원천 허용오차", "이 벽 기준"],
     ["① 가로줄눈 두께", "10 ± 3 mm", "7 ~ 13 mm"],
     ["② 선 및 면", "3 m당 6 mm", "2.0 mm"],
     ["③ 수직도", "3 m당 6 mm", "2.0 mm"],
     ["④ 평면상 위치", "9 m당 6 mm", "2.0 mm"],
     ["⑤ 벽 두께", "−6 ~ +13 mm", "−6 ~ +13 mm"]],
-    [2.15, 1.75, 1.6], 15, row_h=0.44, head_h=0.42, align_c=(1, 2))
-KY = T - 0.04 + th7 + 0.16
-card(s, RX7, KY, RW7, 6.92 - KY, fill="primarysoft", line=None, radius=0.14)
-text(s, RX7 + 0.18, KY, RW7 - 0.36, 6.92 - KY,
-     ["**합격**: 16자리 채움 + ①~⑤ 모두", "**②③④**: 길이 비례 축소 · 하한 2 mm", "**벽돌별 3D IoU**: 측정값만 보고"], 15, "inkdeep", spacing=1.08, after=5, anchor=MSO_ANCHOR.MIDDLE)
+    [2.15, 1.75, 1.6], 15, row_h=0.42, head_h=0.4, align_c=(1, 2))
+KY = BT9 + th9 + 0.14
+card(s, RX9, KY, RW9, 6.92 - KY, fill="primarysoft", line=None, radius=0.14)
+text(s, RX9 + 0.18, KY, RW9 - 0.36, 6.92 - KY,
+     ["**합격**: 16자리 채움 + ①~⑤ 모두", "**②③④**: 길이 비례 축소 · 하한 2 mm", "**벽돌별 3D IoU**: 측정값만 보고"], 15, "inkdeep", spacing=1.06, after=4, anchor=MSO_ANCHOR.MIDDLE)
 footnote(s)
 
-# ═══════════════════════════ 8 결과 ① 소형 실험
-s = new(); T = chrome(s, 8, "소형 실험: 정책 밖 검측으로 완성률 2배 이상", "결과 · 소형 실험")
-xx = M
-for lab in ["SO-ARM100 · 블록 3개 (2+1)", "배치 ±30 mm · ±60°", "시연 200 · ACT · Diffusion", "시험 배치 40 · 48회"]:
-    wd = pw(lab, 14); pill(s, xx, T - 0.04, wd, 0.36, lab, "soft", "inkdeep", 14); xx += wd + 0.12
-LW8 = 6.75; CY = T + 0.45
-bar_chart(s, M, CY, LW8, 2.55, ["A 정책 단독", "B + G1", "C + G2", "D + G3"],
-          [("Diffusion", [35, 30, 72, 75], "primary"), ("ACT", [0, 0, 29, 54], "inkdeep")])
-text(s, M, CY + 2.56, LW8, 0.3, "검측은 누적 추가 · B는 27·25회 · **C·D 위치 정보 = 정답 좌표(상한)**", 14, "charcoal")
-src = G + "g123_cuts.png"
-cut = AS + "p08_g123.png"
-Image.open(src).convert("RGB").crop((0, 0, 1960, 470)).save(cut)
-iw, ih = picture(s, cut, M, CY + 2.92, w=LW8)
-use(8, "사진", src, "소형 환경 G1·G2·G3 장면 원본"); use(8, "사진", cut, "아래 회색 설명 줄을 자른 판")
-RX8 = M + LW8 + 0.35; RW8 = W - M - RX8
-for j, (lab, big, sub) in enumerate([("Diffusion · A → D", "35% → 75%", ["95% CI", "22–50 → 60–86"]), ("ACT · A → D", "0% → 54%", ["95% CI", "0–7 → 40–67"])]):
-    yy = CY + j * 1.2
-    card(s, RX8, yy, RW8, 1.1, fill="primarysoft", line=None, radius=0.16)
-    text(s, RX8 + 0.2, yy + 0.06, RW8 - 0.4, 0.32, lab, 15, "inkdeep", True)
-    text(s, RX8 + 0.2, yy + 0.36, 3.1, 0.68, big, 30, "primary", True, spacing=1.0, anchor=MSO_ANCHOR.MIDDLE)
-    text(s, RX8 + 3.3, yy + 0.36, RW8 - 3.45, 0.68, sub, 14, "inkdeep", spacing=1.0, after=0, anchor=MSO_ANCHOR.MIDDLE)
-iy = CY + 2.46
-for j, (hd, body) in enumerate([("G1 단독: 효과 없음", "다시 집어도 놓기 그대로 → **위치 보정이 핵심**"),
-                                ("카메라 위치 추정 (정답 좌표 대신)", "평균 **0.43 mm** · 대본 + 검측 **48/50 vs 45/50**")]):
-    yy = iy + j * 1.0
-    card(s, RX8, yy, RW8, 0.9, fill="canvas", line="hair", radius=0.14)
-    text(s, RX8 + 0.2, yy + 0.04, RW8 - 0.4, 0.82, [f"**{hd}**", body], 15, "inkdeep", spacing=1.04, after=2, anchor=MSO_ANCHOR.MIDDLE)
-text(s, RX8, iy + 2.02, RW8, 0.34, "→ 대형 환경: 위치 정보를 **카메라로만** 얻어 재검증", 15, "primary", True)
-footnote(s)
-
-# ═══════════════════════════ 9 결과 ② 대형 환경
-s = new(); T = chrome(s, 9, "대형 환경: UR10e · 실척 벽돌 3단 16장 구축", "결과 · 대형 환경")
-LW9 = 7.05
-ph(s, 9, M, T - 0.04, LW9, 4.42, "사진", "새 실험 환경 화면 (첨부하신 PNG)",
-   "UR10e · 받침대 0.6 m · 적벽돌 3단 · 뒤쪽 공급대\n뷰어 왼쪽 메뉴는 잘라서 · 가능하면 정면 대각 시점 1장 더", 16)
-CHY = T + 4.52
-chips = [("벽돌 3개", "**16장**"), ("축소 모형", "**실척**"), ("5 % 임의 기준", "**시방 기준**"), ("정답 좌표", "**카메라**")]
-cw9 = (LW9 - 3 * 0.12) / 4
-for k, (a_, b_) in enumerate(chips):
-    cx = M + k * (cw9 + 0.12)
-    card(s, cx, CHY, cw9, 6.92 - CHY, fill="soft", line=None, radius=0.14)
-    text(s, cx + 0.08, CHY, cw9 - 0.16, 6.92 - CHY, [a_, "→ " + b_], 15, "inkdeep", align=PP_ALIGN.CENTER, spacing=1.05, after=1, anchor=MSO_ANCHOR.MIDDLE)
-RX9 = M + LW9 + 0.35; RW9 = W - M - RX9
-text(s, RX9, T - 0.06, RW9, 0.34, "3단 일자 벽 · L 990 × H 191 mm", 15, "charcoal", True)
-wh = wall(s, RX9 + 0.2, T + 0.38, RW9 - 0.4)
-cks = cite("ks"); ck2 = cite("kcs34")
-th9 = table(s, RX9, T + 0.5 + wh + 0.18, RW9, [["항목", "설정"],
-    ["로봇", "UR10e · 받침대 0.6 m"],
-    ["집게", "Robotiq 2F-140"],
-    ["벽돌", f"190×90×57 mm · 1.95 kg {cks}"],
-    ["벽", "온장 14 + 반장 2 · 줄눈 10 mm"],
-    ["공급", "로봇 뒤 · ±10 mm · ±10°"],
-    ["카메라", "앞 · 위 · 손목 · 128²"],
-    ["판정", f"시방 5항목 {ck2}"]],
-    [1.25, 3.95], 15, row_h=0.4, head_h=0.38)
-footnote(s)
-
-# ═══════════════════════════ 10 결과 ③ 진행 현황
-s = new(); T = chrome(s, 10, "시연 1,000벽 수집 완료, 본 학습 진행 중", "결과 · 진행 현황")
-tl = [("파일럿 50벽", "합격 94 %", "success"), ("환경 보정", "밀림 0.7 mm", "success"), ("동결·재확인", "10/10 합격", "success"),
-      ("본 수집", "1,000벽", "success"), ("데이터셋", "16,000개", "success"), ("본 학습", "seed 1000", "primary")]
+# ═══════════════════════════ 10 대형 실험 ③ 예상 결과 (+ 현재 진행)
+s = new(); T = chrome(s, 10, "예상 결과: G2·G3 위치 보정 효과 최대, G1은 보조", "대형 실험 ③ 예상 결과")
+tl = [("파일럿 50벽", "합격 94 %", "done"), ("환경 보정", "밀림 0.7 mm", "done"), ("본 수집", "1,000벽 · 39분", "done"),
+      ("본 학습", "seed 1000", "now"), ("카메라 연결", "G2 · G3", "next"), ("8조건 시험", "시험 배치", "next")]
 tw = (W - 2 * M + 0.08 * 5) / 6
-for k, (a_, b_, col) in enumerate(tl):
+for k, (a_, b_, st) in enumerate(tl):
     x_ = M + k * (tw - 0.08)
-    cur = col == "primary"
-    chevron(s, x_, T - 0.04, tw, 0.9, a_ + "\n" + b_, "primary" if cur else "soft", "white" if cur else "inkdeep", 16, first=(k == 0))
-    st = "● 진행 중" if cur else "● 완료"
-    text(s, x_ + 0.2, T + 0.9, tw - 0.4, 0.32, st, 14, "primary" if cur else "success", True, align=PP_ALIGN.CENTER)
-NY = T + 1.32
-nums = [("1,000", "합격 시연 벽", "시도 1,005 · 과부하 3 · 제외 2"), ("16,000", "에피소드", "벽돌 1장 = 1개"),
-        ("283만", "프레임", "13.2 GB · 영상 전수 검사"), ("39분", "수집 시간", "작업자 32개 동시")]
-nw = (W - 2 * M - 3 * 0.2) / 4
-for k, (big, lab, sub) in enumerate(nums):
-    nx = M + k * (nw + 0.2)
-    card(s, nx, NY, nw, 1.28, fill="canvas", line="hair", radius=0.16)
-    text(s, nx + 0.2, NY + 0.06, nw - 0.4, 0.62, big, 30, "primary", True, spacing=1.0, anchor=MSO_ANCHOR.MIDDLE)
-    text(s, nx + 0.2, NY + 0.66, nw - 0.4, 0.3, f"**{lab}**", 15, "inkdeep")
-    text(s, nx + 0.2, NY + 0.95, nw - 0.4, 0.3, sub, 14, "ink")
-BY10 = NY + 1.45; BH10 = 6.92 - BY10
-LW10 = 5.6
-for j, (hd, a_, b_) in enumerate([("환경 보정 ① 손안 밀림", "원인: 계산 오류 (쥐는 힘 무관)", "조치: 마찰로 버틸 때만 집게에 고정"),
-                                  ("환경 보정 ② G1 판정", "하중: 쥠 19.1 N vs 빈손 0 N", "집게 각도: 0.24 vs 0.70 rad")]):
-    yy = BY10 + j * (BH10 / 2 + 0.05)
-    hh = BH10 / 2 - 0.05
-    card(s, M, yy, LW10, hh, fill="successsoft", line=None, radius=0.14)
-    text(s, M + 0.2, yy, LW10 - 0.4, hh, [f"**{hd}**", a_, b_], 15, "inkdeep", spacing=1.05, after=1, anchor=MSO_ANCHOR.MIDDLE)
-PX10 = M + LW10 + 0.25; PW10 = (W - M - PX10 - 0.2) / 2
-ph(s, 10, PX10, BY10, PW10, BH10, "영상", "대본이 3단 벽 16장 쌓기", "새 환경 · 자유 시점 · 5배속 · 30초 이내", 15)
-ph(s, 10, PX10 + PW10 + 0.2, BY10, PW10, BH10, "사진", "정책 입력 카메라 3대", "front · top · wrist 같은 순간 캡처 3장", 15)
-footnote(s)
+    fill = {"done": "soft", "now": "primary", "next": "canvas"}[st]
+    chevron(s, x_, T - 0.04, tw, 0.82, a_ + "\n" + b_, fill, "white" if st == "now" else "inkdeep", 15, first=(k == 0))
+    if st == "next":
+        shp = s.shapes[-1]; shp.line.color.rgb = RGB["hair"]; shp.line.width = Pt(1); shp.line.dash_style = MSO_LINE.DASH
+    lab = {"done": "● 완료", "now": "● 진행 중", "next": "○ 예정"}[st]
+    text(s, x_ + 0.2, T + 0.8, tw - 0.4, 0.3, lab, 14, {"done": "success", "now": "primary", "next": "charcoal"}[st], True, align=PP_ALIGN.CENTER)
+EY10 = T + 1.2
+text(s, M, EY10, 9, 0.32, "예상 결과 · 근거는 소형 실험 (정답 좌표 기준)", 15, "charcoal", True)
+cw10 = (W - 2 * M - 0.2) / 2; ch10 = 1.34
+exp10 = [("RQ1 · G1", "작음", "orange", "잡기 실패·누락 감소, **합격률 기여는 작음**", "소형 B: Diffusion 35 → 30 %, ACT 0 → 0 %"),
+         ("RQ2 · G2", "가장 큼", "primary", "배치 오차 감소 → **합격률 가장 크게 상승**", "소형 C: Diffusion 35 → 72 %, ACT 0 → 29 %"),
+         ("RQ3 · G3", "중간", "inkdeep", "불합격 벽돌 회복 → **ACT에서 효과 큼**", "소형 D: Diffusion 72 → 75 %, ACT 29 → 54 %"),
+         ("RQ4 · 상호작용", "G1×G2 (+)", "success", "**잡아야 보정이 의미** → G1·G2 함께 추가 효과", "G2·G3는 일부 대체: 보정이 잘되면 재배치 감소")]
+for i, (q, eff, col, msg, ev) in enumerate(exp10):
+    r_, c_ = divmod(i, 2)
+    cx = M + c_ * (cw10 + 0.2); cy = EY10 + 0.4 + r_ * (ch10 + 0.12)
+    card(s, cx, cy, cw10, ch10, fill="canvas", line="hair", radius=0.16)
+    pill(s, cx + 0.16, cy + 0.14, pw(q, 14), 0.34, q, "inkdeep", "white", 14)
+    pill(s, cx + 0.16 + pw(q, 14) + 0.12, cy + 0.14, pw("예상: " + eff, 14), 0.34, "예상: " + eff, col, "white", 14)
+    text(s, cx + 0.18, cy + 0.56, cw10 - 0.36, 0.36, msg, 16, "inkdeep")
+    text(s, cx + 0.18, cy + 0.92, cw10 - 0.36, 0.34, ev, 14, "ink")
+RB10 = EY10 + 0.4 + 2 * (ch10 + 0.12) + 0.02
+card(s, M, RB10, W - 2 * M, 6.92 - RB10, fill="orangesoft", line="orange", radius=0.14, line_w=1.25)
+text(s, M + 0.2, RB10, W - 2 * M - 0.4, 6.92 - RB10,
+     ["**위험**: 정책 단독 합격률 0 % 근처 가능 → **항목별 mm 오차 · 누락 벽돌**로 분석",
+      "**카메라**: 추정 오차 1 mm 수준이면 정답 좌표 효과 대부분 유지 (소형: 48/50 vs 45/50)"], 15, "inkdeep", spacing=1.05, after=3, anchor=MSO_ANCHOR.MIDDLE)
 
 # ═══════════════════════════ 11 예상 기여
 s = new(); T = chrome(s, 11, "정책·검측 역할 분담과 시방 기준 평가 틀 제시", "예상 기여")
@@ -870,7 +893,7 @@ for page in range(1, N_SLIDES + 1):
         lines.append(f"     저장소 경로: {path}")
         lines.append(f"     GitHub에서 보기: {REPO}/blob/main/{quote(path)}")
     lines.append("")
-lines += ["[차트·도식]", "  8쪽 막대그래프, 2쪽 계단 그림, 9쪽 벽 정면도, 12쪽 일정표는 PowerPoint 도형·차트라 별도 파일 없음(슬라이드에서 편집 가능).",
+lines += ["[차트·도식]", "  7쪽 막대그래프, 2쪽 계단 그림, 8쪽 벽 정면도, 10쪽 진행 타임라인, 12쪽 일정표는 PowerPoint 도형·차트라 별도 파일 없음(슬라이드에서 편집 가능).",
           "", "[생성 스크립트]", "  01_사기설/진행보고/도구/build_진행회의_20261019.py"]
 open(TXT, "w", encoding="utf-8").write("\n".join(lines))
 print("saved", OUT, len(prs.slides), "slides;", len(MEDIA), "media;", len(PH), "placeholders; refs", len(REF_ORDER))

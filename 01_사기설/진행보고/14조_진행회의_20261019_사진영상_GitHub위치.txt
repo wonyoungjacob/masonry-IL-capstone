@@ -11,9 +11,7 @@
   [6쪽] (영상) 대본 시연 1장 — 새 환경 · 집기~철수 · 실시간
   [6쪽] (사진) 정책 입력 3시점 — front · top · wrist 128² 캡처
   [6쪽] (영상) G1·G2·G3 장면 — 새 환경 · 들기 확인 · 보정 · 재배치
-  [9쪽] (사진) 새 실험 환경 화면 (첨부하신 PNG) — UR10e · 받침대 0.6 m · 적벽돌 3단 · 뒤쪽 공급대 / 뷰어 왼쪽 메뉴는 잘라서 · 가능하면 정면 대각 시점 1장 더
-  [10쪽] (영상) 대본이 3단 벽 16장 쌓기 — 새 환경 · 자유 시점 · 5배속 · 30초 이내
-  [10쪽] (사진) 정책 입력 카메라 3대 — front · top · wrist 같은 순간 캡처 3장
+  [8쪽] (사진·영상) 새 실험 환경 화면 (첨부하신 PNG) — UR10e · 받침대 0.6 m · 적벽돌 3단 · 뒤쪽 공급대 / 영상이면: 대본이 16장 쌓는 장면 5배속 · 30초
 
 ■ 이미 넣은 사진·영상
 [4쪽]
@@ -36,16 +34,16 @@
      저장소 경로: 01_사기설/중간발표1/도구/v16_자산/poster_26.png
      GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EB%8F%84%EA%B5%AC/v16_%EC%9E%90%EC%82%B0/poster_26.png
 
-[8쪽]
-  (사진) 소형 환경 G1·G2·G3 장면 원본
-     저장소 경로: 01_사기설/중간발표1/그림/g123_cuts.png
-     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EA%B7%B8%EB%A6%BC/g123_cuts.png
-  (사진) 아래 회색 설명 줄을 자른 판
-     저장소 경로: 01_사기설/진행보고/도구/자산/p08_g123.png
-     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A7%84%ED%96%89%EB%B3%B4%EA%B3%A0/%EB%8F%84%EA%B5%AC/%EC%9E%90%EC%82%B0/p08_g123.png
+[7쪽]
+  (사진) 소형 환경 장면 원본 (SO-ARM100 · 2+1 적층)
+     저장소 경로: 01_사기설/중간발표1/그림/cover_cover_az60_placing_top.png
+     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A4%91%EA%B0%84%EB%B0%9C%ED%91%9C1/%EA%B7%B8%EB%A6%BC/cover_cover_az60_placing_top.png
+  (사진) 크롭·둥근 모서리판
+     저장소 경로: 01_사기설/진행보고/도구/자산/p07_small_env.png
+     GitHub에서 보기: https://github.com/wonyoungjacob/masonry-IL-capstone/blob/main/01_%EC%82%AC%EA%B8%B0%EC%84%A4/%EC%A7%84%ED%96%89%EB%B3%B4%EA%B3%A0/%EB%8F%84%EA%B5%AC/%EC%9E%90%EC%82%B0/p07_small_env.png
 
 [차트·도식]
-  8쪽 막대그래프, 2쪽 계단 그림, 9쪽 벽 정면도, 12쪽 일정표는 PowerPoint 도형·차트라 별도 파일 없음(슬라이드에서 편집 가능).
+  7쪽 막대그래프, 2쪽 계단 그림, 8쪽 벽 정면도, 10쪽 진행 타임라인, 12쪽 일정표는 PowerPoint 도형·차트라 별도 파일 없음(슬라이드에서 편집 가능).
 
 [생성 스크립트]
   01_사기설/진행보고/도구/build_진행회의_20261019.py
