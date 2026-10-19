@@ -23,5 +23,4 @@ for pid in "${pids[@]}"; do wait "$pid" || fail=1; done
 [ $fail -eq 0 ] || { echo "묶음 변환 실패: $PARTS/*.log"; exit 1; }
 roots=()
 for ((i = 0; i < N; i++)); do roots+=("$(printf "%s/part_%02d" "$PARTS" "$i")"); done
-python -m wall3.to_lerobot --merge "${roots[@]}" --root "$FINAL" > "$PARTS/merge.log" 2>&1
-echo "done: $FINAL"
+bash wall3/merge_parts.sh "$FINAL" "${roots[@]}"          # part video check, merge, final full video check, "done:"

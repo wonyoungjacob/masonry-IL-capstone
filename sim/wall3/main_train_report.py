@@ -28,6 +28,10 @@ def fmt_t(t):
     return time.strftime("%m-%d %H:%M", time.localtime(t)) if t else "—"
 
 
+def parse_runs(s):
+    return [(r.split()[0], int(r.split()[1])) for r in s.split(",") if r.strip()]
+
+
 def run_info(train: Path, pol, seed):
     name = f"{pol}_s{seed}"
     st = train / f"{name}.status.json"
@@ -85,11 +89,12 @@ def main():
     ap.add_argument("--dataset", required=True)
     ap.add_argument("--out-dir", required=True)
     ap.add_argument("--final", action="store_true")
+    ap.add_argument("--runs", default=",".join(f"{p} {s}" for p, s in ORDER), help='"act 1000,diffusion 1000,..."')
     ap.add_argument("--journal", default=str(REPO / "실험일지.md"), help="lab log the --final entry goes to")
     a = ap.parse_args()
     train, ds, out = Path(a.train), Path(a.dataset), Path(a.out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    runs = [run_info(train, p, s) for p, s in ORDER]
+    runs = [run_info(train, p, s) for p, s in parse_runs(a.runs)]
     for r in runs:
         if "_curve" in r and r.get("result") in ("done", "failed", "skipped", "stopped"):
             curve_png(r, out / f"학습곡선_{r['name']}.png")
@@ -108,6 +113,8 @@ def main():
     L = ["# 3층 벽체 본 학습 보고 (Ubuntu)", "",
          "지시서: [`우분투지시_3층벽체_본학습.md`](../우분투지시_3층벽체_본학습.md). 이 보고서는 `sim/wall3/main_train_report.py`가 학습이 하나 끝날 때마다 다시 쓴다. "
          "요약 [`요약.json`](요약.json).", ""]
+    if (out / "경위.md").exists():
+        L += ["재시작·결정 경위: [`경위.md`](경위.md)", ""]
     if stop:
         L += [f"> **멈춤:** {stop}", ""]
     d = summ["dataset"]
@@ -120,8 +127,8 @@ def main():
     L += ["## 학습 설정 (6번 모두 같음)", "", "| 항목 | 값 |", "|---|---|",
           "| 정책 | ACT, Diffusion Policy (LeRobot 0.6.1 기본 구현·기본 설정 = 미니 학습과 같음) |",
           "| 행동 묶음 | ACT chunk 100 · 실행 100, Diffusion horizon 64 · 실행 32 · 관측 2 (미니 체크포인트 config.json과 같음) |",
-          "| 스텝 · 배치 · 저장 | 100,000 · 32 · 2만 스텝마다, 쓸 체크포인트 = 마지막 |",
-          "| 학습 seed | 1000, 2000, 3000 |",
+          f"| 스텝 · 배치 · 저장 | 100,000 · 32 · {setting.get('save_freq', 20000):,} 스텝마다, 쓸 체크포인트 = 마지막 |",
+          "| 학습 | " + ", ".join(f"{r['policy']} s{r['seed']}" for r in runs) + " |",
           f"| 데이터 로딩 (속도 설정) | 디코더 **{setting.get('backend', '—')}**, 작업자 **{setting.get('workers', '—')}**, 동시 실행 **{setting.get('concurrent', '—')}** |", ""]
     if bench:
         L += ["### 속도 설정 측정 (학습 시작 전, 초당 샘플 수)", "", "| 정책 | 디코더 | 작업자 | 샘플/s |", "|---|---|---|---|"]
@@ -129,7 +136,7 @@ def main():
             L.append(f"| {r['policy']} | {r['backend']} | {r['workers']} | {r.get('samples_per_s', float('nan')):.0f} |" if "samples_per_s" in r
                      else f"| {r['policy']} | {r['backend']} | {r['workers']} | 실패 |")
         L += ["", f"고른 값: {bench['choice']['backend']} · 작업자 {bench['choice']['workers']} (두 정책 평균 상대 속도가 가장 높은 조합, 6번 모두 같게)", ""]
-    L += ["## 학습 6번", "", "| 정책 | seed | 결과 | 시작 | 끝 | 걸린 시간 | 스텝/s | 처음 → 마지막 손실 | 이어 하기 | 체크포인트 해시 |", "|---|---|---|---|---|---|---|---|---|---|"]
+    L += [f"## 학습 {len(runs)}번", "", "| 정책 | seed | 결과 | 시작 | 끝 | 걸린 시간 | 스텝/s | 처음 → 마지막 손실 | 이어 하기 | 체크포인트 해시 |", "|---|---|---|---|---|---|---|---|---|---|"]
     for r in runs:
         dur = f"{(r['end'] - r['start']) / 3600:.1f} h" if r.get("end") and r.get("start") else "—"
         loss = f"{r['loss_first']:.3f} → {r['loss_last']:.4f}" if "loss_first" in r else "—"
@@ -149,6 +156,9 @@ def main():
                  f"{' / '.join(f'{x:.0f}' for x in ro['wall_clock_s_per_wall'])} s |")
     L += ["", "## 실험설계 md와 다르게 한 것", "", "| # | 항목 | 실험설계 md / 지시 | 실제 |", "|---|---|---|---|",
           f"| 1 | 데이터 로딩 | (미니 학습: pyav, 작업자 4) | {setting.get('backend', '—')}, 작업자 {setting.get('workers', '—')} (지시 4절이 허용한 속도 설정만) |",
+          "| 3 | 학습 seed | 1000 · 2000 · 3000 (6번) | **사용자 결정(10-19): 우선 seed 1000만, ACT·Diffusion 2번** |",
+          "| 4 | 체크포인트 저장 | 2만 스텝마다 | **사용자 결정(10-19): 1만 스텝마다** |",
+          "| 5 | 시작 조건 | 다시 읽기 검사(에피소드마다 3프레임) | 영상 파일 전부 끝까지 디코딩해 프레임 수 확인 추가(깨진 영상 3개 때문, 경위.md) |",
           "| 2 | 정상 동작 확인 시작값 700300 · 700301 | 파일럿 블록 미사용 값 | 이 두 값은 2차 작업 때 수집 일정 시험(대본, `outputs/wall3/collect_sched_test_20261018`, 어느 데이터셋에도 안 들어감)에 한 번 쓰였음. 정책 롤아웃에는 처음 |", ""]
     (out / "보고서.md").write_text("\n".join(L))
     if a.final:

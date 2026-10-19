@@ -20,7 +20,10 @@ CONVERT_LOG=${CONVERT_LOG:-outputs/wall3/main_20261018_convert_d.log}
 OUT=${OUT:-outputs/wall3/main_train_$(date +%Y%m%d)}
 REPO=$(cd .. && pwd)
 REPORT_DIR=${REPORT_DIR:-"$REPO/01_사기설/근거_우분투_wall3_본학습"}
-STEPS=${STEPS:-100000}; SAVE_FREQ=${SAVE_FREQ:-20000}; LOG_FREQ=${LOG_FREQ:-200}; STALL_S=600; CONCURRENT=2
+STEPS=${STEPS:-100000}; SAVE_FREQ=${SAVE_FREQ:-10000}; LOG_FREQ=${LOG_FREQ:-200}; STALL_S=600; CONCURRENT=2
+# runs to train, in order (사용자 결정 2026-10-19: 우선 seed 1000만 → RUNS="act 1000,diffusion 1000")
+RUNS=${RUNS:-"act 1000,diffusion 1000,act 2000,diffusion 2000,act 3000,diffusion 3000"}
+FORCE_BACKEND=${FORCE_BACKEND:-}; FORCE_WORKERS=${FORCE_WORKERS:-}   # set both to skip the loader benchmark
 EXPECT_EP=${EXPECT_EP:-16000}; EXPECT_WALLS=${EXPECT_WALLS:-1000}
 DRY=${DRY:-0}                 # 1 = pipeline test only: no git, no rollout, quick bench
 BENCH_ARGS=${BENCH_ARGS:-}
@@ -53,7 +56,7 @@ stop_now () {  # stop_now <reason>
 }
 
 report () {  # report [--final]
-  python -m wall3.main_train_report --train "$OUT" --dataset "$DS" --out-dir "$REPORT_DIR" --journal "$JOURNAL" "$@" >> "$OUT/report.log" 2>&1 \
+  python -m wall3.main_train_report --train "$OUT" --dataset "$DS" --out-dir "$REPORT_DIR" --journal "$JOURNAL" --runs "$RUNS" "$@" >> "$OUT/report.log" 2>&1 \
     || say "report failed (see $OUT/report.log)"
 }
 
@@ -63,7 +66,7 @@ while systemctl --user is-active --quiet "$CONVERT_UNIT"; do sleep 60; done
 say "conversion unit ended"
 
 # ---------------------------------------------------------------- 2. start conditions
-python - "$DS" "$CONVERT_LOG" "$EXCLUDED" "$EXPECT_EP" "$EXPECT_WALLS" > "$OUT/start_check.json" 2> "$OUT/start_check.err" <<'EOF'
+python - "$DS" "$CONVERT_LOG" "$EXCLUDED" "$EXPECT_EP" "$EXPECT_WALLS" "$OUT/check_videos.json" > "$OUT/start_check.json" 2> "$OUT/start_check.err" <<'EOF'
 import json, sys
 from pathlib import Path
 ds, conv, excluded = Path(sys.argv[1]), Path(sys.argv[2]), [int(x) for x in sys.argv[3].split()]
@@ -82,6 +85,10 @@ seeds = src.get("seeds_used", [])
 chk["walls_1000"] = len(seeds) == n_walls
 chk["excluded_absent"] = not (set(excluded) & set(seeds))
 chk["hash_recorded"] = bool(v.get("dataset_sha256")) and bool(v.get("content_sha256")) and (ds / "meta" / "wall3_hashes.json").exists()
+import subprocess
+out = Path(sys.argv[6])
+r = subprocess.run([sys.executable, "-m", "wall3.check_videos", "--root", str(ds), "--out", str(out)], capture_output=True, text=True)
+chk["videos_all_decode"] = r.returncode == 0          # every mp4 decoded end to end, frames = episode lengths (2026-10-19)
 chk["all_ok"] = all(chk.values())
 chk["values"] = {k: v.get(k) for k in ("num_episodes", "expected_episodes", "num_frames", "expected_frames", "dataset_sha256", "content_sha256", "bytes")}
 print(json.dumps(chk, indent=1))
@@ -96,11 +103,16 @@ fi
 say "start conditions ok"
 
 # ---------------------------------------------------------------- 3. speed setting (data loading only, on the main dataset)
-say "bench_loader"
-python -m wall3.bench_loader --root "$DS" --out "$OUT/bench_loader.json" $BENCH_ARGS > "$OUT/bench_loader.log" 2>&1
-BACKEND=$(python -c "import json; print(json.load(open('$OUT/bench_loader.json'))['choice']['backend'])" 2>/dev/null || echo pyav)
-WORKERS=$(python -c "import json; print(json.load(open('$OUT/bench_loader.json'))['choice']['workers'])" 2>/dev/null || echo 4)
-echo "{\"backend\": \"$BACKEND\", \"workers\": $WORKERS, \"concurrent\": $CONCURRENT, \"chosen\": \"$(stamp)\"}" > "$OUT/setting.json"
+if [ -n "$FORCE_BACKEND" ] && [ -n "$FORCE_WORKERS" ]; then
+  BACKEND=$FORCE_BACKEND; WORKERS=$FORCE_WORKERS
+  say "setting given (no benchmark)"
+else
+  say "bench_loader"
+  python -m wall3.bench_loader --root "$DS" --out "$OUT/bench_loader.json" $BENCH_ARGS > "$OUT/bench_loader.log" 2>&1
+  BACKEND=$(python -c "import json; print(json.load(open('$OUT/bench_loader.json'))['choice']['backend'])" 2>/dev/null || echo pyav)
+  WORKERS=$(python -c "import json; print(json.load(open('$OUT/bench_loader.json'))['choice']['workers'])" 2>/dev/null || echo 4)
+fi
+echo "{\"backend\": \"$BACKEND\", \"workers\": $WORKERS, \"concurrent\": $CONCURRENT, \"save_freq\": $SAVE_FREQ, \"runs\": \"$RUNS\", \"chosen\": \"$(stamp)\"}" > "$OUT/setting.json"
 say "setting: backend $BACKEND, workers $WORKERS, concurrent $CONCURRENT"
 
 # ---------------------------------------------------------------- 4. one training under a watchdog
@@ -174,7 +186,7 @@ EOF
 }
 
 # ---------------------------------------------------------------- queue: two at a time
-QUEUE=("act 1000" "diffusion 1000" "act 2000" "diffusion 2000" "act 3000" "diffusion 3000")
+IFS=',' read -r -a QUEUE <<< "$RUNS"
 declare -A RUN=()
 declare -a POST=()
 next=0
@@ -199,5 +211,5 @@ while true; do
 done
 for p in "${POST[@]}"; do wait "$p"; done
 report --final
-commit "wall3 본학습: 6번 마무리$( [ -f "$OUT/STOP" ] && echo " (멈춤: $(cat "$OUT/STOP"))" ), 보고서·실험일지" "실험일지.md"
+commit "wall3 본학습: ${#QUEUE[@]}번 마무리$( [ -f "$OUT/STOP" ] && echo " (멈춤: $(cat "$OUT/STOP"))" ), 보고서·실험일지" "실험일지.md"
 say "all done$( [ -f "$OUT/STOP" ] && echo " (STOP: $(cat "$OUT/STOP"))" )"
