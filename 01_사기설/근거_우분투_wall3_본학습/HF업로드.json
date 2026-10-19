@@ -1,0 +1,41 @@
+{
+ "dataset": {
+  "repo": "wonyoungjacob/ur10e-masonry-wall3-1000",
+  "type": "dataset",
+  "private": false,
+  "local_files": 621,
+  "remote_files": 623,
+  "missing": [],
+  "size_differs": [],
+  "card": true,
+  "bytes": 13225751985,
+  "ok": true
+ },
+ "models": {
+  "act_s1000": {
+   "repo": "wonyoungjacob/ur10e-masonry-wall3-act-s1000",
+   "type": "model",
+   "private": true,
+   "local_files": 7,
+   "remote_files": 9,
+   "missing": [],
+   "size_differs": [],
+   "card": true,
+   "bytes": 206771899,
+   "ok": true
+  },
+  "diffusion_s1000": {
+   "repo": "wonyoungjacob/ur10e-masonry-wall3-diffusion-s1000",
+   "type": "model",
+   "private": true,
+   "local_files": 7,
+   "remote_files": 9,
+   "missing": [],
+   "size_differs": [],
+   "card": true,
+   "bytes": 1172367466,
+   "ok": true
+  }
+ },
+ "time": "2026-10-19 23:17"
+}
