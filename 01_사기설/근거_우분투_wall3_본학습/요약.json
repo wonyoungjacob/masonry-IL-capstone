@@ -20,25 +20,81 @@
  "setting": {
   "backend": "torchcodec",
   "workers": 8,
-  "concurrent": 2,
+  "concurrent": 1,
   "save_freq": 10000,
-  "runs": "act 1000,diffusion 1000",
-  "chosen": "10-19 17:54:35"
+  "runs": "diffusion 1000,act 1000",
+  "chosen": "10-19 20:16:57"
  },
  "bench": null,
  "stop": null,
  "runs": [
   {
-   "name": "act_s1000",
-   "policy": "act",
-   "seed": 1000,
-   "result": "not started"
-  },
-  {
    "name": "diffusion_s1000",
    "policy": "diffusion",
    "seed": 1000,
-   "result": "not started"
+   "start": 1792400103,
+   "attempts": 1,
+   "result": "running",
+   "steps_logged": 27000,
+   "loss_first": 0.582,
+   "loss_last": 0.004,
+   "loss_last5_mean": 0.004,
+   "loss_min": 0.004,
+   "steps_per_s": 10.12,
+   "update_s_median": 0.06,
+   "data_s_median": 0.0875,
+   "checkpoint": "outputs/wall3/main_train_20261019/diffusion_s1000/checkpoints/020000/pretrained_model",
+   "checkpoint_step_dirs": [
+    "010000",
+    "020000"
+   ],
+   "model_sha256": "5380438780aa1877bdee9261c79ffd06a702bef3ae6e2e460ef1a89b88c69453",
+   "input_features": [
+    "observation.images.front",
+    "observation.images.top",
+    "observation.images.wrist",
+    "observation.state",
+    "observation.environment_state"
+   ],
+   "chunk": {
+    "n_action_steps": 32,
+    "horizon": 64,
+    "n_obs_steps": 2
+   }
+  },
+  {
+   "name": "act_s1000",
+   "policy": "act",
+   "seed": 1000,
+   "start": 1792400083,
+   "attempts": 1,
+   "result": "running",
+   "steps_logged": 27000,
+   "loss_first": 5.613,
+   "loss_last": 0.049,
+   "loss_last5_mean": 0.048799999999999996,
+   "loss_min": 0.048,
+   "steps_per_s": 12.844999999999999,
+   "update_s_median": 0.0335,
+   "data_s_median": 0.0595,
+   "checkpoint": "outputs/wall3/main_train_20261019/act_s1000/checkpoints/020000/pretrained_model",
+   "checkpoint_step_dirs": [
+    "010000",
+    "020000"
+   ],
+   "model_sha256": "3bf8fdff0a3ba1080927e7bfc504637bdfaa54b97f8fa7b15867c7c6d05a9d9b",
+   "input_features": [
+    "observation.images.front",
+    "observation.images.top",
+    "observation.images.wrist",
+    "observation.state",
+    "observation.environment_state"
+   ],
+   "chunk": {
+    "chunk_size": 100,
+    "n_action_steps": 100,
+    "n_obs_steps": 1
+   }
   }
  ]
 }
