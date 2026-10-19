@@ -20,7 +20,9 @@ CONVERT_LOG=${CONVERT_LOG:-outputs/wall3/main_20261018_convert_d.log}
 OUT=${OUT:-outputs/wall3/main_train_$(date +%Y%m%d)}
 REPO=$(cd .. && pwd)
 REPORT_DIR=${REPORT_DIR:-"$REPO/01_사기설/근거_우분투_wall3_본학습"}
-STEPS=${STEPS:-100000}; SAVE_FREQ=${SAVE_FREQ:-10000}; LOG_FREQ=${LOG_FREQ:-200}; STALL_S=600; CONCURRENT=2
+STEPS=${STEPS:-100000}; SAVE_FREQ=${SAVE_FREQ:-10000}; LOG_FREQ=${LOG_FREQ:-200}; STALL_S=600; CONCURRENT=${CONCURRENT:-2}
+RESUME=${RESUME:-0}           # 1 = continue the runs in an existing $OUT from their checkpoints (after the 2026-10-19 reboot)
+UPLOAD_ARGS=${UPLOAD_ARGS:-}  # wall3.hf_upload arguments: models are uploaded only after every run has finished
 # runs to train, in order (사용자 결정 2026-10-19: 우선 seed 1000만 → RUNS="act 1000,diffusion 1000")
 RUNS=${RUNS:-"act 1000,diffusion 1000,act 2000,diffusion 2000,act 3000,diffusion 3000"}
 FORCE_BACKEND=${FORCE_BACKEND:-}; FORCE_WORKERS=${FORCE_WORKERS:-}   # set both to skip the loader benchmark
@@ -31,7 +33,7 @@ JOURNAL=${JOURNAL:-"$REPO/실험일지.md"}
 EXCLUDED="710462 710548"
 stamp () { date "+%m-%d %H:%M:%S"; }
 say () { echo "[$(stamp)] $*"; }
-[ -e "$OUT" ] && { say "$OUT 이미 있음: 덮어쓰지 않음"; exit 1; }
+[ "$RESUME" != 1 ] && [ -e "$OUT" ] && { say "$OUT 이미 있음: 덮어쓰지 않음"; exit 1; }
 mkdir -p "$OUT"
 if [ "$DRY" = 1 ]; then JOURNAL="$OUT/journal_test.md"; echo "# 실험일지" > "$JOURNAL"; fi
 
@@ -60,6 +62,9 @@ report () {  # report [--final]
     || say "report failed (see $OUT/report.log)"
 }
 
+if [ "$RESUME" = 1 ]; then
+  say "resume mode: dataset start conditions passed before ($OUT/start_check.json), continuing runs from checkpoints"
+else
 # ---------------------------------------------------------------- 1. wait for the conversion
 say "waiting for $CONVERT_UNIT (log $CONVERT_LOG)"
 while systemctl --user is-active --quiet "$CONVERT_UNIT"; do sleep 60; done
@@ -101,6 +106,7 @@ if ! python -c "import json,sys; sys.exit(0 if json.load(open('$OUT/start_check.
   exit 1
 fi
 say "start conditions ok"
+fi
 
 # ---------------------------------------------------------------- 3. speed setting (data loading only, on the main dataset)
 if [ -n "$FORCE_BACKEND" ] && [ -n "$FORCE_WORKERS" ]; then
@@ -123,16 +129,57 @@ say "prewarm done"
 # ---------------------------------------------------------------- 4. one training under a watchdog
 status () { echo "$2" > "$OUT/$1.status.json"; }
 
+ckpt_check () {  # ckpt_check <run dir>: last checkpoint complete and loadable, else point "last" at the newest good one
+  python - "$1" >> "$OUT/ckpt_check.log" 2>&1 <<'EOF'
+import json, sys, time
+from pathlib import Path
+import torch
+from safetensors.torch import load_file
+from lerobot.policies.factory import get_policy_class
+ck = Path(sys.argv[1]) / "checkpoints"
+need = ["pretrained_model/config.json", "pretrained_model/model.safetensors", "pretrained_model/train_config.json",
+        "training_state/optimizer_state.safetensors", "training_state/rng_state.safetensors", "training_state/training_step.json"]
+def ok(d):
+    try:
+        if any(not (d / f).exists() for f in need):
+            return False, "missing files"
+        for f in d.rglob("*.json"):
+            json.loads(f.read_text())
+        for f in d.rglob("*.safetensors"):
+            t = load_file(str(f))
+            if any(v.is_floating_point() and not torch.isfinite(v).all() for v in t.values()):
+                return False, f"non-finite {f.name}"
+        cfg = json.loads((d / "pretrained_model" / "config.json").read_text())
+        get_policy_class(cfg["type"]).from_pretrained(str(d / "pretrained_model"))
+        return True, f"step {json.loads((d / 'training_state' / 'training_step.json').read_text())['step']}"
+    except Exception as e:
+        return False, repr(e)[:200]
+dirs = sorted([d for d in ck.iterdir() if d.is_dir() and d.name.isdigit()], reverse=True) if ck.exists() else []
+last = (ck / "last").resolve() if (ck / "last").exists() else None
+print(time.strftime("[%m-%d %H:%M:%S]"), ck.parent.name, "last ->", last.name if last else None)
+for d in ([last] if last else []) + [x for x in dirs if x != last]:
+    good, note = ok(d)
+    print("  ", d.name, "OK" if good else "BROKEN", note)
+    if good:
+        if last is None or d != last:
+            (ck / "last").unlink(missing_ok=True); (ck / "last").symlink_to(d.name)
+            print("   last ->", d.name)
+        break
+EOF
+}
+
 train_one () {  # train_one <policy> <seed>
   local pol=$1 seed=$2 name="${1}_s${2}"
   local out="$OUT/$name" log="$OUT/$name.log" start attempt result="failed" oom=0
-  start=$(date +%s)
+  start=$(python -c "import json; print(json.load(open('$OUT/$name.status.json'))['start'])" 2>/dev/null || date +%s)
   for attempt in 1 2 3; do
     [ -f "$OUT/STOP" ] && { result="stopped"; break; }
     local -a args
-    if [ "$attempt" -gt 1 ] && [ -f "$out/checkpoints/last/pretrained_model/train_config.json" ]; then
-      say "TRAIN $name resume (attempt $attempt)"
-      args=(--config_path="$out/checkpoints/last/pretrained_model/train_config.json" --resume=true)
+    [ -d "$out/checkpoints" ] && ckpt_check "$out"
+    if [ -f "$out/checkpoints/last/pretrained_model/train_config.json" ]; then
+      say "TRAIN $name resume from $(readlink "$out/checkpoints/last") (attempt $attempt)"
+      args=(--config_path="$out/checkpoints/last/pretrained_model/train_config.json" --resume=true
+            --num_workers="$WORKERS" --dataset.video_backend="$BACKEND")
     else
       [ -e "$out" ] && mv "$out" "$out.attempt$((attempt - 1))_no_checkpoint"
       say "TRAIN $name start (attempt $attempt)"
@@ -141,11 +188,12 @@ train_one () {  # train_one <policy> <seed>
             --steps="$STEPS" --batch_size=32 --seed="$seed" --num_workers="$WORKERS" --save_freq="$SAVE_FREQ" --log_freq="$LOG_FREQ"
             --output_dir="$out" --job_name="wall3_main_$name" --wandb.enable=false)
     fi
-    status "$name" "{\"start\": $start, \"attempts\": $attempt, \"result\": \"running\"}"
+    status "$name" "{\"start\": $start, \"attempts\": $attempt, \"resumed\": $( [ "$RESUME" = 1 ] && echo true || echo false ), \"result\": \"running\"}"
     # each training in its own scope: if systemd-oomd kills it under memory pressure only this run dies and the watchdog
     # resumes it from its last checkpoint (before, oomd killed the whole service including the watchdog; 2026-10-19)
+    # nice 10: the desktop stays responsive (2026-10-19 the machine hung under two runs); results are not affected
     systemd-run --user --scope --quiet --unit="wall3-tr-$name-$(date +%H%M%S)" -p ManagedOOMPreference=avoid \
-      lerobot-train "${args[@]}" >> "$log" 2>&1 &
+      nice -n 10 lerobot-train "${args[@]}" >> "$log" 2>&1 &
     local pid=$!
     while kill -0 "$pid" 2>/dev/null; do
       sleep 30
@@ -162,7 +210,7 @@ train_one () {  # train_one <policy> <seed>
   done
   if [ "$result" = "failed" ] && [ "$oom" = 1 ]; then result="oom"; stop_now "$name GPU 메모리 부족이 이어 하기 3번으로도 안 풀림"; fi
   [ "$result" = "failed" ] && say "TRAIN $name FAILED after 3 attempts -> skipped"
-  status "$name" "{\"start\": $start, \"end\": $(date +%s), \"attempts\": $attempt, \"result\": \"$result\"}"
+  status "$name" "{\"start\": $start, \"end\": $(date +%s), \"attempts\": $attempt, \"resumed\": $( [ "$RESUME" = 1 ] && echo true || echo false ), \"result\": \"$result\"}"
   say "TRAIN $name $result"
 }
 
@@ -199,7 +247,11 @@ declare -A RUN=()
 declare -a POST=()
 next=0
 report
-commit "wall3 본학습: 시작 조건 통과, 속도 설정($BACKEND, 작업자 $WORKERS, 동시 $CONCURRENT), 학습 시작"
+if [ "$RESUME" = 1 ]; then
+  commit "wall3 본학습: 체크포인트에서 이어 하기 시작(순서 $RUNS, $BACKEND, 작업자 $WORKERS, 동시 $CONCURRENT)"
+else
+  commit "wall3 본학습: 시작 조건 통과, 속도 설정($BACKEND, 작업자 $WORKERS, 동시 $CONCURRENT), 학습 시작"
+fi
 while true; do
   for key in "${!RUN[@]}"; do
     if ! kill -0 "${RUN[$key]}" 2>/dev/null; then
@@ -219,5 +271,10 @@ while true; do
 done
 for p in "${POST[@]}"; do wait "$p"; done
 report --final
+if [ -n "$UPLOAD_ARGS" ] && [ "$DRY" != 1 ]; then              # models only after every run (no big jobs during training)
+  say "hf upload (models)"
+  python -m wall3.hf_upload $UPLOAD_ARGS >> "$OUT/hf_upload.log" 2>&1 || say "hf upload failed (see $OUT/hf_upload.log)"
+  say "hf upload finished"
+fi
 commit "wall3 본학습: ${#QUEUE[@]}번 마무리$( [ -f "$OUT/STOP" ] && echo " (멈춤: $(cat "$OUT/STOP"))" ), 보고서·실험일지" "실험일지.md"
 say "all done$( [ -f "$OUT/STOP" ] && echo " (STOP: $(cat "$OUT/STOP"))" )"
