@@ -274,7 +274,7 @@ def bar_chart(slide, x, y, w, h, cats, series, gap=60):
     return ch
 
 
-def ph(slide, page, x, y, w, h, kind, title, desc, size=15):
+def ph(slide, page, x, y, w, h, kind, title, desc, size=15, url=None):
     """채울 사진·영상 자리: 주황 점선 상자 + 넣을 내용."""
     shp = rect(slide, x, y, w, h, "orangesoft", "orange", radius=0.14, line_w=1.75)
     shp.line.dash_style = MSO_LINE.DASH
@@ -283,7 +283,7 @@ def ph(slide, page, x, y, w, h, kind, title, desc, size=15):
     ty = y + 0.52
     mtext(slide, x + 0.16, ty, w - 0.32, h - 0.62, [(f"**{title}**", size, "inkdeep", True), (desc, size - 1, "ink", False)],
           align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, spacing=1.08, after=4)
-    PH.append((page, kind, title, desc))
+    PH.append((page, kind, title, desc + (f" ▶ 영상·사진 위치: {url}" if url else "")))
 
 
 # ── 크롬
@@ -320,11 +320,11 @@ REFS = {
     "ravichandar": ("Ravichandar et al., 2020", "Ravichandar, H., Polydoros, A. S., Chernova, S., & Billard, A. (2020). Recent advances in robot learning from demonstration. Annual Review of Control, Robotics, and Autonomous Systems, 3, 297–330. doi:10.1146/annurev-control-100819-063206"),
     "zhao": ("Zhao et al., 2023 (ACT)", "Zhao, T. Z., Kumar, V., Levine, S., & Finn, C. (2023). Learning fine-grained bimanual manipulation with low-cost hardware. Robotics: Science and Systems XIX. doi:10.15607/RSS.2023.XIX.016"),
     "billard": ("Billard & Kragic, 2019", "Billard, A., & Kragic, D. (2019). Trends and challenges in robot manipulation. Science, 364(6446), eaat8414. doi:10.1126/science.aat8414"),
-    "johannink": ("Johannink et al., 2019", "Johannink, T., Bahl, S., Nair, A., Luo, J., Kumar, A., Loskyll, M., Aparicio Ojea, J., Solowjow, E., & Levine, S. (2019). Residual reinforcement learning for robot control. ICRA 2019, 6023–6029. doi:10.1109/ICRA.2019.8794127"),
+    "johannink": ("Johannink et al., 2019", "Johannink, T., Bahl, S., Nair, A., et al. (2019). Residual reinforcement learning for robot control. ICRA 2019, 6023–6029. doi:10.1109/ICRA.2019.8794127"),
     "ross": ("Ross et al., 2011 (DAgger)", "Ross, S., Gordon, G., & Bagnell, J. A. (2011). A reduction of imitation learning and structured prediction to no-regret online learning. AISTATS, PMLR 15, 627–635."),
     "laskey": ("Laskey et al., 2017 (DART)", "Laskey, M., Lee, J., Fox, R., Dragan, A., & Goldberg, K. (2017). DART: Noise injection for robust imitation learning. Conference on Robot Learning, PMLR 78, 143–156."),
     "belkhale": ("Belkhale et al., 2023", "Belkhale, S., Cui, Y., & Sadigh, D. (2023). Data quality in imitation learning. NeurIPS 36. arXiv:2306.02437"),
-    "rac": ("Hu et al., 2025 (RaC)", "Hu, Z., Wu, R., Enock, N., Li, J., Kadakia, R., Erickson, Z., & Kumar, A. (2025). RaC: Robot learning for long-horizon tasks by scaling recovery and correction. arXiv:2509.07953 (preprint)"),
+    "rac": ("Hu et al., 2025 (RaC)", "Hu, Z., Wu, R., Enock, N., et al. (2025). RaC: Robot learning for long-horizon tasks by scaling recovery and correction. arXiv:2509.07953 (preprint)"),
     "agia": ("Agia et al., 2025 (Sentinel)", "Agia, C., Sinha, R., Yang, J., et al. (2025). Unpacking failure modes of generative policies: Runtime monitoring of consistency and progress. CoRL 2024, PMLR 270, 689–723. arXiv:2410.04640"),
     "rewind": ("Zheng et al., 2026 (Rewind-IL)", "Zheng, G., Seenivasan, S., Johnson-Roberson, M., & Zhi, W. (2026). Rewind-IL: Online failure detection and state respawning for imitation learning. IEEE RA-L (early access). doi:10.1109/LRA.2026.3734897"),
     "huang": ("Huang et al., 2027", "Huang, L., Yang, X., Yan, Q., & Zou, Z. (2027). Vision-language model-based demonstrators for imitation learning in construction robotic timber assembly. Journal of Computing in Civil Engineering, 41(1), 04026116. doi:10.1061/JCCEE5.CPENG-7917 (online 2026)"),
@@ -401,38 +401,43 @@ ph(s, 1, 8.0, 1.0, 4.83, 5.2, "사진", "새 실험 환경 대표 화면",
    "첨부하신 MuJoCo 화면\nUR10e · 받침대 · 적벽돌 3단 · 공급대\n뷰어 왼쪽 메뉴는 잘라서", 16)
 pill(s, W - M - 0.62, H - 0.42, 0.62, 0.32, "1", "inkdeep", "white", 13)
 
-# ═══════════════════════════ 2 연구 배경
-s = new(); T = chrome(s, 2, "기존 조적 로봇: 미리 짠 경로 + 현장마다 다시 계측", "연구 배경")
-c1 = cite("liang21")
-text(s, M, T - 0.02, 7.6, 0.36, f"건설 로봇 연구 259편 분류 · 2021년 기준 {c1}", 15, "charcoal", True)
-steps = [("사전 프로그래밍", "135편", ["정해진 경로 반복", "정렬 확인: **사람**"], "예: SAM", "soft", "inkdeep"),
-         ("적응형 조작", "72편", ["센서로 **현장 재계측**", "계획 보정 후 실행"], "예: Hadrian X", "soft", "inkdeep"),
-         ("모방학습", "3편", ["시연에서 **동작 학습**", "건설 분야 초기 단계"], "본 연구 위치", "primary", "white")]
-BW, BG, BOT = 2.45, 0.12, 6.45
-hs = [2.85, 3.5, 4.15]
-for k, (lab, big, lines, ex, fill, col) in enumerate(steps):
-    bx = M + k * (BW + BG); by = BOT - hs[k]
-    card(s, bx, by, BW, hs[k], fill=fill, line=None if fill == "primary" else "hairsoft", radius=0.16)
-    pill(s, bx + 0.15, by + 0.15, pw(lab, 14), 0.36, lab, "inkdeep" if fill != "primary" else "white", "white" if fill != "primary" else "primary", 14)
-    text(s, bx + 0.15, by + 0.6, BW - 0.3, 0.7, big, 34, col if fill == "primary" else "inkdeep", True, spacing=1.0)
-    text(s, bx + 0.15, by + 1.3, BW - 0.3, 0.75, lines, 15, col if fill == "primary" else "ink", spacing=1.05, after=1)
-    pill(s, bx + 0.15, BOT - 0.5, pw(ex, 13), 0.32, ex, "canvas" if fill != "primary" else "inkdeep", "inkdeep" if fill != "primary" else "white", 13, "hair" if fill != "primary" else None)
-# 위로 갈수록 자율성 ↑
-text(s, M, T + 0.42, 4.6, 0.4, "로봇 자율성 ↑ · 사람 개입 ↓  →", 15, "primary", True)
-XR = M + 3 * BW + 2 * BG + 0.35; WR = W - M - XR
-ph(s, 2, XR, T - 0.02, (WR - 0.15) / 2, 2.1, "사진", "SAM 벽돌쌓기", "Construction Robotics\n공식 사진", 14)
-ph(s, 2, XR + (WR - 0.15) / 2 + 0.15, T - 0.02, (WR - 0.15) / 2, 2.1, "사진", "Hadrian X 시공", "FBR 공식 사진", 14)
-yb = T + 2.25
-box = card(s, XR, yb, WR, BOT - yb, fill="criticalsoft", line="critical", radius=0.16, line_w=1.5)
-pill(s, XR + 0.18, yb + 0.16, pw("공통 한계", 14), 0.36, "공통 한계", "critical", "white", 14)
-c2 = cite("giftthaler", "liang22"); c3 = cite("xiao")
-text(s, XR + 0.2, yb + 0.66, WR - 0.4, BOT - yb - 0.75,
-     [f"**현장·자재 변경**: 경로·계측 재설정 {c2}", f"**처음 보는 현장**: 적응 못함 {c3}", "**정렬 확인**: 사람 · 외부 계측 몫"],
-     17, "inkdeep", spacing=1.15, after=8, anchor=MSO_ANCHOR.MIDDLE)
+# ═══════════════════════════ 2 연구 배경: 제어 기반 vs 학습 기반 (영상 비교)
+REFS["fbr"] = ("FBR, 2026", "FBR Limited (2026). ASX 분기 보고 (2026-01-29) · FY26 Appendix 4E (2026-08-31): Hadrian® 시공 속도 공시. fbr.com.au")
+REFS["sun26"] = ("Sun et al., 2026 (RebarBot)", "Sun, T., Han, B., Wu, J., Rusinkiewicz, S., & Shao, Y. (2026). Mobile robotic rebar cage assembly via imitation learning. Automation in Construction, 181, 106671. doi:10.1016/j.autcon.2025.106671")
+s = new(); T = chrome(s, 2, "지금은 제어 기반이 앞섬: 학습 기반은 아직 연구 단계", "연구 배경")
+CW2 = (W - 2 * M - 0.3) / 2
+cf = cite("fbr"); cs = cite("sun26"); cl = cite("liang21")
+cols2 = [("제어 기반 · 산업용", "FBR Hadrian® · CAD 경로 + 실시간 위치 보정", "inkdeep",
+          ("영상", "Hadrian 무편집 시공 영상 중 20~30초", "YouTube @FBR-ltd 공식 · 2026-01-28 · 1배속",
+           "https://www.youtube.com/watch?v=n6g03v_15Aw (무편집 1:22:00) · 소개 1:32 https://www.youtube.com/watch?v=eMIDJB3Pd-M"),
+          [("속도", "벽 36 m²/h"), ("처리량", "285블록/h 이상"), ("준비", "CAD · 전용 블록")],
+          f"출처: FBR 공시 {cf} · 회사 자체 수치"),
+         ("학습 기반 · 연구 단계", "RebarBot · RGB 카메라 + 모방학습", "primary",
+          ("영상", "RebarBot 철근망 조립 영상", "rebarbot.github.io 공식 · 실패 장면 포함",
+           "https://rebarbot.github.io/static/videos/Video_1080p_crop.mp4 · 대안: BrickCraft 외란 영상(8배속 표기) https://intelligent-control-lab.github.io/BrickCraft"),
+          [("성공률", "90 % 이상"), ("시험", "과제 2종 · 20회+"), ("준비", "RGB 카메라만")],
+          f"출처: Sun et al., 2026 {cs} · 건설 모방학습은 초기 단계 {cl}")]
+for k, (tag, sub, fill, phd, chips, src) in enumerate(cols2):
+    cx = M + k * (CW2 + 0.3)
+    card(s, cx, T - 0.04, CW2, 0.68, fill=fill, line=None, radius=0.14)
+    text(s, cx + 0.2, T - 0.03, CW2 - 0.4, 0.66, [f"**{tag}**", sub], 15, "white", spacing=1.0, after=0, anchor=MSO_ANCHOR.MIDDLE)
+    ph(s, 2, cx, T + 0.72, CW2, 2.62, phd[0], phd[1], phd[2], 16, url=phd[3])
+    chw = (CW2 - 2 * 0.12) / 3
+    for j, (a_, b_) in enumerate(chips):
+        chx = cx + j * (chw + 0.12)
+        card(s, chx, T + 3.44, chw, 0.8, fill="soft", line=None, radius=0.12)
+        mtext(s, chx + 0.08, T + 3.44, chw - 0.16, 0.8, [(a_, 13, "charcoal", True), (b_, 16, "inkdeep", True)],
+              align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, spacing=1.0, after=0)
+    text(s, cx, T + 4.28, CW2, 0.3, src, 14, "charcoal")
+BY2 = T + 4.66
+card(s, M, BY2, W - 2 * M, 6.92 - BY2, fill="orangesoft", line="orange", radius=0.14, line_w=1.25)
+text(s, M + 0.2, BY2, W - 2 * M - 0.4, 6.92 - BY2,
+     "과제·규모가 달라 **동일 조건 비교는 아님** · 지금은 제어 기반이 빠르고 현장 검증됨 → **그런데도 왜 학습 기반인가?** (다음 장)",
+     16, "inkdeep", anchor=MSO_ANCHOR.MIDDLE)
 footnote(s)
 
 # ═══════════════════════════ 3 기존 지식: 왜 학습 기반인가
-s = new(); T = chrome(s, 3, "학습 기반: 재프로그래밍·정밀 계측을 시연으로 대체", "연구 배경 · 기존 지식")
+s = new(); T = chrome(s, 3, "성능이 낮아도 학습 기반인 이유: 현장마다 다시 짜지 않음", "연구 배경 · 왜 학습 기반인가")
 LANE_H = 0.92; LX = M + 1.75; CHW = 2.62
 for li, (lab, lfill, chs, res, rfill, rcol) in enumerate([
         ("제어 기반", "critical", ["경로 프로그래밍", "현장 계측·정합", "보정 후 실행"], "현장마다 **반복**", "criticalsoft", "critical"),
@@ -513,51 +518,73 @@ card(s, M, 6.5, W - 2 * M, 0.46, fill="primary", line=None, radius=0.16)
 text(s, M + 0.2, 6.5, W - 2 * M - 0.4, 0.46, "어느 쪽도 손실 → **정책은 그대로, 실패 인지·보정은 정책 밖 검측으로**", 17, "white", align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
 footnote(s)
 
-# ═══════════════════════════ 5 연구 목적 · 연구 질문
-s = new(); T = chrome(s, 5, "정책은 그대로, 검측 3단계의 효과를 단계별로 정량화", "연구 목적 · 연구 질문")
-GW = 4.25; GH = 1.5
-card(s, M, T - 0.04, GW, GH, fill="canvas", line="hair", radius=0.16)
-pill(s, M + 0.16, T + 0.08, pw("선행 연구의 공백", 13), 0.32, "선행 연구의 공백", "critical", "white", 13)
-c8 = cite("agia", "rewind")
-text(s, M + 0.18, T + 0.46, GW - 0.36, GH - 0.52, [f"**실패 감지·복구**: 전체 성공률만 {c8}", "**검측 단계별 기여**: 분리 안 됨", "**건설 품질 기준**: 평가 없음"], 15, "inkdeep", spacing=1.05, after=2)
-arrow_right(s, M + GW + 0.1, T + GH / 2 - 0.2, 0.42, 0.4, "charcoal")
-PX = M + GW + 0.62; PWd = W - M - PX
-card(s, PX, T - 0.04, PWd, GH, fill="primary", line=None, radius=0.16)
-pill(s, PX + 0.16, T + 0.08, pw("연구 목적", 13), 0.32, "연구 목적", "white", "primary", 13)
-text(s, PX + 0.2, T + 0.44, PWd - 0.4, GH - 0.5,
-     ["같은 모방학습 정책 + **정책 밖 검측 3단계** → **시방 합격률** 변화를 단계별 정량화",
-      "목표: 정책 단독보다 합격률 높은 **정책 + 검측 구성** 제시"], 16, "white", spacing=1.08, after=4)
+# ═══════════════════════════ 5 선행 연구 공백 → 공백이면 생기는 문제 → 연구 목적 · 연구 질문
+REFS["agm"] = ("Gao et al., 2026 (AGM)", "Gao, H., Ni, Z., Wen, X., et al. (2026). AGM: Achievement-grounded memory for closed-loop agents with frozen VLA policies. arXiv:2608.29537 (preprint)")
+REFS["commitflow"] = ("Zhao et al., 2026 (CommitFlow)", "Zhao, Z., Feng, Y., Yang, Y., et al. (2026). CommitFlow: Semantic commitment verification and local correction for long-horizon robot manipulation VLA execution. arXiv:2609.21908 (preprint)")
+REFS["kato"] = ("Kato et al., 2026", "Kato, T., Kiyokawa, T., Saito, N., & Harada, K. (2026). Replanning human-robot collaborative tasks with vision-language models via semantic and physical dual-correction. arXiv:2602.14551 (preprint)")
+REFS["jin26"] = ("Jin et al., 2026", "Jin, Z., Wang, H., Sun, X., & Shao, Y. (2026). Harnessing human expertise for high-precision robotic assembly in industrialized construction: A sample-efficient installer-in-the-loop interactive reinforcement learning framework. Advanced Engineering Informatics, 76, 104823.")
+REFS["gawel"] = ("Gawel et al., 2019", "Gawel, A., Blum, H., Pankert, J., et al. (2019). A fully-integrated sensing and control system for high-accuracy mobile robotic building construction. IEEE/RSJ IROS 2019, 2300–2307. arXiv:1912.01870")
+s = new(); T = chrome(s, 5, "남은 공백: 검측 단계별 순효과를 시방 기준으로 잰 연구 없음", "선행 연구 공백 · 연구 목적 · 연구 질문")
+# 세 카드의 줄을 가로로 맞춤: 1줄 = 검측 효과, 2줄 = 판정 기준, 3줄 = 위치 정보
+AW5 = (W - 2 * M - 2 * 0.36) / 3; RH5 = 0.56; AH5 = 0.5 + 3 * RH5 + 2 * 0.04 + 0.06
+gapcols = [("① 선행 연구가 한 것", "inkdeep", "canvas", "hair",
+            [("외부 검증·재시도", f"고정 정책에 적용 {cite('rewind', 'agm', 'commitflow')}"),
+             ("건설 학습 로봇 판정", f"자체 임계값으로 판단 {cite('jin26', 'huang')}"),
+             ("정밀 시공 위치 보정", f"외부 계측 장비 의존 {cite('gawel')}")]),
+           ("② 남은 공백 · 확인한 범위", "critical", "canvas", "critical",
+            [("검측 3단계 2³ 분해", "주효과·상호작용 추정 없음"),
+             ("시방 다항목 판정", "학습 시공 로봇에서 없음"),
+             ("정답 좌표 없는 검측", "모방학습 조적과 결합 없음")]),
+           ("③ 공백이면 생기는 문제", "orange", "orangesoft", None,
+            [("사후 검증 추가 → 역효과", f"성공률 100 → 72 % (오탐) {cite('kato')}"),
+             ("로봇 '성공' ≠ 시방 합격", f"현장 검수 미해결 → 재시공 {cite('jin26')}"),
+             ("다시 외부 계측으로", "현장마다 장비 설치 부담")])]
+GS5 = 16 if all(est_lines(t_, AW5 - 0.42, 16) == 1 for _, _, _, _, cs in gapcols for c in cs for t_ in c) else 15
+for k, (hd, pfill, cfill, cline, cells) in enumerate(gapcols):
+    gx_ = M + k * (AW5 + 0.36)
+    card(s, gx_, T - 0.04, AW5, AH5, fill=cfill, line=cline, radius=0.16, line_w=1.25 if cline == "critical" else 0.75)
+    pill(s, gx_ + 0.15, T + 0.08, pw(hd, 14), 0.34, hd, pfill, "white", 14)
+    for r_, (lab_, body_) in enumerate(cells):
+        text(s, gx_ + 0.17, T + 0.46 + r_ * (RH5 + 0.04), AW5 - 0.34, RH5, [f"**{lab_}**", body_], GS5, "inkdeep", spacing=1.0, after=0)
+    if k < 2:
+        arrow_right(s, gx_ + AW5 + 0.04, T - 0.04 + AH5 / 2 - 0.16, 0.28, 0.32)
+# 연구 목적 (+ 메인 질문)
+PY5 = T - 0.04 + AH5 + 0.08; PH5 = 0.8; PWp = pw("연구 목적", 14)
+card(s, M, PY5, W - 2 * M, PH5, fill="primary", line=None, radius=0.16)
+pill(s, M + 0.16, PY5 + PH5 / 2 - 0.17, PWp, 0.34, "연구 목적", "white", "primary", 14)
+text(s, M + 0.32 + PWp, PY5, W - 2 * M - PWp - 0.5, PH5,
+     ["같은 모방학습 정책 + **정책 밖 검측 3단계** → **단계별 순효과**를 **시방 합격률**로 정량화",
+      "**메인 질문**: 검측 3단계는 시방 합격률을 **각각 · 함께** 얼마나 높이는가? → 2×2×2 요인 설계"], 16, "white", spacing=1.05, after=2, anchor=MSO_ANCHOR.MIDDLE)
 # 벽돌 1장 작업 흐름 (카드 + 화살표)
-FY = T + GH + 0.16
-text(s, M, FY - 0.02, 7.0, 0.34, "벽돌 1장 작업 흐름 · 검측은 정책 밖에서 개입", 15, "charcoal", True)
-pill(s, W - M - pw("실행 중 정답 좌표 미사용", 13), FY - 0.02, pw("실행 중 정답 좌표 미사용", 13), 0.32, "실행 중 정답 좌표 미사용", "canvas", "critical", 13, "critical")
-FY += 0.4
+FY = PY5 + PH5 + 0.08
+text(s, M, FY, 7.0, 0.3, "벽돌 1장 작업 흐름 · 검측은 정책 밖에서 개입", 14, "charcoal", True, anchor=MSO_ANCHOR.MIDDLE)
+pill(s, W - M - pw("실행 중 정답 좌표 미사용", 13), FY, pw("실행 중 정답 좌표 미사용", 13), 0.3, "실행 중 정답 좌표 미사용", "canvas", "critical", 13, "critical")
+FY += 0.34
 flow = [("집기", None), ("G1 잡기 확인", "하중 + 집게 각도"), ("운반", None), ("G2 놓기 전 보정", "작업대 카메라"),
         ("놓기", None), ("G3 놓은 뒤 재배치", "작업대 카메라"), ("다음 벽돌", None)]
 SWf, GWf, AG = 1.05, 2.17, 0.27
-FH = 0.86; fx = M
+FH = 0.6; fx = M
 for k, (lab, sub) in enumerate(flow):
     gate = sub is not None; fw = GWf if gate else SWf
     card(s, fx, FY, fw, FH, fill="primary" if gate else "soft", line=None, radius=0.14)
-    parts = [(lab, 15 if gate else 15, "white" if gate else "inkdeep", True)] + ([(sub, 13, "white", False)] if sub else [])
-    mtext(s, fx + 0.04, FY, fw - 0.08, FH, parts, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, spacing=1.0, after=1)
+    parts = [(lab, 15, "white" if gate else "inkdeep", True)] + ([(sub, 14, "white", False)] if sub else [])
+    mtext(s, fx + 0.04, FY, fw - 0.08, FH, parts, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, spacing=1.0, after=0)
     fx += fw
     if k < len(flow) - 1:
         rect(s, fx + 0.05, FY + FH / 2 - 0.1, AG - 0.1, 0.2, "charcoal", None, shape=MSO_SHAPE.RIGHT_ARROW)
         fx += AG
-# 연구 질문: 메인 띠 + 서브 4장
-QY = FY + FH + 0.18
-card(s, M, QY, W - 2 * M, 0.52, fill="inkdeep", line=None, radius=0.14)
-text(s, M + 0.2, QY, W - 2 * M - 0.4, 0.52, "**메인 질문**   검측 3단계는 시방 합격률을 **각각 · 함께** 얼마나 높이는가?   → 2×2×2 요인 설계", 17, "white", anchor=MSO_ANCHOR.MIDDLE)
-RY5 = QY + 0.64; RW5 = (W - 2 * M - 3 * 0.18) / 4
-rqs = [("RQ1", "G1 주효과", "**G1**(하중·각도)만으로\n잡기 실패가 줄어드는가?"), ("RQ2", "G2 주효과", "**G2**(카메라 보정)가\n배치 오차를 줄이는가?"),
-       ("RQ3", "G3 주효과", "**G3**(카메라 재배치)가\n불합격을 회복하는가?"), ("RQ4", "상호작용", "함께 켜면 효과가\n**더해지는가**?")]
+# 서브 연구 질문 4장
+RY5 = FY + FH + 0.08; RW5 = (W - 2 * M - 3 * 0.18) / 4
+rqs = [("RQ1", "G1 주효과", "잡기 실패가 줄어드는가?"), ("RQ2", "G2 주효과", "배치 오차가 줄어드는가?"),
+       ("RQ3", "G3 주효과", "불합격이 회복되는가?"), ("RQ4", "상호작용", "함께 켜면 **더해지는가**?")]
+QS5 = 16 if all(est_lines(b, RW5 - 0.36, 16) == 1 for _, _, b in rqs) else 15
 for k, (q, how, body) in enumerate(rqs):
     rx = M + k * (RW5 + 0.18)
-    card(s, rx, RY5, RW5, 6.92 - RY5, fill="canvas", line="hair", radius=0.16)
-    pill(s, rx + 0.15, RY5 + 0.14, 0.72, 0.32, q, "primary", "white", 13)
-    text(s, rx + 0.95, RY5 + 0.12, RW5 - 1.05, 0.36, how, 14, "charcoal", True, anchor=MSO_ANCHOR.MIDDLE)
-    text(s, rx + 0.15, RY5 + 0.56, RW5 - 0.3, 6.92 - RY5 - 0.62, body.split("\n"), 15, "inkdeep", spacing=1.08, after=1)
+    card(s, rx, RY5, RW5, 6.92 - RY5, fill="canvas", line="hair", radius=0.14)
+    pill(s, rx + 0.14, RY5 + 0.1, 0.66, 0.3, q, "primary", "white", 13)
+    text(s, rx + 0.88, RY5 + 0.08, RW5 - 0.98, 0.34, how, 14, "charcoal", True, anchor=MSO_ANCHOR.MIDDLE)
+    text(s, rx + 0.14, RY5 + 0.46, RW5 - 0.24, 6.92 - RY5 - 0.5, body, QS5, "inkdeep", spacing=1.0)
+print("p5 sizes: gap", GS5, "rq", QS5, "| RQ top", round(RY5, 2))
 footnote(s)
 
 # ═══════════════════════════ 6 연구 방법 (소형·대형 공통)
@@ -568,7 +595,7 @@ stages = [("① 시연 생성 · 교사", ("영상", "대본 시연 1장", "새 
            ["**방식**: 역기구학 대본", "**정보**: 정답 좌표 (시연에만)", "**선별**: 성공·합격 시연만", "**규모**: 소형 200 · 대형 벽 1,000개", "**단위**: 벽돌 1장 = 에피소드 1개"],
            f"스크립트 시연 86% > 사람 50% {c9}"),
           ("② 정책 학습 · 학생", ("사진", "정책 입력 3시점", "front · top · wrist 128² 캡처"),
-           [f"**정책**: ACT {cite('zhao')} · Diffusion {c10}", "**입력**: 카메라 3대 + 관절 (+ 목표)", "**출력**: 관절 목표 + 집게, 20 Hz", "**학습량**: 두 정책 같은 스텝·배치", "**반복**: 학습 seed · 마지막 체크포인트"],
+           [f"**정책**: ACT {cite('zhao')} · Diffusion {c10}", "**입력**: 카메라 3대 + 관절 (+ 목표)", "**출력**: 관절 목표 + 집게, 20 Hz", "**학습량**: 두 정책 같은 스텝·배치", "**사용**: 마지막 체크포인트"],
            "두 정책 비교 → 결론이 정책 선택에 안 묶임"),
           ("③ 정책 밖 검측 · 실행", ("영상", "G1·G2·G3 장면", "새 환경 · 들기 확인 · 보정 · 재배치"),
            ["**G1**: 들고 멈춘 뒤 하중 + 각도", "**G2**: 놓기 직전 위치 → 보정", "**G3**: 놓은 뒤 위치 → 1회 재배치", "**문턱**: 검증 배치로 정해 동결", "**위치**: 소형 정답 좌표 → 대형 카메라"],
@@ -861,13 +888,15 @@ text(s, M + 0.2, NY14, W - 2 * M - 0.4, 6.92 - NY14,
      "**학습량 근거**: 10만 스텝 × 32 ≈ 프레임 전체 1회 · 미니 학습(데이터 1/20)에서 손실 수렴 확인 · 두 정책 같은 학습량", 15, "inkdeep", anchor=MSO_ANCHOR.MIDDLE)
 
 # ═══════════════════════════ 15 참고문헌
-s = new(); T = chrome(s, 15, "참고문헌", "부록 · 참고문헌")
+s = new(); T = chrome(s, 15, "참고문헌")
+text(s, W - M - 7.2, NAV_H + 0.18, 7.2, 0.58, "서지 확인 2026-10-12 · 10-19 · preprint = 동료심사 게재 미확인", 14, "charcoal", align=PP_ALIGN.RIGHT, anchor=MSO_ANCHOR.MIDDLE)
 colw = (W - 2 * M - 0.3) / 2
-per = len(REF_ORDER) // 2
-for ci, sub in enumerate((REF_ORDER[:per], REF_ORDER[per:])):
-    items = [f"[{REF_ORDER.index(k) + 1}] {REFS[k][1]}" for k in sub]
-    text(s, M + ci * (colw + 0.3), T - 0.08, colw, 6.98 - T, items, 10, "ink", spacing=1.0, after=4)
-text(s, M, 7.02, W - 2 * M - 0.85, 0.34, "서지 확인 2026-10-12 · 10-19 (출판사·Crossref·arXiv·학회 페이지) · preprint 표시는 동료심사 게재 미확인", 11, "charcoal", anchor=MSO_ANCHOR.MIDDLE)
+items = [f"[{REF_ORDER.index(k) + 1}] {REFS[k][1]}" for k in REF_ORDER]
+nls = [est_lines(it, colw - 0.1, 10) + 0.35 for it in items]          # 0.35 ≈ 문단 뒤 간격
+per = min(range(1, len(items)), key=lambda i: max(sum(nls[:i]), sum(nls[i:]))) + 1   # 오른쪽 아래 쪽번호 자리 → 왼쪽에 한 편 더
+for ci, sub in enumerate((items[:per], items[per:])):
+    text(s, M + ci * (colw + 0.3), T - 0.1, colw, (7.38 if ci == 0 else 7.04) - T + 0.1, sub, 10, "ink", spacing=1.0, after=3)
+print("p15 split", per, "/", len(items), "est lines", round(sum(nls[:per]), 1), round(sum(nls[per:]), 1))
 
 assert len(prs.slides) == N_SLIDES, len(prs.slides)
 prs.save(OUT)

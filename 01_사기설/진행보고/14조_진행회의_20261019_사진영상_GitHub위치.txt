@@ -6,8 +6,8 @@
   01_사기설/진행보고/도구/자산/채움_<쪽>_<번호>.png 또는 .mp4
 
   [1쪽] (사진) 새 실험 환경 대표 화면 — 첨부하신 MuJoCo 화면 / UR10e · 받침대 · 적벽돌 3단 · 공급대 / 뷰어 왼쪽 메뉴는 잘라서
-  [2쪽] (사진) SAM 벽돌쌓기 — Construction Robotics / 공식 사진
-  [2쪽] (사진) Hadrian X 시공 — FBR 공식 사진
+  [2쪽] (영상) Hadrian 무편집 시공 영상 중 20~30초 — YouTube @FBR-ltd 공식 · 2026-01-28 · 1배속 ▶ 영상·사진 위치: https://www.youtube.com/watch?v=n6g03v_15Aw (무편집 1:22:00) · 소개 1:32 https://www.youtube.com/watch?v=eMIDJB3Pd-M
+  [2쪽] (영상) RebarBot 철근망 조립 영상 — rebarbot.github.io 공식 · 실패 장면 포함 ▶ 영상·사진 위치: https://rebarbot.github.io/static/videos/Video_1080p_crop.mp4 · 대안: BrickCraft 외란 영상(8배속 표기) https://intelligent-control-lab.github.io/BrickCraft
   [6쪽] (영상) 대본 시연 1장 — 새 환경 · 집기~철수 · 실시간
   [6쪽] (사진) 정책 입력 3시점 — front · top · wrist 128² 캡처
   [6쪽] (영상) G1·G2·G3 장면 — 새 환경 · 들기 확인 · 보정 · 재배치
