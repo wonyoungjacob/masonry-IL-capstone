@@ -114,6 +114,11 @@ else
 fi
 echo "{\"backend\": \"$BACKEND\", \"workers\": $WORKERS, \"concurrent\": $CONCURRENT, \"save_freq\": $SAVE_FREQ, \"runs\": \"$RUNS\", \"chosen\": \"$(stamp)\"}" > "$OUT/setting.json"
 say "setting: backend $BACKEND, workers $WORKERS, concurrent $CONCURRENT"
+# the dataset sits on a spinning disk (sda, HDD): read it once so its pages are in the page cache before random-access
+# training (13 GB, RAM 60 GB). 2026-10-19: training ran at ~1/10 of the benchmark when the pages were not cached.
+say "prewarm page cache: $DS"
+find "$DS" -type f \( -name "*.mp4" -o -name "*.parquet" \) -print0 | xargs -0 cat > /dev/null
+say "prewarm done"
 
 # ---------------------------------------------------------------- 4. one training under a watchdog
 status () { echo "$2" > "$OUT/$1.status.json"; }
@@ -137,7 +142,10 @@ train_one () {  # train_one <policy> <seed>
             --output_dir="$out" --job_name="wall3_main_$name" --wandb.enable=false)
     fi
     status "$name" "{\"start\": $start, \"attempts\": $attempt, \"result\": \"running\"}"
-    lerobot-train "${args[@]}" >> "$log" 2>&1 &
+    # each training in its own scope: if systemd-oomd kills it under memory pressure only this run dies and the watchdog
+    # resumes it from its last checkpoint (before, oomd killed the whole service including the watchdog; 2026-10-19)
+    systemd-run --user --scope --quiet --unit="wall3-tr-$name-$(date +%H%M%S)" -p ManagedOOMPreference=avoid \
+      lerobot-train "${args[@]}" >> "$log" 2>&1 &
     local pid=$!
     while kill -0 "$pid" 2>/dev/null; do
       sleep 30

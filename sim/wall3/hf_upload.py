@@ -101,6 +101,7 @@ def main():
     ap.add_argument("--train", required=True)
     ap.add_argument("--model", action="append", default=[], help="run_name=repo_id")
     ap.add_argument("--public", action="store_true")
+    ap.add_argument("--skip-dataset", action="store_true", help="dataset already uploaded: only wait for the models")
     a = ap.parse_args()
     from huggingface_hub import HfApi
     api = HfApi()
@@ -108,18 +109,19 @@ def main():
     private = not a.public
     root, log, train = Path(a.dataset), Path(a.merge_log), Path(a.train)
     # 1) dataset
-    while True:
+    while not a.skip_dataset:
         txt = log.read_text() if log.exists() else ""
         if any(l.startswith("done:") for l in txt.splitlines()):
             break
         if "깨짐" in txt or "실패" in txt:
             say("merge failed: dataset not uploaded"); return
         time.sleep(POLL)
-    chk = json.loads((root / "meta" / "wall3_check_videos.json").read_text())
-    ver = json.loads((root / "meta" / "wall3_verify.json").read_text())
-    if not (chk.get("ok") and ver.get("ok")):
-        say("dataset checks not ok: not uploaded"); return
-    upload_dataset(api, root, a.dataset_repo, private)
+    if not a.skip_dataset:
+        chk = json.loads((root / "meta" / "wall3_check_videos.json").read_text())
+        ver = json.loads((root / "meta" / "wall3_verify.json").read_text())
+        if not (chk.get("ok") and ver.get("ok")):
+            say("dataset checks not ok: not uploaded"); return
+        upload_dataset(api, root, a.dataset_repo, private)
     # 2) models, as each training finishes
     todo = dict(m.split("=", 1) for m in a.model)
     while todo:
