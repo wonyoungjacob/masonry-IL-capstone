@@ -33,22 +33,32 @@
    "policy": "diffusion",
    "seed": 1000,
    "start": 1792400103,
+   "end": 1792414214,
    "attempts": 1,
-   "result": "running",
-   "steps_logged": 27000,
+   "resumed": true,
+   "result": "done",
+   "steps_logged": 100000,
    "loss_first": 0.582,
-   "loss_last": 0.004,
-   "loss_last5_mean": 0.004,
-   "loss_min": 0.004,
-   "steps_per_s": 10.12,
-   "update_s_median": 0.06,
-   "data_s_median": 0.0875,
-   "checkpoint": "outputs/wall3/main_train_20261019/diffusion_s1000/checkpoints/020000/pretrained_model",
+   "loss_last": 0.001,
+   "loss_last5_mean": 0.0004,
+   "loss_min": 0.0,
+   "steps_per_s": 17.13,
+   "update_s_median": 0.057,
+   "data_s_median": 0.001,
+   "checkpoint": "outputs/wall3/main_train_20261019/diffusion_s1000/checkpoints/100000/pretrained_model",
    "checkpoint_step_dirs": [
     "010000",
-    "020000"
+    "020000",
+    "030000",
+    "040000",
+    "050000",
+    "060000",
+    "070000",
+    "080000",
+    "090000",
+    "100000"
    ],
-   "model_sha256": "5380438780aa1877bdee9261c79ffd06a702bef3ae6e2e460ef1a89b88c69453",
+   "model_sha256": "b8526a2cd8ce10753c46193d4973b8e491e3616845b19a8b59095c3aef46cad1",
    "input_features": [
     "observation.images.front",
     "observation.images.top",
@@ -60,6 +70,51 @@
     "n_action_steps": 32,
     "horizon": 64,
     "n_obs_steps": 2
+   },
+   "rollout": {
+    "policy": "diffusion",
+    "ckpt": "outputs/wall3/main_train_20261019/diffusion_s1000/checkpoints/last/pretrained_model",
+    "n_action_steps": 32,
+    "walls": 2,
+    "seeds": [
+     700300,
+     700301
+    ],
+    "lifted": 2,
+    "bricks": 32,
+    "retract_end": 8,
+    "stalled": 0,
+    "slots_filled_mean": 1.0,
+    "spec_pass": 0,
+    "iou_mean": 0.05061603517032794,
+    "final_xy_err_mm_median": 1216.3442632595666,
+    "final_xy_err_mm_of_lifted_median": 10.76200961026947,
+    "wall_clock_s": {
+     "median": 155.44865310192108,
+     "max": 170.79619932174683
+    },
+    "sim_s_per_wall_median": 235.07500000000002,
+    "iou_mean_per_wall": [
+     0.05418311886811703,
+     0.047048951472538854
+    ],
+    "filled_per_wall": [
+     1,
+     1
+    ],
+    "lifted_per_wall": [
+     1,
+     1
+    ],
+    "spec_per_wall": [
+     false,
+     false
+    ],
+    "wall_clock_s_per_wall": [
+     170.79619932174683,
+     140.10110688209534
+    ],
+    "scene_sha256": "10909a503935beef2b26ed12088d2a0e6d7383d55923407590cc4cebbe6eb864"
    }
   },
   {
@@ -68,15 +123,16 @@
    "seed": 1000,
    "start": 1792400083,
    "attempts": 1,
+   "resumed": true,
    "result": "running",
-   "steps_logged": 27000,
+   "steps_logged": 26000,
    "loss_first": 5.613,
-   "loss_last": 0.049,
-   "loss_last5_mean": 0.048799999999999996,
+   "loss_last": 0.05,
+   "loss_last5_mean": 0.0504,
    "loss_min": 0.048,
-   "steps_per_s": 12.844999999999999,
-   "update_s_median": 0.0335,
-   "data_s_median": 0.0595,
+   "steps_per_s": 13.22,
+   "update_s_median": 0.037,
+   "data_s_median": 0.044,
    "checkpoint": "outputs/wall3/main_train_20261019/act_s1000/checkpoints/020000/pretrained_model",
    "checkpoint_step_dirs": [
     "010000",
