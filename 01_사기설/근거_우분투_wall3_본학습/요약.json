@@ -23,7 +23,7 @@
   "concurrent": 2,
   "save_freq": 10000,
   "runs": "act 1000,diffusion 1000",
-  "chosen": "10-19 15:57:19"
+  "chosen": "10-19 17:54:35"
  },
  "bench": null,
  "stop": null,
