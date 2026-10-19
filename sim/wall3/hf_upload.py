@@ -69,6 +69,21 @@ UR10e + Robotiq 2F-140 brick laying in MuJoCo, one episode per brick.
 """
 
 
+def verify_remote(api, repo: str, repo_type: str, local: Path, skip=(".cache",)):
+    """Every local file is on the Hub with the same size (README.md is the card, written on the Hub only)."""
+    info = (api.dataset_info if repo_type == "dataset" else api.model_info)(repo, files_metadata=True)
+    remote = {s.rfilename: s.size for s in info.siblings}
+    loc = {str(f.relative_to(local)): f.stat().st_size for f in local.rglob("*") if f.is_file() and not f.relative_to(local).parts[0] in skip}
+    missing = sorted(f for f in loc if f not in remote)
+    differ = sorted(f for f in loc if f in remote and remote[f] != loc[f])
+    res = {"repo": repo, "type": repo_type, "private": info.private, "local_files": len(loc), "remote_files": len(remote),
+           "missing": missing[:20], "size_differs": differ[:20], "card": "README.md" in remote,
+           "bytes": sum(loc.values()), "ok": not missing and not differ and "README.md" in remote}
+    say("verify", repo, "OK" if res["ok"] else "PROBLEM", {k: res[k] for k in ("local_files", "remote_files", "card", "private")},
+        res["missing"][:3], res["size_differs"][:3])
+    return res
+
+
 def upload_dataset(api, root: Path, repo: str, private: bool):
     info = json.loads((root / "meta" / "info.json").read_text())
     api.create_repo(repo, repo_type="dataset", private=private, exist_ok=True)
@@ -91,6 +106,7 @@ def upload_model(api, train: Path, name: str, repo: str, dataset_repo: str, priv
     api.upload_folder(repo_id=repo, folder_path=str(ck), repo_type="model")
     api.upload_file(path_or_fileobj=model_card(train, name, repo, dataset_repo).encode(), path_in_repo="README.md", repo_id=repo, repo_type="model")
     say(f"model upload done: https://huggingface.co/{repo}")
+    return verify_remote(api, repo, "model", ck)
 
 
 def main():
@@ -102,6 +118,8 @@ def main():
     ap.add_argument("--model", action="append", default=[], help="run_name=repo_id")
     ap.add_argument("--public", action="store_true")
     ap.add_argument("--skip-dataset", action="store_true", help="dataset already uploaded: only wait for the models")
+    ap.add_argument("--record", default=str(Path(__file__).resolve().parents[2] / "01_사기설" / "근거_우분투_wall3_본학습" / "HF업로드.json"),
+                    help="upload + verification results (committed with the report)")
     a = ap.parse_args()
     from huggingface_hub import HfApi
     api = HfApi()
@@ -123,17 +141,22 @@ def main():
             say("dataset checks not ok: not uploaded"); return
         upload_dataset(api, root, a.dataset_repo, private)
     # 2) models, as each training finishes
+    rec = {"dataset": verify_remote(api, a.dataset_repo, "dataset", root), "models": {}}
     todo = dict(m.split("=", 1) for m in a.model)
     while todo:
         for name in list(todo):
             st = train / f"{name}.status.json"
             res = json.loads(st.read_text()).get("result") if st.exists() else None
             if res == "done":
-                upload_model(api, train, name, todo.pop(name), a.dataset_repo, private)
+                rec["models"][name] = upload_model(api, train, name, todo.pop(name), a.dataset_repo, private)
+                Path(a.record).write_text(json.dumps(rec, indent=1, ensure_ascii=False))
             elif res in ("failed", "stopped", "oom"):
                 say(f"{name} {res}: not uploaded"); todo.pop(name)
+                rec["models"][name] = {"uploaded": False, "result": res}
         if todo:
             time.sleep(POLL)
+    rec["time"] = time.strftime("%Y-%m-%d %H:%M")
+    Path(a.record).write_text(json.dumps(rec, indent=1, ensure_ascii=False))
     say("all uploads finished")
 
 
