@@ -122,23 +122,32 @@
    "policy": "act",
    "seed": 1000,
    "start": 1792400083,
-   "attempts": 1,
+   "end": 1792419206,
+   "attempts": 2,
    "resumed": true,
-   "result": "running",
-   "steps_logged": 26000,
+   "result": "done",
+   "steps_logged": 100000,
    "loss_first": 5.613,
-   "loss_last": 0.05,
-   "loss_last5_mean": 0.0504,
-   "loss_min": 0.048,
-   "steps_per_s": 13.22,
-   "update_s_median": 0.037,
-   "data_s_median": 0.044,
-   "checkpoint": "outputs/wall3/main_train_20261019/act_s1000/checkpoints/020000/pretrained_model",
+   "loss_last": 0.028,
+   "loss_last5_mean": 0.027800000000000002,
+   "loss_min": 0.027,
+   "steps_per_s": 22.06,
+   "update_s_median": 0.03,
+   "data_s_median": 0.012,
+   "checkpoint": "outputs/wall3/main_train_20261019/act_s1000/checkpoints/100000/pretrained_model",
    "checkpoint_step_dirs": [
     "010000",
-    "020000"
+    "020000",
+    "030000",
+    "040000",
+    "050000",
+    "060000",
+    "070000",
+    "080000",
+    "090000",
+    "100000"
    ],
-   "model_sha256": "3bf8fdff0a3ba1080927e7bfc504637bdfaa54b97f8fa7b15867c7c6d05a9d9b",
+   "model_sha256": "4e78a43b815ec1e3ce10a635b60b3f01f297252dce9e29a4783220809d40442e",
    "input_features": [
     "observation.images.front",
     "observation.images.top",
@@ -150,6 +159,51 @@
     "chunk_size": 100,
     "n_action_steps": 100,
     "n_obs_steps": 1
+   },
+   "rollout": {
+    "policy": "act",
+    "ckpt": "outputs/wall3/main_train_20261019/act_s1000/checkpoints/last/pretrained_model",
+    "n_action_steps": 100,
+    "walls": 2,
+    "seeds": [
+     700300,
+     700301
+    ],
+    "lifted": 2,
+    "bricks": 32,
+    "retract_end": 17,
+    "stalled": 0,
+    "slots_filled_mean": 2.0,
+    "spec_pass": 0,
+    "iou_mean": 0.09479242121236109,
+    "final_xy_err_mm_median": 1216.3442632595666,
+    "final_xy_err_mm_of_lifted_median": 13.001832305544156,
+    "wall_clock_s": {
+     "median": 26.77036952972412,
+     "max": 35.99151659011841
+    },
+    "sim_s_per_wall_median": 157.375,
+    "iou_mean_per_wall": [
+     0.09493699782322224,
+     0.09464784460149994
+    ],
+    "filled_per_wall": [
+     2,
+     2
+    ],
+    "lifted_per_wall": [
+     1,
+     1
+    ],
+    "spec_per_wall": [
+     false,
+     false
+    ],
+    "wall_clock_s_per_wall": [
+     35.99151659011841,
+     17.549222469329834
+    ],
+    "scene_sha256": "10909a503935beef2b26ed12088d2a0e6d7383d55923407590cc4cebbe6eb864"
    }
   }
  ]
