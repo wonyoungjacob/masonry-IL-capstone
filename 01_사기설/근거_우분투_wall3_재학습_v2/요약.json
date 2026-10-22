@@ -1,0 +1,44 @@
+{
+ "dataset": {
+  "root": "data/wall3_main_v2_20261022",
+  "episodes": 16000,
+  "frames": 2833187,
+  "dataset_sha256": "e74b408392a67899ebabb7dddab27818814e018ae81ce6df0a8956b9134916c9",
+  "content_sha256": "777ea463869ffa70309b806b8ef643da87189b98b0f644e7365bf28de0429b48",
+  "bytes": 13226670099,
+  "walls": 1000,
+  "seeds": [
+   710000,
+   711003
+  ],
+  "excluded_seeds": [
+   710462,
+   710548
+  ],
+  "freeze_commit": "482da46"
+ },
+ "setting": {
+  "backend": "torchcodec",
+  "workers": 8,
+  "concurrent": 1,
+  "save_freq": 10000,
+  "runs": "diffusion 1000,act 1000",
+  "chosen": "10-22 22:15:47"
+ },
+ "bench": null,
+ "stop": null,
+ "runs": [
+  {
+   "name": "diffusion_s1000",
+   "policy": "diffusion",
+   "seed": 1000,
+   "result": "not started"
+  },
+  {
+   "name": "act_s1000",
+   "policy": "act",
+   "seed": 1000,
+   "result": "not started"
+  }
+ ]
+}
