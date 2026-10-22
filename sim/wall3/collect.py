@@ -86,14 +86,14 @@ class StepLog:
 
 
 def one_wall(args):
-    seed, out_dir, record, env_version = args
+    seed, out_dir, record, env_version, expert_version = args
     from wall3.config import scene_config
     from wall3.scene import WallEnv
-    from wall3.expert import WallExpert
+    from wall3.expert import WallExpert, expert_config
     from wall3.spec_metrics import evaluate_env, sensitivity
     t0 = time.time()
     env = WallEnv(scene_config(env_version))
-    ex = WallExpert(env)
+    ex = WallExpert(env, expert_config(expert_version))
     log = StepLog(env)
     rec = None
     if record:
@@ -115,6 +115,7 @@ def one_wall(args):
     r["final_brick_poses"] = env.brick_poses().tolist()
     r["design"] = env.design
     r["env_version"] = env_version
+    r["expert_version"] = expert_version
     r["supply_initial"] = [[p.tolist(), float(y)] for p, y in env.supply]
     r["base_dist_m"] = [float(np.hypot(s["x"], s["y"])) for s in env.design]
     # 추가 지시 2: a wall whose expert grasp was released by condition ③ (force / twist / contact loss) even once is not
@@ -149,10 +150,12 @@ def main():
     ap.add_argument("--record-every", type=int, default=0, help="record every N-th wall to video/ (0 = none)")
     ap.add_argument("--target-pass", type=int, default=0, help="stop once this many walls pass the spec (0 = run all --n)")
     ap.add_argument("--env-version", required=True, help="pilot_20261016 | main_v1 (wall3.config.ENV_VERSIONS)")
+    ap.add_argument("--expert-version", default=None, help="wall3.expert.EXPERT_VERSIONS key (default: same as --env-version)")
     ap.add_argument("--stop-overload-frac", type=float, default=0.0, help="stop when walls with an overload release exceed this fraction")
     ap.add_argument("--stop-pass-rate-below", type=float, default=0.0, help="stop when the spec pass rate falls below this")
     ap.add_argument("--stop-min-n", type=int, default=100, help="walls finished before the stop rules apply")
     a = ap.parse_args()
+    a.expert_version = a.expert_version or a.env_version
     seeds = list(range(a.seed0, a.seed0 + a.n))
     in_pilot = PILOT[0] <= seeds[0] and seeds[-1] <= PILOT[1]
     in_main = MAIN[0] <= seeds[0] and seeds[-1] <= MAIN[1] and a.env_version == "main_v1"
@@ -166,11 +169,11 @@ def main():
     from wall3.expert import expert_config
     meta = {"git_commit": subprocess.check_output(["git", "-C", str(SIM), "rev-parse", "HEAD"], text=True).strip(),
             "git_dirty": bool(subprocess.check_output(["git", "-C", str(SIM), "status", "--porcelain", "--", "wall3"], text=True).strip()),
-            "assets": asset_info(), "env_version": a.env_version, "scene": scene_config(a.env_version).to_dict(), "expert": expert_config(a.env_version).to_dict(),
+            "assets": asset_info(), "env_version": a.env_version, "scene": scene_config(a.env_version).to_dict(), "expert_version": a.expert_version, "expert": expert_config(a.expert_version).to_dict(),
             "seeds": seeds, "phases": PHASES, "cams": CAMS, "args": vars(a), "nproc": os.cpu_count(),
             "started": time.strftime("%Y-%m-%d %H:%M:%S")}
     (out / "collect_config.json").write_text(json.dumps(meta, indent=1, default=float, ensure_ascii=False))
-    jobs = [(s, str(out), bool(a.record_every) and (s - a.seed0) % a.record_every == 0, a.env_version) for s in seeds]
+    jobs = [(s, str(out), bool(a.record_every) and (s - a.seed0) % a.record_every == 0, a.env_version, a.expert_version) for s in seeds]
     t0 = time.time()
     res, stop = [], None
 

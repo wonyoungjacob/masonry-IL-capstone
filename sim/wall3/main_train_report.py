@@ -91,6 +91,8 @@ def main():
     ap.add_argument("--final", action="store_true")
     ap.add_argument("--runs", default=",".join(f"{p} {s}" for p, s in ORDER), help='"act 1000,diffusion 1000,..."')
     ap.add_argument("--journal", default=str(REPO / "실험일지.md"), help="lab log the --final entry goes to")
+    ap.add_argument("--title", default="3층 벽체 본 학습", help="report title / lab-log heading")
+    ap.add_argument("--note", default=None, help="markdown paragraph under the title (e.g. what differs from the main training)")
     a = ap.parse_args()
     train, ds, out = Path(a.train), Path(a.dataset), Path(a.out_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -110,7 +112,7 @@ def main():
             "setting": setting, "bench": bench, "stop": stop, "runs": [{k: v for k, v in r.items() if k != "_curve"} for r in runs]}
     (out / "요약.json").write_text(json.dumps(summ, indent=1, ensure_ascii=False, default=float))
 
-    L = ["# 3층 벽체 본 학습 보고 (Ubuntu)", "",
+    L = [f"# {a.title} 보고 (Ubuntu)", "", *([a.note, ""] if a.note else []),
          "지시서: [`우분투지시_3층벽체_본학습.md`](../우분투지시_3층벽체_본학습.md). 이 보고서는 `sim/wall3/main_train_report.py`가 학습이 하나 끝날 때마다 다시 쓴다. "
          "요약 [`요약.json`](요약.json).", ""]
     if (out / "경위.md").exists():
@@ -168,9 +170,11 @@ def main():
         lines = [f"- {r['name']}: {(r['end'] - r['start']) / 3600:.1f} h, 손실 {r['loss_first']:.3f} → {r['loss_last']:.4f}"
                  + (f", 확인 2벽 들어 올림 {'/'.join(map(str, r['rollout']['lifted_per_wall']))}, 채움 {'/'.join(map(str, r['rollout']['filled_per_wall']))}" if r.get("rollout") else "")
                  for r in done]
-        entry = (f"# 실험일지\n\n## {time.strftime('%Y-%m-%d')} — 3층 벽체 본 학습 6번 (ACT·Diffusion × seed 1000·2000·3000, 10만 스텝) (Ubuntu, Claude Code)\n\n"
-                 f"상세 `01_사기설/근거_우분투_wall3_본학습/보고서.md`. 데이터 `{d['root']}` (에피소드 {d['episodes']:,}, 내용 해시 `{(d['content_sha256'] or '')[:12]}…`).\n"
-                 f"- 끝난 학습 {len(done)} / 6" + (f", 멈춤: {stop}" if stop else "") + f", 데이터 로딩 {setting.get('backend')} · 작업자 {setting.get('workers')} · 동시 {setting.get('concurrent')}\n"
+        head = ("3층 벽체 본 학습 6번 (ACT·Diffusion × seed 1000·2000·3000, 10만 스텝)" if a.title == "3층 벽체 본 학습"
+                else f"{a.title} ({', '.join(r['name'] for r in runs)}, 10만 스텝)")
+        entry = (f"# 실험일지\n\n## {time.strftime('%Y-%m-%d')} — {head} (Ubuntu, Claude Code)\n\n"
+                 f"상세 `01_사기설/{Path(a.out_dir).name}/보고서.md`. 데이터 `{d['root']}` (에피소드 {d['episodes']:,}, 내용 해시 `{(d['content_sha256'] or '')[:12]}…`).\n"
+                 f"- 끝난 학습 {len(done)} / {len(runs) if a.title != '3층 벽체 본 학습' else 6}" + (f", 멈춤: {stop}" if stop else "") + f", 데이터 로딩 {setting.get('backend')} · 작업자 {setting.get('workers')} · 동시 {setting.get('concurrent')}\n"
                  + "\n".join(lines) + "\n\n---\n\n")
         if not u.startswith("# 실험일지\n"):
             u = "# 실험일지\n" + u

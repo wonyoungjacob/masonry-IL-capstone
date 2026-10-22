@@ -20,6 +20,8 @@ CONVERT_LOG=${CONVERT_LOG:-outputs/wall3/main_20261018_convert_d.log}
 OUT=${OUT:-outputs/wall3/main_train_$(date +%Y%m%d)}
 REPO=$(cd .. && pwd)
 REPORT_DIR=${REPORT_DIR:-"$REPO/01_사기설/근거_우분투_wall3_본학습"}
+TAG=${TAG:-본학습}             # commit message prefix: "wall3 $TAG: ..." (재학습 v2 = "재학습_v2")
+TITLE=${TITLE:-}; NOTE=${NOTE:-}   # report title / note (main_train_report --title / --note; empty = 본 학습 defaults)
 STEPS=${STEPS:-100000}; SAVE_FREQ=${SAVE_FREQ:-10000}; LOG_FREQ=${LOG_FREQ:-200}; STALL_S=600; CONCURRENT=${CONCURRENT:-2}
 RESUME=${RESUME:-0}           # 1 = continue the runs in an existing $OUT from their checkpoints (after the 2026-10-19 reboot)
 UPLOAD_ARGS=${UPLOAD_ARGS:-}  # wall3.hf_upload arguments: models are uploaded only after every run has finished
@@ -44,7 +46,7 @@ commit () {  # commit <message> [extra paths...]
     flock 9
     cd "$REPO" || exit 0
     git pull -q --rebase --autostash || say "git pull failed"
-    git add "01_사기설/근거_우분투_wall3_본학습" "$@"
+    git add "$REPORT_DIR" "$@"
     git commit -q -m "$msg
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" || say "nothing to commit"
@@ -58,7 +60,10 @@ stop_now () {  # stop_now <reason>
 }
 
 report () {  # report [--final]
-  python -m wall3.main_train_report --train "$OUT" --dataset "$DS" --out-dir "$REPORT_DIR" --journal "$JOURNAL" --runs "$RUNS" "$@" >> "$OUT/report.log" 2>&1 \
+  local extra=()
+  [ -n "$TITLE" ] && extra+=(--title "$TITLE")
+  [ -n "$NOTE" ] && extra+=(--note "$NOTE")
+  python -m wall3.main_train_report --train "$OUT" --dataset "$DS" --out-dir "$REPORT_DIR" --journal "$JOURNAL" --runs "$RUNS" "${extra[@]}" "$@" >> "$OUT/report.log" 2>&1 \
     || say "report failed (see $OUT/report.log)"
 }
 
@@ -102,7 +107,7 @@ if ! python -c "import json,sys; sys.exit(0 if json.load(open('$OUT/start_check.
   stop_now "자동 시작 조건 실패: $(python -c "import json; d=json.load(open('$OUT/start_check.json')); print([k for k,v in d.items() if v is False])" 2>/dev/null || cat "$OUT/start_check.err")"
   mkdir -p "$REPORT_DIR"
   { echo "# 3층 벽체 본 학습 보고 (Ubuntu)"; echo; echo "> **멈춤:** $(cat "$OUT/STOP")"; echo; echo '```'; cat "$OUT/start_check.json"; echo '```'; } > "$REPORT_DIR/보고서.md"
-  commit "wall3 본학습: 자동 시작 조건 실패로 멈춤"
+  commit "wall3 $TAG: 자동 시작 조건 실패로 멈춤"
   exit 1
 fi
 say "start conditions ok"
@@ -237,7 +242,7 @@ EOF
       > "$OUT/rollout_$name.log" 2>&1 || say "rollout $name failed (see log)"
   fi
   report
-  commit "wall3 본학습: $name $result, 정상 동작 확인 2벽, 보고서 갱신"
+  commit "wall3 $TAG: $name $result, 정상 동작 확인 2벽, 보고서 갱신"
   say "POST $name done ($result)"
 }
 
@@ -248,9 +253,9 @@ declare -a POST=()
 next=0
 report
 if [ "$RESUME" = 1 ]; then
-  commit "wall3 본학습: 체크포인트에서 이어 하기 시작(순서 $RUNS, $BACKEND, 작업자 $WORKERS, 동시 $CONCURRENT)"
+  commit "wall3 $TAG: 체크포인트에서 이어 하기 시작(순서 $RUNS, $BACKEND, 작업자 $WORKERS, 동시 $CONCURRENT)"
 else
-  commit "wall3 본학습: 시작 조건 통과, 속도 설정($BACKEND, 작업자 $WORKERS, 동시 $CONCURRENT), 학습 시작"
+  commit "wall3 $TAG: 시작 조건 통과, 속도 설정($BACKEND, 작업자 $WORKERS, 동시 $CONCURRENT), 학습 시작"
 fi
 while true; do
   for key in "${!RUN[@]}"; do
@@ -276,5 +281,5 @@ if [ -n "$UPLOAD_ARGS" ] && [ "$DRY" != 1 ]; then              # models only aft
   python -m wall3.hf_upload $UPLOAD_ARGS >> "$OUT/hf_upload.log" 2>&1 || say "hf upload failed (see $OUT/hf_upload.log)"
   say "hf upload finished"
 fi
-commit "wall3 본학습: ${#QUEUE[@]}번 마무리$( [ -f "$OUT/STOP" ] && echo " (멈춤: $(cat "$OUT/STOP"))" ), 보고서·실험일지" "실험일지.md"
+commit "wall3 $TAG: ${#QUEUE[@]}번 마무리$( [ -f "$OUT/STOP" ] && echo " (멈춤: $(cat "$OUT/STOP"))" ), 보고서·실험일지" "실험일지.md"
 say "all done$( [ -f "$OUT/STOP" ] && echo " (STOP: $(cat "$OUT/STOP"))" )"
