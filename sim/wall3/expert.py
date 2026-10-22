@@ -58,6 +58,7 @@ class ExpertConfig:
 EXPERT_VERSIONS = {
     "pilot_20261016": dict(t_close=0.45, tcp_same_pass=False),
     "main_v1": dict(),
+    "main_v1_eval": dict(),          # same expert as main_v1 (only the mortar set time differs)
 }
 
 

@@ -60,19 +60,24 @@ def run_wall(env, policy, pre, post, cfg_in, seed, torch, rec=None, q_ret=None, 
         zmax = z0
         left, still, reason = False, 0, "timeout"
         qhist = []
-        while env.t - start < n_limit:
+        gate_steps = 0                                           # gate actions do not count in the brick time limit (2026-10-22)
+        while env.t - start - gate_steps < n_limit:
             obs = obs_of(env, k, cfg_in, torch)
             with torch.inference_mode():
                 act = post(policy.select_action(pre(obs))).squeeze(0).detach().cpu().numpy().astype(np.float64)
             if rec is not None:
                 rec.frame(f"policy brick {k + 1}", k)
+            t_b = env.t
             if gates is not None and gates.before(act):          # G2 / G3 took over this release
                 last = np.asarray(env.last_action, float).copy()
+                gate_steps += env.t - t_b
             else:
                 env.step(act[:6], float(act[6]))
                 last = act
                 if gates is not None:
+                    t_m = env.t
                     gates.after(act)                              # G1 (or carrying bookkeeping)
+                    gate_steps += env.t - t_m
             q = env.arm_q()
             qhist.append(q)
             zmax = max(zmax, env.brick_pose(k)[0][2])
@@ -86,6 +91,7 @@ def run_wall(env, policy, pre, post, cfg_in, seed, torch, rec=None, q_ret=None, 
                 break
         moved_last3s = float(np.abs(np.array(qhist[-60:]).max(0) - np.array(qhist[-60:]).min(0)).max()) if len(qhist) >= 60 else None
         bricks.append({"slot": k, "start": int(start), "end": int(env.t), "duration_s": (env.t - start) * dt, "end_reason": reason,
+                       "policy_time_s": (env.t - start - gate_steps) * dt, "gate_time_s": gate_steps * dt,
                        "grasped_lifted": bool(zmax > z0 + 0.02), "max_lift_mm": float((zmax - z0) * 1000),
                        "stalled": bool(reason == "timeout" and moved_last3s is not None and moved_last3s < 0.02),
                        "joint_range_last3s_rad": moved_last3s,

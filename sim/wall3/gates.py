@@ -44,7 +44,8 @@ class GateConfig:
     g3_tol_yaw_deg: float = 1.5
     g3_tol_z: float = 0.002          # m: brick centre above its place height by more than this (perched)
     g3_tol_tilt_deg: float = 2.0
-    g3_partial_margin: float = 0.003  # m: a partial view (up to ~2.5 mm error) decides 'bad' only beyond tol + this
+    g3_partial_margin: float | None = None  # m: decide 'bad' on a partial view beyond tol + this (None = wait for a full view;
+                                     #    only needed while the mortar set in 2 s, main_v1)
     min_time_left_s: float = 0.0     # G3 re-placement only if this much of the brick time limit is left (0 = always; 예비 확인 2026-10-20)
 
     def to_dict(self):
@@ -124,10 +125,6 @@ class WallGates:
             return
         if self.g1 is None:                                 # no check: treat as carrying
             self.carrying, self.hold_cmd = True, float(act[6])
-            return
-        if (self.deadline - self.env.t) < sum(max(1, int(round(t / self.dt))) for t in
-                                              (self.g1cfg.t_settle, self.g1cfg.t_load, self.g1cfg.t_squeeze, self.g1cfg.t_restore, self.g1cfg.t_open)):
-            self.ev["g1"].append({"t": int(self.env.t), "skipped": "time_limit"})
             return
         m = self.g1.measure(act[:6], float(act[6]), (lambda lb: self.on_frame(lb, self.k)) if self.on_frame else None)
         ok = self.g1.decide(m)
@@ -329,7 +326,8 @@ class WallGates:
                     dd = self.cam.find(xy, r=0.04, z_range=zr, L=L, yaw_prior=yaw_d)
                     if dd is not None and dd["full"]:
                         return dd
-                    if dd is not None and float(np.hypot(*(dd["pos"][:2] - xy))) > c.g3_tol_xy + c.g3_partial_margin:
+                    if c.g3_partial_margin is not None and dd is not None and \
+                            float(np.hypot(*(dd["pos"][:2] - xy))) > c.g3_tol_xy + c.g3_partial_margin:
                         dd["decided_on_partial"] = True                  # clearly off even with a partial view: no time to lose
                         return dd
                     d = dd if dd is not None else d
