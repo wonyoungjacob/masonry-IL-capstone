@@ -122,17 +122,89 @@
    "policy": "act",
    "seed": 1000,
    "start": 1792684467,
+   "end": 1792691008,
    "attempts": 1,
    "resumed": false,
-   "result": "running",
-   "steps_logged": 3000,
+   "result": "done",
+   "steps_logged": 100000,
    "loss_first": 5.572,
-   "loss_last": 0.228,
-   "loss_last5_mean": 0.2696,
-   "loss_min": 0.228,
-   "steps_per_s": 14.45,
-   "update_s_median": 0.038,
-   "data_s_median": 0.03
+   "loss_last": 0.025,
+   "loss_last5_mean": 0.025,
+   "loss_min": 0.025,
+   "steps_per_s": 15.76,
+   "update_s_median": 0.025,
+   "data_s_median": 0.039,
+   "checkpoint": "outputs/wall3/main_train_v2_20261022/act_s1000/checkpoints/100000/pretrained_model",
+   "checkpoint_step_dirs": [
+    "010000",
+    "020000",
+    "030000",
+    "040000",
+    "050000",
+    "060000",
+    "070000",
+    "080000",
+    "090000",
+    "100000"
+   ],
+   "model_sha256": "8ad4fe3fe52e31bdc84ed3ea2fd966bfb0e4b501b63eef2b04307724c84bf440",
+   "input_features": [
+    "observation.images.front",
+    "observation.images.top",
+    "observation.images.wrist",
+    "observation.state",
+    "observation.environment_state"
+   ],
+   "chunk": {
+    "chunk_size": 100,
+    "n_action_steps": 100,
+    "n_obs_steps": 1
+   },
+   "rollout": {
+    "policy": "act",
+    "ckpt": "outputs/wall3/main_train_v2_20261022/act_s1000/checkpoints/last/pretrained_model",
+    "n_action_steps": 100,
+    "walls": 2,
+    "seeds": [
+     700300,
+     700301
+    ],
+    "lifted": 2,
+    "bricks": 32,
+    "retract_end": 30,
+    "stalled": 0,
+    "slots_filled_mean": 2.0,
+    "spec_pass": 0,
+    "iou_mean": 0.09156411436582529,
+    "final_xy_err_mm_median": 1216.3442632595666,
+    "final_xy_err_mm_of_lifted_median": 21.185844416925168,
+    "wall_clock_s": {
+     "median": 27.178887367248535,
+     "max": 36.109392404556274
+    },
+    "sim_s_per_wall_median": 164.125,
+    "iou_mean_per_wall": [
+     0.08743228792116606,
+     0.09569594081048452
+    ],
+    "filled_per_wall": [
+     2,
+     2
+    ],
+    "lifted_per_wall": [
+     1,
+     1
+    ],
+    "spec_per_wall": [
+     false,
+     false
+    ],
+    "wall_clock_s_per_wall": [
+     36.109392404556274,
+     18.248382329940796
+    ],
+    "scene_sha256": "10909a503935beef2b26ed12088d2a0e6d7383d55923407590cc4cebbe6eb864"
+   }
   }
  ]
 }
