@@ -1,0 +1,286 @@
+{
+ "act_none": {
+  "walls": 100,
+  "spec_pass": 0,
+  "slots_filled_mean": 1.92,
+  "iou_mean": 0.0953567019096119,
+  "filled_rate_by_slot": [
+   0.95,
+   0.94,
+   0.02,
+   0.01,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "lifted_rate_by_slot": [
+   1.0,
+   0.36,
+   0.08,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "filled_err_mm": {
+   "n": 192,
+   "median": 16.062551843434953,
+   "p90": 25.420164955657633
+  },
+  "policy_time_s_per_brick": 10.60965625,
+  "gate_time_s_per_brick": 0.0,
+  "wall_clock_s_per_wall": 35.44306911945343,
+  "dirs": [
+   "act_none_part0",
+   "act_none_part1",
+   "act_none_part2",
+   "act_none_part3",
+   "act_none_part4"
+  ],
+  "git_commits": [
+   "ede5543"
+  ]
+ },
+ "act_all": {
+  "walls": 100,
+  "spec_pass": 0,
+  "slots_filled_mean": 2.08,
+  "iou_mean": 0.12088955972342977,
+  "filled_rate_by_slot": [
+   1.0,
+   0.9,
+   0.08,
+   0.09,
+   0.01,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "lifted_rate_by_slot": [
+   1.0,
+   0.97,
+   0.15,
+   0.01,
+   0.02,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "filled_err_mm": {
+   "n": 208,
+   "median": 0.6391659669076564,
+   "p90": 7.080780822633737
+  },
+  "policy_time_s_per_brick": 16.4711875,
+  "gate_time_s_per_brick": 11.845999999999998,
+  "wall_clock_s_per_wall": 125.570335521698,
+  "gates": {
+   "g1_checks": 14698,
+   "g1_grasped": 231,
+   "g1_grasped_but_target_not_lifted": 22,
+   "g2_releases": 251,
+   "g2_in_hand_by_camera": 225,
+   "g2_in_hand_err_mm_median": 0.3,
+   "g3_inspections": 204,
+   "g3_seen": 180,
+   "g3_bad": 47,
+   "g3_replaced": 47,
+   "g3_meas_err_mm_median": 0.32,
+   "g3_replace_after_mm_median": 0.35
+  },
+  "dirs": [
+   "act_all_part0",
+   "act_all_part1",
+   "act_all_part2",
+   "act_all_part3",
+   "act_all_part4"
+  ],
+  "git_commits": [
+   "ede5543"
+  ]
+ },
+ "diffusion_none": {
+  "walls": 100,
+  "spec_pass": 0,
+  "slots_filled_mean": 0.24,
+  "iou_mean": 0.006480141009812529,
+  "filled_rate_by_slot": [
+   0.18,
+   0.04,
+   0.0,
+   0.0,
+   0.02,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "lifted_rate_by_slot": [
+   0.98,
+   0.26,
+   0.08,
+   0.05,
+   0.05,
+   0.15,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "filled_err_mm": {
+   "n": 24,
+   "median": 37.295118578350035,
+   "p90": 168.9393135769822
+  },
+  "policy_time_s_per_brick": 14.640718750000001,
+  "gate_time_s_per_brick": 0.0,
+  "wall_clock_s_per_wall": 514.6275006103516,
+  "dirs": [
+   "diffusion_none_part0",
+   "diffusion_none_part1",
+   "diffusion_none_part2",
+   "diffusion_none_part3",
+   "diffusion_none_part4"
+  ],
+  "git_commits": [
+   "58f1650",
+   "ede5543"
+  ]
+ },
+ "diffusion_all": {
+  "walls": 100,
+  "spec_pass": 0,
+  "slots_filled_mean": 1.07,
+  "iou_mean": 0.05275505866942983,
+  "filled_rate_by_slot": [
+   0.67,
+   0.16,
+   0.04,
+   0.05,
+   0.03,
+   0.08,
+   0.02,
+   0.01,
+   0.01,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "lifted_rate_by_slot": [
+   1.0,
+   0.15,
+   0.06,
+   0.07,
+   0.07,
+   0.41,
+   0.01,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "filled_err_mm": {
+   "n": 107,
+   "median": 1.3718600511714014,
+   "p90": 36.272922313390744
+  },
+  "policy_time_s_per_brick": 15.21040625,
+  "gate_time_s_per_brick": 10.75171875,
+  "wall_clock_s_per_wall": 533.3961905574798,
+  "gates": {
+   "g1_checks": 12798,
+   "g1_grasped": 266,
+   "g1_grasped_but_target_not_lifted": 95,
+   "g2_releases": 312,
+   "g2_in_hand_by_camera": 217,
+   "g2_in_hand_err_mm_median": 0.83,
+   "g3_inspections": 227,
+   "g3_seen": 175,
+   "g3_bad": 98,
+   "g3_replaced": 85,
+   "g3_meas_err_mm_median": 0.4,
+   "g3_replace_after_mm_median": 0.56
+  },
+  "dirs": [
+   "diffusion_all_part0",
+   "diffusion_all_fix_700320",
+   "diffusion_all_fix_700330",
+   "diffusion_all_fix_700340",
+   "diffusion_all_fix_700350",
+   "diffusion_all_fix_700360",
+   "diffusion_all_fix_700370",
+   "diffusion_all_fix_700380",
+   "diffusion_all_fix_700390"
+  ],
+  "git_commits": [
+   "58b962b",
+   "58f1650"
+  ]
+ },
+ "_meta": {
+  "note": "diffusion_all = part0(20) + \uace0\uce5c \ucf54\ub4dc(58b962b) \ub2e4\uc2dc \ub3cc\ub9ac\uae30 80\ubcbd. \uc911\ub2e8\ub41c part1 \u00b7 part2 \u00b7 part3 \u00b7 part4\uc758 \ubd80\ubd84 \uacb0\uacfc\ub294 \ub123\uc9c0 \uc54a\uc74c",
+  "excluded_partial_dirs": [
+   "diffusion_all_part1",
+   "diffusion_all_part2",
+   "diffusion_all_part3",
+   "diffusion_all_part4"
+  ],
+  "made": "2026-10-22 21:57:37"
+ }
+}
