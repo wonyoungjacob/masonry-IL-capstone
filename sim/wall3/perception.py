@@ -163,7 +163,7 @@ class BrickPoseEstimator:
             return None
         tilt = float(np.degrees(np.arccos(np.clip(nrm[2], -1, 1))))
         z_top = float(np.percentile(pts[:, 2], 90))
-        y0, y1, x0, x1 = max(ys.min() - 8, 0), ys.max() + 9, max(xs.min() - 8, 0), xs.max() + 9
+        y0, y1, x0, x1 = max(ys.min() - 8, 0), min(ys.max() + 9, hgt.shape[0]), max(xs.min() - 8, 0), min(xs.max() + 9, hgt.shape[1])   # clip at the image border
         z_ref = float(np.median(pts[:, 2]))
         own = np.zeros((y1 - y0, x1 - x0), np.uint8); own[ys - y0, xs - x0] = 1
         own = cv2.dilate(own, np.ones((5, 5), np.uint8)).astype(bool)
