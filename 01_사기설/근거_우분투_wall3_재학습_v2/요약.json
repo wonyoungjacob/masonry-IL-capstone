@@ -19,11 +19,11 @@
  },
  "setting": {
   "backend": "torchcodec",
-  "workers": 8,
+  "workers": 4,
   "concurrent": 1,
   "save_freq": 10000,
   "runs": "diffusion 1000,act 1000",
-  "chosen": "10-22 22:15:47"
+  "chosen": "10-22 22:35:01"
  },
  "bench": null,
  "stop": null,
