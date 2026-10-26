@@ -110,6 +110,7 @@ def main():
     ap.add_argument("--k0", type=int, nargs="+", required=True, help="first brick given to the policy (bricks 0..k0-1 by the expert)")
     ap.add_argument("--n-bricks", type=int, default=1)
     ap.add_argument("--out-dir", required=True)
+    ap.add_argument("--expert-version", default=None, help="expert for bricks 0..k0-1 (default: same as --env-version; v2 data = main_v2)")
     ap.add_argument("--tag", required=True, help="file name prefix: <out-dir>/<tag>_k<k0>.json")
     ap.add_argument("--record", default=None, help="mp4 of the first seed (first k0 only)")
     a = ap.parse_args()
@@ -123,11 +124,11 @@ def main():
     from eval_policy import load_policy
     from wall3.config import scene_config, RETRACT_Q
     from wall3.scene import WallEnv
-    from wall3.expert import WallExpert
+    from wall3.expert import WallExpert, expert_config
     policy, pcfg, pre, post = load_policy(a.ckpt, "cuda", None, None)
     cfg_in = set(pcfg.input_features)
     env = WallEnv(scene_config(a.env_version))
-    ex = WallExpert(env)
+    ex = WallExpert(env, expert_config(a.expert_version or a.env_version))
     q_ret = np.array(RETRACT_Q)
     commit = subprocess.check_output(["git", "-C", str(SIM), "rev-parse", "HEAD"], text=True).strip()
     for j, k0 in enumerate(a.k0):
@@ -150,7 +151,7 @@ def main():
             print(f"[{pcfg.type}] seed {seed} k0 {k0}: " + "; ".join(
                 f"brick {b['slot']} lifted {b['target_lifted']} closes {b['n_closes']} other {b['other_lifted']} {b['end_reason']} "
                 f"final xy {b['final']['xy_mm']:.1f} mm yaw {b['final']['yaw_deg']:.1f} laid moved {b['laid_moved_mm']}" for b in bricks), flush=True)
-            outs[k0].write_text(json.dumps({"meta": {"ckpt": a.ckpt, "policy": pcfg.type, "env_version": a.env_version, "k0": k0,
+            outs[k0].write_text(json.dumps({"meta": {"ckpt": a.ckpt, "policy": pcfg.type, "env_version": a.env_version, "expert_version": a.expert_version or a.env_version, "k0": k0,
                                                      "seeds": a.seeds, "git_commit": commit, "script": "diag_handoff v2"},
                                             "runs": res}, indent=1, default=float))
     env.close()

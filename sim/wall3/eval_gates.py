@@ -12,8 +12,11 @@ from pathlib import Path
 import numpy as np
 
 SIM = Path(__file__).resolve().parents[1]
-CKPT = {"act": "outputs/wall3/main_train_20261019/act_s1000/checkpoints/last/pretrained_model",
-        "diffusion": "outputs/wall3/main_train_20261019/diffusion_s1000/checkpoints/last/pretrained_model"}
+CKPT_DIR = "outputs/wall3/main_train_20261019"       # 본 학습 (v1 데이터); 재학습 v2 = outputs/wall3/main_train_v2_20261022
+
+
+def ckpts(train_dir):
+    return {p: f"{train_dir}/{p}_s1000/checkpoints/last/pretrained_model" for p in ("act", "diffusion")}
 COND = {"none": [], "all": ["--g1", "--g2", "--g3"]}
 
 
@@ -60,12 +63,14 @@ def main():
     ap.add_argument("--chunks", type=int, default=4)
     ap.add_argument("--parallel", type=int, default=8)
     ap.add_argument("--env-version", default="main_v1_eval")
+    ap.add_argument("--train-dir", default=CKPT_DIR, help="training output with {act,diffusion}_s1000")
     a = ap.parse_args()
     out = Path(a.out)
     if out.exists():
         raise SystemExit(f"{out} 이미 있음")
     out.mkdir(parents=True)
     seeds = list(range(a.seed0, a.seed0 + a.n))
+    CKPT = ckpts(a.train_dir)
     jobs = []
     for pol in a.policies:
         for cond in a.conditions:
