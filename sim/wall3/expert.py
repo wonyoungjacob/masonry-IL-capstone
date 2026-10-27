@@ -19,6 +19,12 @@ from wall3.ik import UR10eIK, wrap, down_R
 from wall3.poses import dz_pad, yaw_of_quat
 from wall3.scene import WallEnv, _quat_rotmat
 
+
+def rot_angle(R, Rt):
+    """True rotation angle between two rotation matrices (rad)."""
+    return float(np.arccos(np.clip((np.trace(R.T @ Rt) - 1.0) / 2.0, -1.0, 1.0)))
+
+
 KP, KD = 5000.0, 500.0                      # UR10e Menagerie actuator gain / damping (gainprm, biasprm)
 
 
@@ -49,15 +55,33 @@ class ExpertConfig:
     lag_wall: float = 0.35                  # supply → wall: rotate away from the table before descending
     t_unload: float = 0.10                  # s, before opening: bring the finger command to the stalled closure (grip force → 0
                                             # on both fingers together) so the opening finger does not shove the brick
+    # main_v2 (2026-10-22): one wrist branch per brick. main_v1 demos split between two (or more) wrist_3 angles for the same
+    # brick: (a) a 180° grasp / place flip chosen by a near-tie rule, (b) IK accepting a pose turned 180° about the tool axis
+    # (ik.rot_err is 0 at 180°), fixed above the wall by spinning the wrist half a turn in one step. Off = main_v1 behaviour.
+    ik_angle_check: bool = False            # accept an IK solution only if the true rotation error (angle) is small
+    grasp_wrist_ref: tuple | None = None    # rad per slot: grasp with the flip whose wrist_3 is closest to this
+    place_wrist_ref: tuple | None = None    # rad per slot: place with the flip whose wrist_3 is closest to this
+    max_cart_wrist_step: float | None = None  # rad, a straight-line move whose wrist_3 jumps more than this in one step fails
 
     def to_dict(self):
-        return asdict(self)
+        d = asdict(self)
+        for k in ("ik_angle_check", "grasp_wrist_ref", "place_wrist_ref", "max_cart_wrist_step"):
+            if not d[k]:
+                d.pop(k)
+        return d
 
 
 # expert settings per environment version (pilot_20261016 reproduces the pilot demos exactly)
 EXPERT_VERSIONS = {
     "pilot_20261016": dict(t_close=0.45, tcp_same_pass=False),
     "main_v1": dict(),
+    "main_v1_eval": dict(),          # same expert as main_v1 (only the mortar set time differs)
+    # main_v2 (2026-10-22, 사용자 결정): main_v1 + one wrist branch per brick for the grasp and one for the place (not necessarily
+    # the same). References = wrist_3 of the largest branch in the main_v1 dataset (data/wall3_main_20261019, 1000 walls) at the
+    # moment the fingers start closing / opening (wall3/diag_demo_modes.py); slots 0, 2, 3, 4, 5, 15 had other branches.
+    "main_v2": dict(ik_angle_check=True, max_cart_wrist_step=0.3,
+                    grasp_wrist_ref=(-1.487, -1.455, -1.935, 0.946, 0.761, -1.211, -1.036, -0.657, 0.62, 0.433, 0.327, -1.012, -0.815, 0.264, -0.06, -0.074),
+                    place_wrist_ref=(-2.796, 0.043, -0.294, -0.6, -0.831, 0.407, 0.201, -0.125, -0.455, -0.726, -0.878, 0.344, 0.043, -0.294, -0.6, -0.831)),
 }
 
 
@@ -188,9 +212,15 @@ class WallExpert:
         n = max(1, int(np.ceil(T / self.dt)))
         path, q = [], self.q_cmd
         for s in minjerk(n):
+            q_prev = q
             q, ep, er = self.ik.solve_from(q, p0 + s * (np.asarray(p_to) - p0), R)
+            if self.cfg.ik_angle_check:
+                er = rot_angle(self.ik.fk(q)[1], R)
             if ep > 1e-3 or er > 1e-2:
                 self.fail = f"ik_cartesian:{phase}"
+                return
+            if self.cfg.max_cart_wrist_step and abs(q[5] - q_prev[5]) > self.cfg.max_cart_wrist_step:
+                self.fail = f"wrist_jump:{phase}:{q[5] - q_prev[5]:+.2f}"
                 return
             path.append(q)
         self._play(np.array(path), grip, held, phase)
@@ -199,13 +229,33 @@ class WallExpert:
         self._play(np.repeat(self.q_cmd[None], n, axis=0), grip, held, phase)
 
     def _solve(self, p, R, q_ref, pan_ref):
-        q, info = self.ik.solve(p, R, q_ref, seeds=self._seeds(p, q_ref))
+        if self.cfg.ik_angle_check:
+            q = self._solve_checked(p, R, q_ref)
+        else:
+            q, info = self.ik.solve(p, R, q_ref, seeds=self._seeds(p, q_ref))
         if q is None:
             return None
         q = q.copy()
         q[0] = pan_ref + wrap(q[0] - pan_ref)          # keep the pan on the side it came from (no net winding)
         q[5] = q_ref[5] + wrap(q[5] - q_ref[5])
         return q
+
+    def _solve_checked(self, p, R, q_ref, tol_p=2e-4, tol_ang=2e-3):
+        """ik.solve with the true rotation angle as the orientation test (ik.rot_err vanishes at 180°) and the seeds repeated
+        with wrist_3 turned by ±90° / 180°, so a seed half a turn off can still converge to the right pose."""
+        best = None
+        for s0 in self._seeds(p, q_ref):
+            for dw in (0.0, np.pi / 2, -np.pi / 2, np.pi):
+                sd = np.array(s0, float); sd[5] += dw
+                q, ep, _ = self.ik.solve_from(sd, p, R)
+                if ep > tol_p or rot_angle(self.ik.fk(q)[1], R) > tol_ang:
+                    continue
+                if min(self.ik.margins(q).values()) < 0 or not self.ik.branch_ok(q, p):
+                    continue
+                cost = float(np.sum(wrap(q - q_ref) ** 2))
+                if best is None or cost < best[1]:
+                    best = (q, cost)
+        return None if best is None else best[0]
 
     def _seeds(self, p, q_ref):
         from wall3.ik import PAN_OFFSET
@@ -284,13 +334,17 @@ class WallExpert:
         pb, qb = env.brick_pose(k)
         yaw_b = yaw_of_quat(qb)
         best = None
+        ref = self.q_ret[5] if c.grasp_wrist_ref is None else c.grasp_wrist_ref[k]
         for yaw in (yaw_b, yaw_b + np.pi):
             R = down_R(yaw)
             q_app = self._solve(pb + [0, 0, self.dzp + c.approach], R, self.q_ret, self.q_ret[0])
-            if q_app is not None and (best is None or abs(q_app[5] - self.q_ret[5]) < abs(best[1][5] - self.q_ret[5])):
+            if q_app is not None and (best is None or abs(q_app[5] - ref) < abs(best[1][5] - ref)):
                 best = (R, q_app)
         if best is None:
             return {"fail": "ik_supply"}
+        if c.grasp_wrist_ref is not None and abs(best[1][5] - ref) > np.pi / 2:      # only the other branch was reachable
+            self.fail = f"wrist_branch:grasp:{best[1][5]:+.2f}"
+            return {}
         R_s, q_app = best
         self._joint_move(q_app, 0.0, None, "to_supply", lag=c.lag_supply)
         if self.fail:
@@ -328,9 +382,14 @@ class WallExpert:
             p_tcp = p_d - R_tcp @ rel_p
             q_w = self._solve(p_tcp + [0, 0, c.approach], R_tcp, self.q_ret, self.q_ret[0])
             if q_w is not None:
-                cands.append((abs(q_w[5] - self.q_cmd[5]) + 0.3 * abs(q_w[5] - self.q_ret[5]), Rf, R_tcp, p_tcp, q_w))
+                cost = (abs(q_w[5] - self.q_cmd[5]) + 0.3 * abs(q_w[5] - self.q_ret[5]) if c.place_wrist_ref is None
+                        else abs(q_w[5] - c.place_wrist_ref[k]))
+                cands.append((cost, Rf, R_tcp, p_tcp, q_w))
         if not cands:
             self.fail = "ik_wall"
+            return {}
+        if c.place_wrist_ref is not None and min(x[0] for x in cands) > np.pi / 2:  # only the other branch was reachable
+            self.fail = f"wrist_branch:place:{min(cands, key=lambda x: x[0])[4][5]:+.2f}"
             return {}
         _, Rf, R_tcp, p_tcp, q_w = min(cands, key=lambda x: x[0])
         self._joint_move(q_w, grip, held, "to_wall", lag=c.lag_wall)

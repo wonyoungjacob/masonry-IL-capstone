@@ -460,7 +460,8 @@ class WallEnv:
             on_wall = abs(p[1] - WALL_Y) < 0.02 and x_lo < p[0] < x_hi and p[2] > 0.3 * H
             ok = on_wall and self._static(i) and self.hand_clear(p)
             self.settle_count[i] = self.settle_count[i] + 1 if ok else 0
-            if self.settle_count[i] >= c.cure_settle_steps:
+            n_cure = c.cure_settle_steps if c.cure_time_s is None else int(round(c.cure_time_s / c.ctrl_dt))
+            if self.settle_count[i] >= n_cure:
                 eq = m.equality(f"cure_{i}").id
                 qi = np.r_[q[0], -q[1:]]
                 m.eq_data[eq, 0:3] = 0.0

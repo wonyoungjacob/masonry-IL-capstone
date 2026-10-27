@@ -1,0 +1,210 @@
+{
+ "dataset": {
+  "root": "data/wall3_main_v2_20261022",
+  "episodes": 16000,
+  "frames": 2833187,
+  "dataset_sha256": "e74b408392a67899ebabb7dddab27818814e018ae81ce6df0a8956b9134916c9",
+  "content_sha256": "777ea463869ffa70309b806b8ef643da87189b98b0f644e7365bf28de0429b48",
+  "bytes": 13226670099,
+  "walls": 1000,
+  "seeds": [
+   710000,
+   711003
+  ],
+  "excluded_seeds": [
+   710462,
+   710548
+  ],
+  "freeze_commit": "482da46"
+ },
+ "setting": {
+  "backend": "torchcodec",
+  "workers": 4,
+  "concurrent": 1,
+  "save_freq": 10000,
+  "runs": "diffusion 1000,act 1000",
+  "chosen": "10-22 22:35:01"
+ },
+ "bench": null,
+ "stop": null,
+ "runs": [
+  {
+   "name": "diffusion_s1000",
+   "policy": "diffusion",
+   "seed": 1000,
+   "start": 1792676106,
+   "end": 1792684450,
+   "attempts": 1,
+   "resumed": false,
+   "result": "done",
+   "steps_logged": 100000,
+   "loss_first": 0.57,
+   "loss_last": 0.0,
+   "loss_last5_mean": 0.0,
+   "loss_min": 0.0,
+   "steps_per_s": 14.68,
+   "update_s_median": 0.052,
+   "data_s_median": 0.015,
+   "checkpoint": "outputs/wall3/main_train_v2_20261022/diffusion_s1000/checkpoints/100000/pretrained_model",
+   "checkpoint_step_dirs": [
+    "010000",
+    "020000",
+    "030000",
+    "040000",
+    "050000",
+    "060000",
+    "070000",
+    "080000",
+    "090000",
+    "100000"
+   ],
+   "model_sha256": "498b3748d793ab2741462e59669480f6cfb0e3d449900752823485b258f01213",
+   "input_features": [
+    "observation.images.front",
+    "observation.images.top",
+    "observation.images.wrist",
+    "observation.state",
+    "observation.environment_state"
+   ],
+   "chunk": {
+    "n_action_steps": 32,
+    "horizon": 64,
+    "n_obs_steps": 2
+   },
+   "rollout": {
+    "policy": "diffusion",
+    "ckpt": "outputs/wall3/main_train_v2_20261022/diffusion_s1000/checkpoints/last/pretrained_model",
+    "n_action_steps": 32,
+    "walls": 2,
+    "seeds": [
+     700300,
+     700301
+    ],
+    "lifted": 7,
+    "bricks": 32,
+    "retract_end": 13,
+    "stalled": 0,
+    "slots_filled_mean": 3.0,
+    "spec_pass": 0,
+    "iou_mean": 0.14890333402370637,
+    "final_xy_err_mm_median": 1165.3754541752328,
+    "final_xy_err_mm_of_lifted_median": 18.34587964639472,
+    "wall_clock_s": {
+     "median": 124.62485408782959,
+     "max": 133.0698537826538
+    },
+    "sim_s_per_wall_median": 218.75,
+    "iou_mean_per_wall": [
+     0.151288478737317,
+     0.14651818931009572
+    ],
+    "filled_per_wall": [
+     3,
+     3
+    ],
+    "lifted_per_wall": [
+     4,
+     3
+    ],
+    "spec_per_wall": [
+     false,
+     false
+    ],
+    "wall_clock_s_per_wall": [
+     133.0698537826538,
+     116.17985439300537
+    ],
+    "scene_sha256": "10909a503935beef2b26ed12088d2a0e6d7383d55923407590cc4cebbe6eb864"
+   }
+  },
+  {
+   "name": "act_s1000",
+   "policy": "act",
+   "seed": 1000,
+   "start": 1792684467,
+   "end": 1792691008,
+   "attempts": 1,
+   "resumed": false,
+   "result": "done",
+   "steps_logged": 100000,
+   "loss_first": 5.572,
+   "loss_last": 0.025,
+   "loss_last5_mean": 0.025,
+   "loss_min": 0.025,
+   "steps_per_s": 15.76,
+   "update_s_median": 0.025,
+   "data_s_median": 0.039,
+   "checkpoint": "outputs/wall3/main_train_v2_20261022/act_s1000/checkpoints/100000/pretrained_model",
+   "checkpoint_step_dirs": [
+    "010000",
+    "020000",
+    "030000",
+    "040000",
+    "050000",
+    "060000",
+    "070000",
+    "080000",
+    "090000",
+    "100000"
+   ],
+   "model_sha256": "8ad4fe3fe52e31bdc84ed3ea2fd966bfb0e4b501b63eef2b04307724c84bf440",
+   "input_features": [
+    "observation.images.front",
+    "observation.images.top",
+    "observation.images.wrist",
+    "observation.state",
+    "observation.environment_state"
+   ],
+   "chunk": {
+    "chunk_size": 100,
+    "n_action_steps": 100,
+    "n_obs_steps": 1
+   },
+   "rollout": {
+    "policy": "act",
+    "ckpt": "outputs/wall3/main_train_v2_20261022/act_s1000/checkpoints/last/pretrained_model",
+    "n_action_steps": 100,
+    "walls": 2,
+    "seeds": [
+     700300,
+     700301
+    ],
+    "lifted": 2,
+    "bricks": 32,
+    "retract_end": 30,
+    "stalled": 0,
+    "slots_filled_mean": 2.0,
+    "spec_pass": 0,
+    "iou_mean": 0.09156411436582529,
+    "final_xy_err_mm_median": 1216.3442632595666,
+    "final_xy_err_mm_of_lifted_median": 21.185844416925168,
+    "wall_clock_s": {
+     "median": 27.178887367248535,
+     "max": 36.109392404556274
+    },
+    "sim_s_per_wall_median": 164.125,
+    "iou_mean_per_wall": [
+     0.08743228792116606,
+     0.09569594081048452
+    ],
+    "filled_per_wall": [
+     2,
+     2
+    ],
+    "lifted_per_wall": [
+     1,
+     1
+    ],
+    "spec_per_wall": [
+     false,
+     false
+    ],
+    "wall_clock_s_per_wall": [
+     36.109392404556274,
+     18.248382329940796
+    ],
+    "scene_sha256": "10909a503935beef2b26ed12088d2a0e6d7383d55923407590cc4cebbe6eb864"
+   }
+  }
+ ]
+}

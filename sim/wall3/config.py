@@ -88,7 +88,11 @@ class SceneConfig:
     mortar_zeta: float = 1.0
     mortar_friction: float = 0.75
     bed_overhang: float = 0.002
-    cure_settle_steps: int = 40                 # 2 s at 20 Hz
+    cure_settle_steps: int = 40                 # 2 s at 20 Hz: bed laying (next course) waits for this, and the brick cure below
+    # brick cure (mortar set) time. None = cure_settle_steps (2 s, main_v1 as frozen). The evaluation environment
+    # (2026-10-22, 사용자 결정) uses a real mortar's initial setting time: placed bricks stay movable on the fresh bed for
+    # the whole wall (they rest on the compliant bed with friction), and the next course is laid as before (2 s still).
+    cure_time_s: float | None = None
     hand_clear: float = 0.05                    # TCP farther than this from the brick centre = hand off the brick
     # bed laying check (brick_sim brick_in_slot tolerances)
     slot_tol_xy: float = 0.008
@@ -110,6 +114,8 @@ class SceneConfig:
 
     def to_dict(self):
         d = asdict(self)
+        if d.get("cure_time_s") is None:        # keeps the frozen main_v1 config dict (and its hash) unchanged
+            d.pop("cure_time_s", None)
         return d
 
 
@@ -119,6 +125,9 @@ ENV_VERSIONS = {
     "pilot_20261016": dict(brick_rgba=((0.62, 0.62, 0.60, 1.0), (0.58, 0.58, 0.56, 1.0)), ctrl_interp="linear",
                            mortar_stiffness="brick_sim", integrator="implicitfast", arm_damping="actuator", grip_lock=False),
     "main_v1": dict(),
+    # 평가용 (2026-10-22, 사용자 결정): main_v1 + 실제 모르타르처럼 벽 하나 쌓는 동안 굳지 않음. 시멘트 모르타르 초결은 보통 수 시간
+    # (KS L 5103 / ASTM C191 계열 시험, 조적 모르타르 가사 시간 약 2 ~ 2.5 h) → 2 h. 정책 학습 데이터(main_v1, 2 s 경화)와 다른 점은 이것뿐
+    "main_v1_eval": dict(cure_time_s=7200.0),
 }
 
 
