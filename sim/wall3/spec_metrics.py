@@ -8,7 +8,9 @@
 - ① 1단 아랫면–바닥: 원천 정의상 음수가 생기지 않지만, MuJoCo 소프트 접촉은 벽돌을 바닥에 0.1 mm 안팎 파묻는다.
   −0.5 mm까지는 접촉 침투로 보고 0으로 판정한다(원값 base_min_raw_mm 기록). 그보다 깊으면 불합격.
 - ④ 1단 양 끝면: 먹선 위치와 비교하므로 끝면의 아래 모서리(바닥과 만나는 선)로 잰다.
-- ②·③·④ 허용오차의 길이 ℓ: 실제로 잰 길이(② ④ = 벽 길이, ③ = 벽 높이). 이 벽은 하한 2 mm가 적용된다.
+- ②·③·④ 허용오차의 길이 ℓ: 실제로 잰 길이(② ④ = 벽 길이, ③ = 벽 높이).
+  기준 길이(②③ 3 m, ④ 9 m)보다 짧으면 원천값 6 mm를 그대로 적용한다(문언 적용, 2026-10-27 팀 결정).
+  구 C안(비례 축소 + 하한)은 mode="scaled"로 다시 채점할 수 있다.
 - ② 기준 길이 3 m 초과의 '임의의 3 m 구간' 창 검사는 이 벽(0.99 m)에 필요 없어 전체 길이 꺾은선으로만 구현했다.
 """
 import numpy as np
@@ -16,7 +18,8 @@ from scipy.optimize import linear_sum_assignment
 
 from brick_sim.volume import box, intersection
 
-FLOOR_TOL = 0.002          # m, 하한 (C안)
+TOL_MODE = "literal"       # 2026-10-27: 기준 길이 미만도 6 mm 그대로. "scaled" = 구 C안(비례 축소 + 하한)
+FLOOR_TOL = 0.002          # m, 구 C안의 하한 (mode="scaled"에서만 씀)
 BASE_PENETRATION = 0.0005  # m, 1단 아랫면–바닥 거리의 접촉 침투 허용 (구현 해석)
 EXIST_XY, EXIST_Z, EXIST_TILT = 0.045, 0.0285, 45.0
 SAMPLE_DX = 0.010
@@ -28,16 +31,24 @@ def _interp(pts, l):
     return float(np.interp(l, xs, ys))
 
 
-def tol_line(l, floor=FLOOR_TOL):          # ② 선 및 면
-    return max(floor, _interp([(0, 0), (3, 0.006), (12, 0.013), (1e9, 0.013)], l))
+def _tol(pts, l, floor, mode):
+    if mode == "literal":                  # 기준 길이 미만 구간은 첫 원천값(6 mm) 그대로
+        return _interp([(0, pts[1][1])] + pts[1:], l)
+    if mode == "scaled":                   # 구 C안: 0에서 비례, 하한 floor
+        return max(floor, _interp(pts, l))
+    raise ValueError(mode)
 
 
-def tol_plumb(l, floor=FLOOR_TOL):         # ③ 수직도
-    return max(floor, _interp([(0, 0), (3, 0.006), (6, 0.010), (12, 0.013), (1e9, 0.013)], l))
+def tol_line(l, floor=FLOOR_TOL, mode=TOL_MODE):          # ② 선 및 면
+    return _tol([(0, 0), (3, 0.006), (12, 0.013), (1e9, 0.013)], l, floor, mode)
 
 
-def tol_position(l, floor=FLOOR_TOL):      # ④ 평면상 위치
-    return max(floor, _interp([(0, 0), (9, 0.006), (18, 0.013), (1e9, 0.013)], l))
+def tol_plumb(l, floor=FLOOR_TOL, mode=TOL_MODE):         # ③ 수직도
+    return _tol([(0, 0), (3, 0.006), (6, 0.010), (12, 0.013), (1e9, 0.013)], l, floor, mode)
+
+
+def tol_position(l, floor=FLOOR_TOL, mode=TOL_MODE):      # ④ 평면상 위치
+    return _tol([(0, 0), (9, 0.006), (18, 0.013), (1e9, 0.013)], l, floor, mode)
 
 
 BED_TOL = (0.007, 0.013)                   # ① 1–2단·2–3단
@@ -116,7 +127,7 @@ def _edge_at_y(a, b, y):
 
 
 # ---------------------------------------------------------------- evaluation
-def evaluate(poses, lengths, design, width, height, front_y, front_dir=(0.0, 1.0, 0.0), floor_z=0.0, floor_tol=FLOOR_TOL):
+def evaluate(poses, lengths, design, width, height, front_y, front_dir=(0.0, 1.0, 0.0), floor_z=0.0, floor_tol=FLOOR_TOL, mode=TOL_MODE):
     """poses: (N, 7) world pos + quat (w, x, y, z); lengths: (N,) brick length along its long axis; design: slots
     (dict x, y, z, yaw, L, course, index); front_y: world y of the design front face (y_f). Returns a dict (m → mm)."""
     poses = np.asarray(poses, float)
@@ -183,7 +194,7 @@ def evaluate(poses, lengths, design, width, height, front_y, front_dir=(0.0, 1.0
     allc = np.array([B[k].corners() for k in present]).reshape(-1, 3) if present else np.zeros((0, 3))
     wall_len = float(allc[:, 0].max() - allc[:, 0].min()) if len(allc) else 0.0
     wall_h = float(allc[:, 2].max() - floor_z) if len(allc) else 0.0
-    t2 = tol_line(wall_len, floor_tol)
+    t2 = tol_line(wall_len, floor_tol, mode)
     level = {}
     for c, ks in by_course.items():
         z = np.array([B[k].corner(f, True, l)[2] for k in ks for f in (True, False) for l in (True, False)])
@@ -216,7 +227,7 @@ def evaluate(poses, lengths, design, width, height, front_y, front_dir=(0.0, 1.0
         return None if q is None else yp(q[1])
 
     # ---- ③ plumb (front face vs course-1 bottom front edge at the same x; end faces vs course-1 end bottom edge)
-    t3 = tol_plumb(wall_h, floor_tol)
+    t3 = tol_plumb(wall_h, floor_tol, mode)
     d3, worst3 = 0.0, None
     c1 = by_course.get(1, [])
     for x in xs:
@@ -259,7 +270,7 @@ def evaluate(poses, lengths, design, width, height, front_y, front_dir=(0.0, 1.0
                       "pass": bool(v3 <= t3 + 1e-12), "worst_slot": worst3}
 
     # ---- ④ plan position (course-1 front bottom edge vs y_f; course-1 end faces' bottom edge vs design end x)
-    t4 = tol_position(wall_len, floor_tol)
+    t4 = tol_position(wall_len, floor_tol, mode)
     front4, w4f = 0.0, None
     for k in c1:
         for l in (True, False):
@@ -320,13 +331,15 @@ def evaluate(poses, lengths, design, width, height, front_y, front_dir=(0.0, 1.0
     return res
 
 
-def evaluate_env(env, floor_tol=FLOOR_TOL):
+def evaluate_env(env, floor_tol=FLOOR_TOL, mode=TOL_MODE):
     """Evaluate a wall3 WallEnv at its current state (bricks i ↔ design i only through the matching)."""
     from wall3.config import W, H, WALL_Y
     lengths = [s["L"] for s in env.design]
-    return evaluate(env.brick_poses(), lengths, env.design, W, H, front_y=WALL_Y + W / 2, floor_tol=floor_tol)
+    return evaluate(env.brick_poses(), lengths, env.design, W, H, front_y=WALL_Y + W / 2, floor_tol=floor_tol, mode=mode)
 
 
 def sensitivity(env_or_args, floors=(0.001, 0.002, 0.003)):
-    """Spec pass with the floor tolerance at 1, 2, 3 mm (2.5절 민감도)."""
-    return {f"{int(round(f * 1e3))}mm": evaluate_env(env_or_args, floor_tol=f)["spec_pass"] for f in floors}
+    """Spec pass re-scored under the old C안 (scaled, floor 1·2·3 mm) next to the literal rule (2.5절 재채점)."""
+    out = {f"{int(round(f * 1e3))}mm": evaluate_env(env_or_args, floor_tol=f, mode="scaled")["spec_pass"] for f in floors}
+    out["literal"] = evaluate_env(env_or_args, mode="literal")["spec_pass"]
+    return out
