@@ -3,6 +3,7 @@
 - 로봇·집게 모델 파일은 고치지 않는다. UR10e는 Menagerie 파일을 MjSpec으로 읽어 받침대 위로 옮기고, 집게는 wall3.gripper로 붙인다.
 - 모르타르는 brick_sim(mortarB) 모델 그대로: 아래 단 벽돌이 모두 제자리에 놓여 2 s 정지하면 그 실제 윗면 위에 두께 10 mm 순응층
   (벽돌마다 한 장 + 세로줄눈 위 다리 한 장, mocap)을 깔고, 벽 위치에 놓인 벽돌은 2 s 정지 뒤 고정(weld)한다. 1단 아래는 없다.
+  bed_rule "placed"(main_v1_eval_bed, 2026-10-30): '제자리' 대신 '공급대를 떠남'이면 깐다(삐뚤어도 그 실제 윗면 위에).
   침하량은 두께에 비례해 0.5 mm × 10 / 4.737 = 1.06 mm, 감쇠비 1, 계면 마찰 0.75.
 - 카메라: front(벽 앞면 쪽에서 고정), top(벽 위 고정), wrist(손목), 정책용 128×128. 검측용 top 고해상도 RGB-D(1280×960).
   overview(녹화용 자유 시점 대신 쓰는 고정 시점, 정책 입력 아님).
@@ -345,6 +346,7 @@ class WallEnv:
         self.settle_count = np.zeros(self.n, int)
         self.bed_count = {1: np.zeros(self.n, int), 2: np.zeros(self.n, int)}
         self.bed_laid = {1: -1, 2: -1}
+        self.bed_blocked = {1: 0, 2: 0}       # bed_rule "placed": steps the bed was ready but would sink into an upper brick
         self.lock_b = -1                      # brick currently welded to the gripper (-1 = none)
         self.lock_events = []                 # lock / release records (info only, never a policy or G1 input)
         self._close_t0, self._cmd_max, self._cmd_lock = None, 0.0, 0.0
@@ -449,6 +451,13 @@ class WallEnv:
             return False
         return np.degrees(abs((yaw - dsg["yaw"] + np.pi / 2) % np.pi - np.pi / 2)) <= c.slot_tol_yaw_deg
 
+    def on_table(self, i):
+        """Brick i rests on the supply table (inside the table outline, at the table-top height)."""
+        c = self.cfg
+        p, _ = self.brick_pose(i)
+        return bool(c.table_x[0] < p[0] < c.table_x[1] and c.table_y[0] < p[1] < c.table_y[1]
+                    and abs(p[2] - (c.table_h + H / 2)) < 0.02)
+
     def _update_cure(self):
         m, d, c = self.model, self.data, self.cfg
         xs = [s["x"] for s in self.design]
@@ -486,14 +495,16 @@ class WallEnv:
         return float(-d.contact.dist[:n][sel].mean()) if sel.any() else np.nan
 
     def _update_bed(self, bnd):
-        """Lay the mortar bed on course `bnd` once every brick of it is in its slot, static for 2 s and the hand is off."""
+        """Lay the mortar bed on course `bnd` once every brick of it is in its slot (bed_rule "placed": off the supply table),
+        static for 2 s and the hand is off."""
         c, d, m = self.cfg, self.data, self.model
         info = self.beds[bnd]
         cnt = self.bed_count[bnd]
         ready = True
         for i in info["lower"]:
             p, _ = self.brick_pose(i)
-            ok = self.in_slot(i) and self._static(i) and self.hand_clear(p)
+            placed = self.in_slot(i) if c.bed_rule == "in_slot" else not self.on_table(i)
+            ok = placed and self._static(i) and self.hand_clear(p)
             cnt[i] = cnt[i] + 1 if ok else 0
             ready &= cnt[i] >= c.cure_settle_steps
         if not ready:
@@ -514,7 +525,24 @@ class WallEnv:
             d.mocap_pos[self.bed_mocap[nm]] = [((pl[0] + Ll / 2) + (pr[0] - Lr / 2)) / 2, (cl[1] + cr[1]) / 2, (cl[2] + cr[2]) / 2]
             d.mocap_quat[self.bed_mocap[nm]] = [1, 0, 0, 0]
         mujoco.mj_forward(m, d)
+        if c.bed_rule == "placed" and self._bed_sinks(info):
+            for nm in info["slabs"] + info["joints"]:
+                d.mocap_pos[self.bed_mocap[nm]] = [0, 0, -1]
+            mujoco.mj_forward(m, d)
+            self.bed_blocked[bnd] += 1
+            return
         self.bed_laid[bnd] = self.t
+
+    def _bed_sinks(self, info, depth=0.001):
+        """A slab of this bed overlaps a brick of the course above by more than `depth` (the bed pairs are with those only)."""
+        d = self.data
+        n = d.ncon
+        if n == 0:
+            return False
+        g = d.contact.geom[:n]
+        mine = np.array([self.bed_gid[nm] for nm in info["slabs"] + info["joints"]])
+        sel = np.isin(g[:, 0], mine) | np.isin(g[:, 1], mine)
+        return bool((d.contact.dist[:n][sel] < -depth).any())
 
     # ------------------------------------------------------------------ grip lock (나2 결정, 현실성 조건 1 ~ 6)
     def _rel_pose(self, b):
