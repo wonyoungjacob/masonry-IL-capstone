@@ -24,6 +24,8 @@ def main():
     ap.add_argument("--env-version", default="main_v1_eval")
     ap.add_argument("--seeds", type=int, nargs="+", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--gate-pose-source", choices=("camera", "truth"), default="camera", help="= rollout (2026-11-03)")
+    ap.add_argument("--gate-target", choices=("turn", "held_truth", "held_grasp"), default="turn", help="= rollout (2026-11-03)")
     ap.add_argument("--compare", nargs="*", default=[], help="rollout.json files of the evaluation run to compare with")
     a = ap.parse_args()
     if any(not (700300 <= s <= 700399) for s in a.seeds):
@@ -42,14 +44,16 @@ def main():
     from wall3.config import scene_config, RETRACT_Q
     from wall3.scene import WallEnv
     from wall3.g1 import G1Config
-    from wall3.gates import WallGates
+    from wall3.gates import WallGates, GateConfig
     from wall3.rollout import run_wall
     policy, pcfg, pre, post = load_policy(a.ckpt, "cuda", None, None)
     cfg_in = set(pcfg.input_features)
     env = WallEnv(scene_config(a.env_version))
     q_ret = np.array(RETRACT_Q)
-    gates = WallGates(env, policy, g1=True, g2=True, g3=True, g1_cfg=G1Config(thr_load=4.5, thr_angle=0.47))   # = rollout --g1 --g2 --g3
+    gates = WallGates(env, policy, g1=True, g2=True, g3=True, g1_cfg=G1Config(thr_load=4.5, thr_angle=0.47),
+                      cfg=GateConfig(pose_source=a.gate_pose_source, target=a.gate_target))   # = rollout --g1 --g2 --g3
     meta = {"ckpt": a.ckpt, "env_version": a.env_version, "policy_type": pcfg.type, "gates": gates.summary_config(),
+            "gate_pose_source": a.gate_pose_source, "gate_target": a.gate_target,
             "git_commit": subprocess.check_output(["git", "-C", str(SIM), "rev-parse", "HEAD"], text=True).strip(),
             "scene_sha256": hashlib.sha256(json.dumps(env.cfg.to_dict(), sort_keys=True, default=float).encode()).hexdigest(),
             "script": "diag_trace", "src_codes": SRC}
@@ -65,6 +69,7 @@ def main():
         tp, R = env.tcp()
         log["t"].append(env.t)
         log["k"].append(getattr(gates, "k", -1))
+        log["tgt"].append(getattr(gates, "tgt", -1))                 # gate reference slot (= k for target turn)
         log["src"].append(state["src"])
         log["pose"].append(P.astype(np.float32))
         log["tcp"].append(np.r_[tp, np.arctan2(R[1, 0], R[0, 0])].astype(np.float32))
@@ -87,10 +92,11 @@ def main():
 
     res = []
     for seed in a.seeds:
-        for key in ("t", "k", "src", "pose", "tcp", "lock", "grip"):
+        for key in ("t", "k", "tgt", "src", "pose", "tcp", "lock", "grip"):
             log[key] = []
         r = run_wall(env, policy, pre, post, cfg_in, seed, torch, None, q_ret, gates)
         np.savez_compressed(out / f"trace_{seed}.npz", t=np.array(log["t"], np.int32), k=np.array(log["k"], np.int8),
+                            tgt=np.array(log["tgt"], np.int8),
                             src=np.array(log["src"], np.int8), pose=np.stack(log["pose"]), tcp=np.stack(log["tcp"]),
                             lock=np.array(log["lock"], np.int8), grip=np.array(log["grip"], np.float32))
         r["lock_events"] = env.lock_events

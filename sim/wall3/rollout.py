@@ -125,7 +125,13 @@ def main():
     ap.add_argument("--g3", action="store_true", help="G3 post-release inspection + one re-placement (top camera)")
     ap.add_argument("--g1-thr-load", type=float, default=4.5, help="N (임시값)")
     ap.add_argument("--g1-thr-angle", type=float, default=0.47, help="rad (임시값)")
+    ap.add_argument("--gate-pose-source", choices=("camera", "truth"), default="camera",
+                    help="G2 · G3 brick poses from the camera, or the simulator truth (진단 전용, 2026-11-03)")
+    ap.add_argument("--gate-target", choices=("turn", "held_truth", "held_grasp"), default="turn",
+                    help="G2 · G3 reference slot: turn k / brick lifted (truth, 진단) / nearest supply slot at the G1 moment")
     a = ap.parse_args()
+    if (a.gate_pose_source != "camera" or a.gate_target != "turn") and not (a.g2 or a.g3):
+        raise SystemExit("--gate-pose-source / --gate-target 는 --g2 또는 --g3 와 함께만")
     if any(not any(lo <= s <= hi for lo, hi in ALLOWED) for s in a.seeds):
         raise SystemExit(f"롤아웃 시작값은 파일럿 블록 미사용 값 {ALLOWED}만")
     out = Path(a.out)
@@ -143,13 +149,15 @@ def main():
     gates = None
     if a.g1 or a.g2 or a.g3:
         from wall3.g1 import G1Config
-        from wall3.gates import WallGates
+        from wall3.gates import WallGates, GateConfig
         gates = WallGates(env, policy, g1=a.g1, g2=a.g2, g3=a.g3,
-                          g1_cfg=G1Config(thr_load=a.g1_thr_load, thr_angle=a.g1_thr_angle))
+                          g1_cfg=G1Config(thr_load=a.g1_thr_load, thr_angle=a.g1_thr_angle),
+                          cfg=GateConfig(pose_source=a.gate_pose_source, target=a.gate_target))
     meta = {"ckpt": a.ckpt, "env_version": a.env_version, "policy_type": pcfg.type, "n_action_steps": pcfg.n_action_steps,
             "input_features": {k: list(v.shape) for k, v in pcfg.input_features.items()},
             "git_commit": subprocess.check_output(["git", "-C", str(SIM), "rev-parse", "HEAD"], text=True).strip(), "limit_s": LIMIT_S,
             "gates": (gates.summary_config() if gates is not None else None),
+            "gate_pose_source": a.gate_pose_source, "gate_target": a.gate_target,
             "scene_sha256": hashlib.sha256(json.dumps(env.cfg.to_dict(), sort_keys=True, default=float).encode()).hexdigest()}
     res = []
     for i, seed in enumerate(a.seeds):
@@ -167,7 +175,7 @@ def main():
               f"stalled {sum(x['stalled'] for x in b)}, filled {sum(ev['slots_filled'])}/16, spec {ev['spec_pass']}, IoU mean {ev['iou_mean']:.3f}, "
               f"median xy err {np.median([x['final_xy_err_mm'] for x in b]):.1f} mm, wall {r['wall_clock_s']:.0f} s (sim {r['sim_s']:.0f} s)"
               + (f", G1 checks {sum('grasped' in c for x in b for c in x['gates']['g1'])} (not grasped {sum(c.get('grasped') is False for x in b for c in x['gates']['g1'])}),"
-                 f" G2 {sum(len(x['gates']['g2']) for x in b)}, G3 {sum(len(x['gates']['g3']) for x in b)}"
+                 f" G2 {sum(not e.get('skipped') for x in b for e in x['gates']['g2'])} (far {sum(e.get('skipped') == 'far' for x in b for e in x['gates']['g2'])}), G3 {sum(len(x['gates']['g3']) for x in b)}"
                  f" (re-placed {sum(isinstance(e.get('replace'), dict) for x in b for e in x['gates']['g3'])})" if gates is not None else ""), flush=True)
         (out / "rollout.json").write_text(json.dumps({"meta": meta, "walls": res}, indent=1, default=float))
     env.close()

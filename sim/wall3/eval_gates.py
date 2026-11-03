@@ -18,6 +18,26 @@ CKPT_DIR = "outputs/wall3/main_train_20261019"       # 본 학습 (v1 데이터)
 def ckpts(train_dir):
     return {p: f"{train_dir}/{p}_s1000/checkpoints/last/pretrained_model" for p in ("act", "diffusion")}
 COND = {"none": [], "all": ["--g1", "--g2", "--g3"]}
+# 2026-11-03 (우분투지시_검측정보진단_20261103.md 2.4): what the gates use (truth = 진단 전용) and G1 · G2 · G3 on / off
+_TRUTH, _HT, _HG = ["--gate-pose-source", "truth"], ["--gate-target", "held_truth"], ["--gate-target", "held_grasp"]
+COND.update({"all_truth": COND["all"] + _TRUTH, "all_truth_held": COND["all"] + _TRUTH + _HT, "all_held": COND["all"] + _HG,
+             "g1": ["--g1"], "g1g2": ["--g1", "--g2"], "g1g3": ["--g1", "--g3"], "g2g3": ["--g2", "--g3"],
+             "g1g2_held": ["--g1", "--g2"] + _HG, "g1g3_held": ["--g1", "--g3"] + _HG, "g2g3_held": ["--g2", "--g3"] + _HG})
+PERCH_MM = 20.0          # 'filled' but the brick centre more than this above its design height (10-29: perched on a neighbour)
+
+
+def perched_filled(walls):
+    """(seed, slot) of 'filled' slots whose occupant (the brick matched to the slot by spec_metrics) sits more than PERCH_MM
+    above the slot's design height."""
+    from wall3.config import design_slots
+    D = design_slots()
+    out = []
+    for w in walls:
+        err = {b["slot"]: b["final_err_mm"] for b in w["bricks"]}
+        for j, (f, i) in enumerate(zip(w["eval"]["slots_filled"], w["eval"]["match"])):
+            if f and i >= 0 and (D[i]["z"] - D[j]["z"]) * 1000 + err[i][2] > PERCH_MM:
+                out.append((w["seed"], j))
+    return out
 
 
 def summarize(walls):
@@ -35,9 +55,15 @@ def summarize(walls):
            "policy_time_s_per_brick": float(np.mean([b.get("policy_time_s", b["duration_s"]) for b in br])),
            "gate_time_s_per_brick": float(np.mean([b.get("gate_time_s", 0.0) for b in br])),
            "wall_clock_s_per_wall": float(np.mean([w["wall_clock_s"] for w in walls]))}
+    # 2026-11-03
+    fb = filled.astype(bool)
+    first = [int(np.argmin(f)) if not f.all() else len(f) for f in fb]               # first unfilled slot (0-based; 16 = complete)
+    out.update(walls_complete=int(fb.all(1).sum()), slots_filled_median=float(np.median(filled.sum(1))),
+               first_unfilled_hist={str(i): first.count(i) for i in range(filled.shape[1] + 1) if first.count(i)},
+               filled_but_perched=len(perched_filled(walls)))
     if g:
         g1 = [e for x in g for e in x["g1"] if "grasped" in e]
-        g2 = [e for x in g for e in x["g2"] if not e.get("release_here")]
+        g2 = [e for x in g for e in x["g2"] if not e.get("release_here") and not e.get("skipped")]
         g3 = [e for x in g for e in x["g3"]]
         rep = [e["replace"] for e in g3 if isinstance(e.get("replace"), dict)]
         out["gates"] = {
@@ -50,6 +76,26 @@ def summarize(walls):
             "g3_replaced": len(rep), "g3_meas_err_mm_median": float(np.median([e["audit_meas_err_mm"] for e in g3 if "audit_meas_err_mm" in e]))
             if any("audit_meas_err_mm" in e for e in g3) else None,
             "g3_replace_after_mm_median": float(np.median([r["audit_after_mm"] for r in rep if "audit_after_mm" in r])) if rep else None}
+        # 2026-11-03: G2 / G3 interventions (the release went to the gate), releases skipped 15 cm away from the reference slot,
+        # G1 'grasped' where the lifted brick (audit) was the turn's brick, in-hand pose measured (camera or truth)
+        g1k = [(e, b["slot"]) for b in br if b.get("gates") for e in b["gates"]["g1"] if e.get("grasped")]
+        out["gates"].update(
+            g2_interventions=len([e for x in g for e in x["g2"] if not e.get("skipped")]),
+            g2_skipped_far=sum(e.get("skipped") == "far" for x in g for e in x["g2"]),
+            g2_in_hand_measured=sum(e.get("in_hand_src") in ("camera", "truth") for e in g2),
+            g1_grasped_turn_brick=sum(e.get("audit_max_rise_brick") == k and (e.get("audit_max_rise_mm") or 0) > 10 for e, k in g1k))
+        tg = [e for x in g for e in x.get("target", []) if e.get("used")]
+        if tg:
+            t1 = [e for e in tg if e.get("g1_grasped") is True]
+            ok = [e for e in t1 if e.get("audit_brick") is not None]
+            match = sum(not e.get("undetermined") and e["slot"] == e["audit_brick"] for e in ok)
+            out["gates"]["target"] = {
+                "method": sorted({e["method"] for e in tg}), "decisions": len(tg),
+                "undetermined": sum(bool(e.get("undetermined")) for e in tg),
+                "g1_true": len(t1), "g1_true_no_brick_lifted": len(t1) - len(ok), "g1_true_match": match,
+                "match_rate": match / len(ok) if ok else None,                   # G1 'grasped' and a brick really in the hand
+                "match_rate_all_g1_true": match / len(t1) if t1 else None,
+                "slot_ne_turn": sum(e["slot"] != e["turn"] for e in tg)}
     return out
 
 

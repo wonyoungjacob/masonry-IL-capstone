@@ -13,6 +13,12 @@ G2를 끄고 G3만 켜면 놓는 순간 가로채 그 자리에서 그대로 놓
 
 동작은 대본(wall3/expert.py)의 이동 함수(역동역학 피드포워드 포함)를 그대로 쓴다. 검측 동작 시간도 벽돌당 시간 제한(17 s)에 들어간다.
 문턱 · 허용치는 임시값(검증 배치로 정해 동결 전). 결과는 '정책 + 검측'으로 따로 보고한다.
+
+검측이 쓰는 정보 진단 (2026-11-03, 우분투지시_검측정보진단_20261103.md 2절). 기본값(camera, turn)은 그 전과 같은 동작이다.
+  pose_source "truth" (진단 전용): 동작은 카메라 모드와 같고, 판단에 쓰는 값(손 안 벽돌 · 놓인 벽돌 자세, 받침 높이)만 참값.
+  target: G2 · G3의 기준 자리. "turn" 차례 번호 k / "held_truth" G1 순간 참값으로 들린 벽돌의 자리 (진단) /
+          "held_grasp" G1 순간 손(관절값 순기구학) xy에서 가장 가까운 공급칸의 자리 (도면의 공급대 배치만 씀, 참값 안 씀).
+  turn이 아니면 감사 기록(audit_*)은 실제로 손에 든 벽돌(참값)로 남긴다.
 """
 from __future__ import annotations
 
@@ -27,6 +33,17 @@ from wall3.g1 import G1, G1Config, G1Trigger
 from wall3.ik import down_R, wrap
 from wall3.poses import yaw_of_quat
 from wall3.perception import BrickPoseEstimator, _fold
+
+POSE_SOURCES = ("camera", "truth")
+TARGETS = ("turn", "held_truth", "held_grasp")
+
+
+def nearest_supply_slot(xy, supply_slots, max_d):
+    """held_grasp: the supply slot (nominal centre from the layout drawing; slot i holds the brick of design slot i) nearest to
+    the hand's xy. Returns (slot or None if farther than max_d, distance m)."""
+    d = np.hypot(*(np.asarray(supply_slots, float) - np.asarray(xy, float)[:2]).T)
+    i = int(np.argmin(d))
+    return (i if d[i] <= max_d else None), float(d[i])
 
 
 @dataclass
@@ -47,6 +64,16 @@ class GateConfig:
     g3_partial_margin: float | None = None  # m: decide 'bad' on a partial view beyond tol + this (None = wait for a full view;
                                      #    only needed while the mortar set in 2 s, main_v1)
     min_time_left_s: float = 0.0     # G3 re-placement only if this much of the brick time limit is left (0 = always; 예비 확인 2026-10-20)
+    pose_source: str = "camera"      # 2026-11-03: brick poses / support height for G2 · G3 from the camera, or "truth" (진단 전용)
+    target: str = "turn"             # 2026-11-03: G2 · G3 reference slot: "turn" (k) | "held_truth" (진단) | "held_grasp"
+    held_grasp_max: float = 0.10     # m: held_grasp nearest supply slot farther than this = undetermined (use k)
+    held_truth_min_rise: float = 0.01  # m: held_truth needs a brick lifted more than this (else k)
+
+    def __post_init__(self):
+        if self.pose_source not in POSE_SOURCES:
+            raise ValueError(f"unknown pose_source {self.pose_source!r}")
+        if self.target not in TARGETS:
+            raise ValueError(f"unknown target {self.target!r}")
 
     def to_dict(self):
         return asdict(self)
@@ -70,11 +97,19 @@ class WallGates:
         self.replaced = set()
         self._t_release = None
         self.debug_dir = None
+        self.truth = self.cfg.pose_source == "truth"
+        self.default = self.cfg.pose_source == "camera" and self.cfg.target == "turn"     # = the gates before 2026-11-03
+        self.carrying, self.tgt, self.held_b = False, 0, None
 
     # ------------------------------------------------------------------ per brick
     def start_brick(self, k, deadline_t):
+        # target != turn: a brick still in the hand keeps its reference slot into the next turn (the policy sometimes places
+        # in the next turn the brick it picked in this one); a new wall (k = 0) always starts empty
+        keep = self.cfg.target != "turn" and k > 0 and self.carrying
         self.k, self.deadline = k, deadline_t
-        self.carrying, self.hold_cmd = False, None
+        if not keep:
+            self.carrying, self.hold_cmd = False, None
+            self.tgt, self.held_b = k, None
         self.trig.reset()
         self.ev = {"g1": [], "g2": [], "g3": []}
         self.z_start = [self.env.brick_pose(j)[0][2] for j in range(self.env.n)]      # audit only
@@ -86,9 +121,51 @@ class WallGates:
         return (self.deadline - self.env.t) * self.dt
 
     def _audit(self, k):
-        """Ground truth for the log only."""
+        """Ground truth for the log only. Default gates: brick k (as before); otherwise the brick really in the hand."""
+        if not self.default and self.held_b is not None:
+            k = self.held_b
         p, q = self.env.brick_pose(k)
         return p, yaw_of_quat(q)
+
+    def _ab(self, k):
+        return k if self.default or self.held_b is None else self.held_b
+
+    # ------------------------------------------------------------------ reference slot (2026-11-03)
+    def _lifted_truth(self):
+        """Ground truth: the brick in the hand at the G1 moment = the grip-locked one, else the one lifted most since the
+        turn began (more than held_truth_min_rise); None if none."""
+        env = self.env
+        if env.lock_b >= 0:
+            return int(env.lock_b)
+        rise = [env.brick_pose(j)[0][2] - self.z_start[j] for j in range(env.n)]
+        j = int(np.argmax(rise))
+        return j if rise[j] > self.cfg.held_truth_min_rise else None
+
+    def _decide_target(self):
+        """At the G1 moment (closed and lifted 1.5 cm; the same trigger without G1): the reference slot for G2 · G3 and the
+        brick really in the hand (ground truth, audit only unless held_truth / truth)."""
+        c = self.cfg
+        held = self._lifted_truth()
+        info = {"t": int(self.env.t), "turn": int(self.k), "method": c.target, "audit_brick": held}
+        if c.target == "turn":
+            slot = self.k
+        elif c.target == "held_truth":
+            slot = held if held is not None else self.k
+            info["undetermined"] = held is None
+        else:
+            p, _ = self.env.tcp()
+            i, d = nearest_supply_slot(p[:2], self.env.cfg.supply_slots, c.held_grasp_max)
+            slot = i if i is not None else self.k
+            info.update(supply_slot=i, supply_dist_mm=round(d * 1000, 1), undetermined=i is None)
+        info["slot"] = int(slot)
+        return int(slot), held, info
+
+    def _take(self, act, dec, g1_ok):
+        slot, held, info = dec
+        self.carrying, self.hold_cmd = True, float(act[6])
+        self.tgt, self.held_b = slot, held
+        if not self.default:
+            self.ev.setdefault("target", []).append({**info, "g1_grasped": g1_ok, "used": True})
 
     def _design(self, k):
         s = self.env.design[k]
@@ -102,17 +179,21 @@ class WallGates:
         if float(act[6]) >= self.hold_cmd - self.cfg.release_drop:
             return False
         p, _ = self.env.tcp()
-        xy, _, _, _ = self._design(self.k)
-        if float(np.hypot(*(p[:2] - xy))) > self.cfg.near_slot or not (self.on_g2 or self.on_g3):
+        t = self.tgt                                      # reference slot (= k for target "turn")
+        xy, _, _, _ = self._design(t)
+        dist = float(np.hypot(*(p[:2] - xy)))
+        if dist > self.cfg.near_slot or not (self.on_g2 or self.on_g3):
             self.carrying = False                         # a release elsewhere (or no G2/G3): the policy does it
+            if self.on_g2 or self.on_g3:                  # 2026-11-03: logged only (not a G2 release in the summaries)
+                self.ev["g2"].append({"t": int(self.env.t), "slot": int(t), "skipped": "far", "dist_mm": round(dist * 1000, 1)})
             return False
         self.carrying = False
         if self.on_g2:
-            self._g2_place(self.k, self.hold_cmd, measure=True)
+            self._g2_place(t, self.hold_cmd, measure=True)
         else:
-            self._release_here(self.k, self.hold_cmd)      # G3 only: release where the policy is, no correction
+            self._release_here(t, self.hold_cmd)          # G3 only: release where the policy is, no correction
         if self.on_g3:
-            self._g3(self.k)
+            self._g3(t)
         self._handback()
         return True
 
@@ -123,8 +204,9 @@ class WallGates:
         p, _ = self.env.tcp()
         if not self.trig.update(float(act[6]), p[2]):
             return
+        dec = self._decide_target()                         # the G1 moment: reference slot (kept until the release)
         if self.g1 is None:                                 # no check: treat as carrying
-            self.carrying, self.hold_cmd = True, float(act[6])
+            self._take(act, dec, None)
             return
         m = self.g1.measure(act[:6], float(act[6]), (lambda lb: self.on_frame(lb, self.k)) if self.on_frame else None)
         ok = self.g1.decide(m)
@@ -133,8 +215,10 @@ class WallGates:
                               "audit_target_rise_mm": round(rise[self.k] * 1000, 1), "audit_max_rise_brick": int(np.argmax(rise)),
                               "audit_max_rise_mm": round(max(rise) * 1000, 1)})
         if ok:
-            self.carrying, self.hold_cmd = True, float(act[6])
+            self._take(act, dec, True)
         else:
+            if not self.default:
+                self.ev.setdefault("target", []).append({**dec[2], "g1_grasped": False, "used": False})
             for _ in range(max(1, int(round(self.g1cfg.t_open / self.dt)))):
                 self.env.step(act[:6], self.env.cfg.gripper.open_ctrl)
                 if self.on_frame:
@@ -161,12 +245,98 @@ class WallGates:
         xy, yaw, L, s = self._design(k)
         if s["course"] == 1:
             return 0.0, "floor"
+        if self.truth:
+            return self._support_top_truth(k)
         if self.cam is not None:
             z = self.cam.surface_z(xy[0], xy[1], yaw, offsets=(-(L / 2 + 0.005), L / 2 + 0.005), across=(0.0,),
                                    z_lo=s["z"] - H / 2 - 0.01, z_hi=s["z"] - H / 2 + 0.01)
             if z is not None:
                 return z, "camera"
         return s["z"] - H / 2, "drawing"
+
+    def _support_top_truth(self, k):
+        """pose_source truth (진단): the real top of the mortar bed under slot k (slab mocap pose + slab thickness) at the
+        points the camera samples (the head-joint gaps at both ends); no bed yet: the real top of the lower-course bricks."""
+        from wall3.scene import _quat_rotmat
+        env, m, d = self.env, self.env.model, self.env.data
+        xy, yaw, L, s = self._design(k)
+        bnd = s["course"] - 1
+        ex_ = np.array([np.cos(yaw), np.sin(yaw)])
+        pts = [xy + o * ex_ for o in (-(L / 2 + 0.005), L / 2 + 0.005)]
+        if env.bed_laid[bnd] >= 0:
+            src = "truth_bed"
+            info = env.beds[bnd]
+            boxes = [(d.geom_xpos[g].copy(), d.geom_xmat[g].reshape(3, 3).copy(), m.geom_size[g].copy())
+                     for g in (env.bed_gid[nm] for nm in info["slabs"] + info["joints"])]
+        else:
+            src = "truth_brick"
+            boxes = []
+            for i in range(env.n):
+                if self.env.design[i]["course"] == bnd:
+                    p, q = env.brick_pose(i)
+                    boxes.append((p, _quat_rotmat(q), np.array([self.env.design[i]["L"] / 2, W / 2, H / 2])))
+        zs = []
+        for pt in pts:
+            tops = []
+            for c, R, half in boxes:
+                n = R[:, 2] if R[2, 2] >= 0 else -R[:, 2]
+                if n[2] < 0.5:
+                    continue
+                t0 = c + n * half[2]
+                z = t0[2] - (n[0] * (pt[0] - t0[0]) + n[1] * (pt[1] - t0[1])) / n[2]
+                loc = R.T @ (np.r_[pt, z] - c)
+                if abs(loc[0]) <= half[0] and abs(loc[1]) <= half[1]:
+                    tops.append(float(z))
+            if tops:
+                zs.append(max(tops))
+        if zs:
+            return float(np.median(zs)), src
+        return s["z"] - H / 2, "drawing"
+
+    def _in_hand_truth(self):
+        """pose_source truth (진단): the brick hanging in the jaw now (grip-locked, else the one found at the G1 moment if it
+        still hangs about dzp below the TCP); None = empty hand."""
+        env = self.env
+        b = env.lock_b if env.lock_b >= 0 else self.held_b
+        if b is None or b < 0:
+            return None
+        p, R = env.tcp()
+        bp, _ = env.brick_pose(b)
+        ax = R[:2, 0] / np.linalg.norm(R[:2, 0])
+        ay = np.array([-ax[1], ax[0]])
+        rel = bp[:2] - p[:2]
+        if abs(bp[2] - (p[2] - self.ex.dzp)) > 0.02 or abs(rel @ ax) > self.env.design[b]["L"] / 2 or abs(rel @ ay) > W / 2 + 0.01:
+            return None
+        return int(b)
+
+    def _held_meas_truth(self, b, p, R):
+        """pose_source truth (진단): brick b in the TCP frame at TCP pose (p, R), in the camera's held_brick format."""
+        bp, bq = self.env.brick_pose(b)
+        byaw = yaw_of_quat(bq)
+        ax = R[:2, 0] / np.linalg.norm(R[:2, 0])
+        ay = np.array([-ax[1], ax[0]])
+        rel = bp[:2] - p[:2]
+        return {"pos": bp, "yaw": byaw, "yaw_in_hand_deg": float(np.degrees(_fold(byaw - float(np.arctan2(R[1, 0], R[0, 0]))))),
+                "across_m": float(rel @ ay), "along_m": float(rel @ ax), "src": "truth", "brick": int(b)}
+
+    def _find_truth(self, xy, r, z_range):
+        """pose_source truth (진단), for cam.find: the brick just released (the one in the hand at the G1 moment) if its real
+        centre is within r of xy with its top in z_range (the camera's search window), else None; with no known brick in the
+        hand, the brick whose real centre is nearest xy in that window."""
+        from wall3.scene import _quat_rotmat
+        env = self.env
+        best, bd = None, r
+        for j in (range(env.n) if self.held_b is None else (self.held_b,)):
+            p, q = env.brick_pose(j)
+            R = _quat_rotmat(q)
+            z_top = p[2] + abs(R[2, 2]) * H / 2
+            if z_range is not None and not (z_range[0] <= z_top <= z_range[1]):
+                continue
+            dd = float(np.hypot(*(p[:2] - np.asarray(xy)[:2])))
+            if dd < bd:
+                best, bd = {"pos": p, "yaw": yaw_of_quat(q), "tilt_deg": float(np.degrees(np.arccos(np.clip(abs(R[2, 2]), -1, 1)))),
+                            "full": True, "src": "truth", "brick": j}, dd
+        return best
 
     def _move_tcp(self, p, yaw, grip, held, phase, T=0.6, exact_yaw=False):
         """Joint-space move to a TCP pose (gripper down, x axis = yaw); unless exact_yaw, the yaw is chosen modulo pi
@@ -203,9 +373,13 @@ class WallGates:
                 else:
                     self._move_tcp(tgt, yaw_home, ex.grip_cmd, k, "g2_view_shift", T=0.3, exact_yaw=True)
             p, R = env.tcp()
-            hb = self.cam.held_brick(p, R, L, ex.dzp)
+            if self.truth:
+                b = self._in_hand_truth()
+                hb = self._held_meas_truth(b, p, R) if b is not None else None
+            else:
+                hb = self.cam.held_brick(p, R, L, ex.dzp)
             tries.append(hb is not None)
-            if hb is None and self.debug_dir is not None:          # what the camera saw when no brick end was visible
+            if hb is None and self.debug_dir is not None and not self.truth:          # what the camera saw when no brick end was visible
                 from PIL import Image
                 self.debug_dir.mkdir(parents=True, exist_ok=True)
                 Image.fromarray(self.cam.last_rgb).save(self.debug_dir / f"g2_t{env.t}_k{k}_shift{shift:+.3f}_turn{np.degrees(turn):+.0f}_out{o:.2f}.png")
@@ -216,6 +390,13 @@ class WallGates:
         p, R = env.tcp()
         if not got:
             return None, p, R, tries
+        if self.truth:                                             # the true in-hand pose at the pose G2 continues from
+            b = self._in_hand_truth()
+            if b is None:
+                return None, p, R, tries
+            hb = self._held_meas_truth(b, p, R)
+            hb["n_views"] = len(got)
+            return hb, p, R, tries
         # the grasp position along the brick is a property of the grasp: the median over the views that saw it
         hb = dict(got[0][0])
         hb["along_m"] = float(np.median([h["along_m"] for h, _, _ in got]))
@@ -240,7 +421,7 @@ class WallGates:
         if hb is None:
             u0, c0, dpsi, src = 0.0, 0.0, 0.0, "nominal"         # grasp position unknown: assume a centred, aligned grasp
         else:
-            u0, c0, dpsi, src = hb["along_m"], hb["across_m"], np.deg2rad(hb["yaw_in_hand_deg"]), "camera"
+            u0, c0, dpsi, src = hb["along_m"], hb["across_m"], np.deg2rad(hb["yaw_in_hand_deg"]), ("truth" if self.truth else "camera")
         ev.update(in_hand_along_mm=round(u0 * 1000, 2), in_hand_across_mm=round(c0 * 1000, 2),
                   in_hand_yaw_deg=round(float(np.degrees(dpsi)), 2), in_hand_src=src)
         bp, byaw = self._audit(k)                                # log only: true in-hand offset
@@ -248,7 +429,9 @@ class WallGates:
         ay = np.array([-ax[1], ax[0]])
         ev["audit_in_hand_err_mm"] = round(float(np.hypot(*((p[:2] + u0 * ax + c0 * ay) - bp[:2]))) * 1000, 2) if hb is not None else None
         ev["audit_in_hand_yaw_err_deg"] = round(float(np.degrees(_fold(tcp_yaw + dpsi - byaw))), 2) if hb is not None else None
-        if self.debug_dir is not None and hb is not None and ev["audit_in_hand_err_mm"] > 3:
+        if not self.default:
+            ev["audit_brick"] = self._ab(k)
+        if self.debug_dir is not None and hb is not None and ev["audit_in_hand_err_mm"] > 3 and not self.truth:
             from PIL import Image
             self.debug_dir.mkdir(parents=True, exist_ok=True)
             self.cam._key = None; self.cam.detect()
@@ -266,7 +449,11 @@ class WallGates:
         # 3) re-measure once at the target and correct the residual
         if ok and measure:
             p2, R2 = env.tcp()
-            hb2 = self.cam.held_brick(p2, R2, L, ex.dzp)
+            if self.truth:
+                b2 = self._in_hand_truth()
+                hb2 = self._held_meas_truth(b2, p2, R2) if b2 is not None else None
+            else:
+                hb2 = self.cam.held_brick(p2, R2, L, ex.dzp)
             if hb2 is not None:
                 err = xy - hb2["pos"][:2]
                 ev["residual_mm"] = round(float(np.hypot(*err)) * 1000, 2)      # logged only
@@ -323,7 +510,7 @@ class WallGates:
                 ex._play(path[i:i + 1], 0.0, None, "g3_view")
                 self.view_steps += 1
                 if i >= 3:
-                    dd = self.cam.find(xy, r=0.04, z_range=zr, L=L, yaw_prior=yaw_d)
+                    dd = self._find_truth(xy, 0.04, zr) if self.truth else self.cam.find(xy, r=0.04, z_range=zr, L=L, yaw_prior=yaw_d)
                     if dd is not None and dd["full"]:
                         return dd
                     if c.g3_partial_margin is not None and dd is not None and \
@@ -332,8 +519,11 @@ class WallGates:
                         return dd
                     d = dd if dd is not None else d
         ex._joint_move(np.array(ex.q_ret), 0.0, None, "g3_view_retract", lag=0.0)
-        self.cam._key = None
-        d2 = self.cam.find(xy, r=0.04, z_range=zr, L=L, yaw_prior=yaw_d)
+        if self.truth:
+            d2 = self._find_truth(xy, 0.04, zr)
+        else:
+            self.cam._key = None
+            d2 = self.cam.find(xy, r=0.04, z_range=zr, L=L, yaw_prior=yaw_d)
         return d2 if d2 is not None else d
 
     def _g3(self, k):
@@ -350,6 +540,10 @@ class WallGates:
             bp, byaw = self._audit(k)
             ev.update(exy_mm=round(exy * 1000, 2), eyaw_deg=round(eyaw, 2), ez_mm=round(ez * 1000, 2), tilt_deg=round(d["tilt_deg"], 2),
                       audit_meas_err_mm=round(float(np.hypot(*(d["pos"][:2] - bp[:2]))) * 1000, 2))
+            if not self.default:
+                ev["audit_brick"] = self._ab(k)
+                if self.truth:
+                    ev["truth_found_brick"] = d.get("brick")
             bad = exy > c.g3_tol_xy or abs(eyaw) > c.g3_tol_yaw_deg or ez > c.g3_tol_z or d["tilt_deg"] > c.g3_tol_tilt_deg
             ev["bad"] = bool(bad)
             if bad and k not in self.replaced and d["tilt_deg"] < 45:
@@ -367,7 +561,7 @@ class WallGates:
         gc = env.cfg.gripper
         pos, yaw_b = d["pos"], d["yaw"]
         above = np.r_[pos[:2], pos[2] + ex.dzp + 0.045]
-        out = {"audit_cured_before": bool(env.cured[k])}
+        out = {"audit_cured_before": bool(env.cured[self._ab(k)])}
         if not self._move_tcp(above, yaw_b, 0.0, None, "g3_to_brick", T=0.4):
             out["result"] = "ik_failed"
             return out
@@ -377,14 +571,19 @@ class WallGates:
         cg = ex.grip_close_cmd()
         ex._hold(n, [min(cg, G.ramp(gc, True, (i + 1) * self.dt, gc.open_ctrl)) for i in range(n)], None, "g3_close")
         closure = env.closure()
-        out["audit_cured_at_close"] = bool(env.cured[k])                 # log only: mortar set before the gate got there?
-        out["audit_cure_t"] = int(env.cure_t[k]); out["t_close"] = int(env.t)
+        if not self.default:                                             # the brick really re-grasped (audit; truth mode: judged by it)
+            if self.truth and d.get("brick") is not None:
+                self.held_b = int(d["brick"])
+            elif env.lock_b >= 0:
+                self.held_b = int(env.lock_b)
+            out["audit_brick"] = self._ab(k)
+        out["audit_cured_at_close"] = bool(env.cured[self._ab(k)])       # log only: mortar set before the gate got there?
+        out["audit_cure_t"] = int(env.cure_t[self._ab(k)]); out["t_close"] = int(env.t)
         if closure > ex.cfg.grip_empty:
             out["result"] = "grasp_empty"
             self._open_and_lift(k, cg)
             return out
-        self.k = k
-        self._g2_place(k, cg, measure=True)
+        self._g2_place(k, cg, measure=True)                              # (self.k stays the turn; k = the reference slot)
         d2 = self._view_laid(k)
         if d2 is not None:
             out["after_exy_mm"] = round(float(np.hypot(*(d2["pos"][:2] - xy))) * 1000, 2)
