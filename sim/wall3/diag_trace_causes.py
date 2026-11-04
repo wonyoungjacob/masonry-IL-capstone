@@ -11,8 +11,15 @@
      (m = j: 그 벽돌 앞에서 헛집음, m ≠ j이고 m이 이미 공급대에 없음: 옮겨진 벽돌 m의 빈자리를 집으려 함)
 
 실행: cd sim && venv/bin/python -m wall3.diag_trace_causes outputs/wall3/diag_trace_20261028
+
+2026-11-03 선택 옵션 (10-29 검증 반영, 우분투지시_검측정보진단_20261103.md 3절 C). 옵션 없이 돌리면 10-28과 같은 분류다.
+  --aim-max-mm 50 : '못 집음'의 노린 공급칸은 손이 그 처음 공급 위치 50 mm 안에서 오므린 경우만. 더 멀면 '공급칸 밖에서 오므림'
+  --perch-mm 20   : 평가가 '채움'으로 셌지만 그 자리를 차지한 벽돌(평가의 짝짓기)이 설계 높이보다 20 mm 넘게 뜬 자리(이웃 벽돌에
+                    걸침)를 따로 표시하고, '처음 문제 자리' = min(처음 못 채운 자리, 처음 걸친 자리) 표를 함께 낸다
+  추적에 검측 기준 자리(tgt, 2026-11-03 diag_trace)가 있으면 G2·G3 동작에 '기준 자리 = 그 벽돌의 자리인지'를 붙인다
+  --out FILE      : 결과 json (기본 <root>/causes.json, 이미 있으면 멈춤)
 """
-import collections, json, sys
+import argparse, collections, json, sys
 from pathlib import Path
 
 import numpy as np
@@ -46,8 +53,9 @@ def segments(P, thr=0.0015, gap=6):
     return out
 
 
-def analyse(z, wall, design):
+def analyse(z, wall, design, aim_max=None, perch=None):
     k, src, pose, tcp, grip = z["k"], z["src"], z["pose"].astype(float), z["tcp"].astype(float), z["grip"]
+    tgt = z["tgt"] if "tgt" in z.files else None
     P, Q = pose[:, :, :3], pose[:, :, 3:7]
     n = P.shape[1]
     D = np.array([[s["x"], s["y"], s["z"]] for s in design])
@@ -70,6 +78,8 @@ def analyse(z, wall, design):
                   "lift_mm": round(lift), "dxy_mm": round(dxy),
                   "end": P[e, b].round(3).tolist(), "end_near_slot": near,
                   "end_near_mm": round(float(np.hypot(*(P[e, b, :2] - D[near, :2])) * 1000)), "end_in_own": bool(inslot[e, b])}
+            if tgt is not None:
+                mv["tgt"] = int(tgt[s])
             moves[b].append(mv)
             if mv["carry"]:
                 carried[b].append(mv)
@@ -81,22 +91,33 @@ def analyse(z, wall, design):
             continue
         dd = np.hypot(supply0[:, 0] - tcp[i, 0], supply0[:, 1] - tcp[i, 1])
         m = int(np.argmin(dd))
+        if aim_max is not None and dd[m] * 1000 > aim_max:
+            attempts.append({"i": int(i), "k": int(k[i]), "aim": None, "aim_mm": round(float(dd[m]) * 1000), "aim_gone": None})
+            continue
         attempts.append({"i": int(i), "k": int(k[i]), "aim": m, "aim_mm": round(float(dd[m]) * 1000),
                          "aim_gone": bool(np.hypot(*(P[i, m, :2] - supply0[m, :2])) > 0.02)})
     filled = wall["eval"]["slots_filled"]
+    match = wall["eval"].get("match")
     out = []
-    for j in range(n):
-        if filled[j]:
-            continue
+    todo = [(j, j, False) for j in range(n) if not filled[j]]
+    if perch is not None and match is not None:                 # 'filled' slot j whose occupant brick sits > perch mm high
+        for j in range(n):
+            o = match[j]
+            if filled[j] and o >= 0 and (P[-1, o, 2] - D[j, 2]) * 1000 > perch:
+                todo.append((j, o, True))
+        todo.sort()
+    for j_slot, j, perched in todo:
         fp, tl = P[-1, j], float(tilt_deg(Q[-1, j]))
-        dj = float(np.hypot(*(fp[:2] - D[j, :2])) * 1000)
-        dz = float((fp[2] - D[j, 2]) * 1000)
+        dj = float(np.hypot(*(fp[:2] - D[j_slot, :2])) * 1000)
+        dz = float((fp[2] - D[j_slot, 2]) * 1000)
         on_sup = bool(fp[2] > 0.3)                                  # supply table top ~0.35 m
         untouched = bool(np.hypot(*(fp[:2] - supply0[j, :2])) < 0.05) and on_sup
         near = int(np.argmin(np.hypot(D[:, 0] - fp[0], D[:, 1] - fp[1]) + 10 * (np.abs(D[:, 2] - fp[2]) > EXIST_Z)))
         dn = float(np.hypot(*(fp[:2] - D[near, :2])) * 1000)
         # final state
-        if untouched:
+        if perched:
+            st = "채움으로 셌지만 이웃 벽돌에 걸침(+%d mm 넘게 뜸)" % perch
+        elif untouched:
             st = "공급대 제자리(안 옮겨짐)"
         elif on_sup:
             st = "공급대 위 다른 곳"
@@ -129,7 +150,7 @@ def analyse(z, wall, design):
             if car or disp > 30:
                 big.append(dict(car[0] if car else c[0], chain_end=c[-1]["end"], chain_disp_mm=round(disp)))
         wall_carry = [m for m in moves[j] if m["carry"] and m["dxy_mm"] > 300 and m["src"] == 0]
-        r = {"slot": j, "final": fp.round(3).tolist(), "final_tilt_deg": round(tl, 1), "final_dxy_mm": round(dj), "final_dz_mm": round(dz),
+        r = {"slot": j_slot, "brick": j, "perched": perched, "final": fp.round(3).tolist(), "final_tilt_deg": round(tl, 1), "final_dxy_mm": round(dj), "final_dz_mm": round(dz),
              "state": st, "moves": moves[j], "policy_transport_k": [m["k"] for m in wall_carry],
              "gate_moved": [m["k"] for m in moves[j] if m["src"] == 2 and (m["carry"] or m["dxy_mm"] > 30)]}
         if untouched or not big:
@@ -140,25 +161,37 @@ def analyse(z, wall, design):
                 why = "정책이 집으려 하지 않음"
             else:
                 m, g, _ = r["aims"][0]
-                why = ("자기 벽돌 앞에서 헛집음" if m == j else f"이미 옮겨진 벽돌 {m}의 빈 공급 위치를 집으려 함" if g else
-                       f"아직 공급대에 있는 다른 벽돌 {m}을 노림")
+                why = ("공급칸 밖에서 집게를 오므림" if m is None else "자기 벽돌 앞에서 헛집음" if m == j else
+                       f"이미 옮겨진 벽돌 {m}의 빈 공급 위치를 집으려 함" if g else f"아직 공급대에 있는 다른 벽돌 {m}을 노림")
             r.update(actor="못 집음", why=why, text=f"못 집음: {why} (차례 {j} 시도 {len(att)}회) → {st}")
         else:
             m = big[-1]
             who = SRCN[m["src"]]
+            ref = ""
+            if m["src"] == 2 and "tgt" in m:                         # the gate's reference slot when it moved this brick
+                ref = "(기준=제 자리)" if m["tgt"] == j else "(기준≠제 자리)"
             if m["carry"]:
-                act = f"{who}가 차례 {m['k']}에 들어 옮김"
+                act = f"{who}가 차례 {m['k']}에 들어 옮김" + (f"(검측 기준 자리 {m['tgt']})" if ref else "")
             else:
                 busy = [b for b in range(n) if b != j and any(c["s"] - 2 <= m["s"] <= c["e"] + 2 for c in carried[b])]
                 act = f"{who} 동작 중 밀림(차례 {m['k']}" + (f", 그때 벽돌 {busy} 운반 중)" if busy else ")")
-            r.update(actor=("G2·G3" if m["src"] == 2 else "정책") + (" 운반" if m["carry"] else " 밀림"), last_k=m["k"],
+            r.update(actor=("G2·G3" if m["src"] == 2 else "정책") + (" 운반" if m["carry"] else " 밀림") + ref, last_k=m["k"],
                      text=f"{act} → {st} (xy {dj:.0f} mm, 높이 {dz:+.0f} mm, 기울기 {tl:.0f}°)")
         out.append(r)
     return out, moves, attempts
 
 
 def main():
-    root = Path(sys.argv[1])
+    ap = argparse.ArgumentParser()
+    ap.add_argument("root")
+    ap.add_argument("--aim-max-mm", type=float, default=None)
+    ap.add_argument("--perch-mm", type=float, default=None)
+    ap.add_argument("--out", default=None)
+    a = ap.parse_args()
+    root = Path(a.root)
+    out_json = Path(a.out) if a.out else root / "causes.json"
+    if out_json.exists():
+        raise SystemExit(f"{out_json} 이미 있음: 덮어쓰지 않음")
     from wall3.config import scene_config
     from wall3.scene import WallEnv
     res = {}
@@ -169,12 +202,17 @@ def main():
     for d, w in walls:
         env.reset(w["seed"])
         z = np.load(d / f"trace_{w['seed']}.npz")
-        fails, moves, attempts = analyse(z, w, env.design)
+        fails, moves, attempts = analyse(z, w, env.design, a.aim_max_mm, a.perch_mm)
         first = next((j for j in range(16) if not w["eval"]["slots_filled"][j]), 16)
-        res[w["seed"]] = {"same_as_eval": w.get("same_as_eval"), "first_unfilled": first, "fails": fails,
+        res[w["seed"]] = {"same_as_eval": w.get("same_as_eval"), "first_unfilled": first, "fails": [f for f in fails if not f.get("perched")],
                           "moves": {b: m for b, m in moves.items() if m}, "attempts": attempts}
+        if a.perch_mm is not None:
+            pf = [f for f in fails if f.get("perched")]
+            res[w["seed"]]["perched"] = pf
+            res[w["seed"]]["first_problem"] = min([first] + [f["slot"] for f in pf])
     env.close()
-    (root / "causes.json").write_text(json.dumps(res, indent=1, default=float))
+    out_json.write_text(json.dumps({"_options": {"aim_max_mm": a.aim_max_mm, "perch_mm": a.perch_mm}, **res} if (a.aim_max_mm or a.perch_mm) else res,
+                                   indent=1, default=float))
     for s, r in res.items():
         print(f"{s} 처음 못 채운 자리 {r['first_unfilled']} 재현 {r['same_as_eval'] and r['same_as_eval']['slots_filled']}")
         for f in r["fails"]:
@@ -192,13 +230,20 @@ def main():
             w = "이미 옮겨진 벽돌의 빈 공급 위치를 집으려 함" if w.startswith("이미 옮겨진") else "아직 있는 다른 벽돌을 노림" if w.startswith("아직") else w
             return f"못 집음: {w}"
         return f"{f['actor']} → {f['state']}"
-    for name, pick in (("처음 못 채운 자리", lambda f, r: f["slot"] == r["first_unfilled"]),
-                       ("그 뒤 못 채운 자리", lambda f, r: f["slot"] > r["first_unfilled"])):
+    tables = [("처음 못 채운 자리", "first_unfilled", "fails", lambda f, r: f["slot"] == r["first_unfilled"]),
+              ("그 뒤 못 채운 자리", "first_unfilled", "fails", lambda f, r: f["slot"] > r["first_unfilled"])]
+    if a.perch_mm is not None:
+        tables.append(("처음 문제 자리(걸침 포함)", "first_problem", "both",
+                       lambda f, r: f["slot"] == r["first_problem"]))
+        print("\n걸친 채움 자리(0부터):", sorted(collections.Counter(f["slot"] for r in res.values() for f in r["perched"]).items()),
+              "| 걸침이 처음 못 채운 자리보다 앞인 벽:", sum(r["first_problem"] < r["first_unfilled"] for r in res.values()))
+    for name, key, which, pick in tables:
         tab = collections.defaultdict(collections.Counter)
         for r in res.values():
-            for f in r["fails"]:
+            fs = r["fails"] + (r.get("perched", []) if which == "both" else [])
+            for f in fs:
                 if pick(f, r):
-                    tab[label(f, r["first_unfilled"])][f["slot"]] += 1
+                    tab[label(f, r[key])][f["slot"]] += 1
         print(f"\n{name}: 원인 × 자리(0부터)")
         for lab, c in sorted(tab.items()):
             print(f"  {lab}: 계 {sum(c.values())} | " + " ".join(f"{k}:{v}" for k, v in sorted(c.items())))
