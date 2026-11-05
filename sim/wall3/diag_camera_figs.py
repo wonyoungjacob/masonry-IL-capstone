@@ -169,13 +169,14 @@ def main():
         try:
             t0, held, carrying = int(env.t), gates.held_b, gates.carrying
             n2 = len(gates.ev["g2"])
+            st["placing"] = st["place"] is None and st["pick"] is not None and carrying and held == B   # G3 runs inside before0
             r = before0(act)
             if st["place"] is None and st["pick"] is not None and carrying and held == B and (r or len(gates.ev["g2"]) > n2):
                 st["place"] = t0
                 st["place_by"] = "G2" if r else "정책 (15 cm 밖)"
             return r
         finally:
-            st["src"] = "policy"
+            st["src"], st["placing"] = "policy", False
     gates.after, gates.before = after, before
 
     # 2) G2: the held brick measurement (original function, result unchanged)
@@ -223,7 +224,7 @@ def main():
             dd = float(np.hypot(*(p["pos"][:2] - np.asarray(xy)[:2])))
             if dd < bd:
                 best, bd, bdet = p, dd, det
-        if best is not None and st["g3"] is None and st["place"] is not None and gates.held_b == B and \
+        if best is not None and st["g3"] is None and (st["place"] is not None or st.get("placing")) and gates.held_b == B and \
                 float(np.hypot(*(np.asarray(xy)[:2] - xyB))) < 1e-6:
             bp, bq = env.brick_pose(B)
             pos = np.asarray(best["pos"], float)

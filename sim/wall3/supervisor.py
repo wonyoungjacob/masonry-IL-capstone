@@ -201,7 +201,7 @@ def post_stage(sname, st):
         dst = REPORT / "확인영상"
         if not dst.exists():
             dst.mkdir(parents=True)
-            for f in (SIM / W / "diag_video_held_20261104").glob("*"):
+            for f in (SIM / W / "diag_video_held_20261104").rglob("*"):
                 if f.suffix in (".mp4", ".png"):
                     shutil.copy2(f, dst / f.name)
             log(f"복사 영상 -> {dst}")
