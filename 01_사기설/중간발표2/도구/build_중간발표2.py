@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""사회기반시스템종합설계 14조 · 중간발표 2 발표 자료 v2 (2026-11-10 발표). 10장.
-v1 = 저장소 밖 '14조 중간발표 2.pptx'(Noto Sans KR). v2는 내용은 그대로 두고 형식만 바꿈:
+"""사회기반시스템종합설계 14조 · 중간발표 2 발표 자료 (v3, 2026-11-10 발표). 10장.
+v1 = 저장소 밖 '14조 중간발표 2.pptx'(Noto Sans KR). v2: 내용은 그대로 두고 형식만 바꿈. v3: 2쪽 실험 조건 · 용어 풀이, 3쪽 벽 그림, 10쪽 일정 채움:
 - 글꼴 Pretendard만, 본문 16~17pt · 아래 줄 13~14pt (작은 글씨 · 연한 회색 없음)
 - Meta 디자인 토큰(흰 바탕 · 코발트 · 알약 · 둥근 카드 · 그림자 없음) + 컨설팅 원칙(1장 1메시지 · 개조식 · 카드/표/흐름/빅넘버)
 - 쪽 제목은 '~다' 문장형 → '~함' 개조식
 - 그림은 v1에서 꺼낸 것(도구/자산/). 도구 함수는 진행보고/도구/build_진행회의_20261103.py와 같음.
-실행: python build_중간발표2_v2.py <출력.pptx> <안 씀>"""
+실행: python build_중간발표2.py <출력.pptx> <안 씀>"""
 import sys, os, re
 from urllib.parse import quote
 from PIL import Image, ImageDraw
@@ -569,10 +569,10 @@ page_no(s, 1)
 
 # ═══════════════════════════ 2 지금까지의 내용
 s = new(); T = chrome(s, 2, "성공 시연만 배운 정책은 실패를 모름 → 검측을 정책 밖에 둠", "지금까지의 내용 · 중간발표 1")
-y = T - 0.04; cw = (CW - 2 * 0.2) / 3; chh = 3.0
+y = T - 0.04; cw = (CW - 2 * 0.2) / 3; chh = 2.75
 rows_card(s, M, y, cw, chh, "문제 · 모방학습의 딜레마",
-          [("복구를 안 가르치면", "critical", "실패를 알아채지 못함 · 정책 단독 **Diffusion 35 % · ACT 0 %**"),
-           ("복구를 가르치면", "critical", "정밀도 손실 · 완성률 **90 % → 2 %**")])
+          [("성공 시연만 학습", "critical", "**실패를 알아채지 못함** · 정책 단독 Diffusion 35 % · ACT 0 %"),
+           ("바로잡는 시연도 섞음", "critical", "**정밀도 손실** · 완성률 90 % → 2 %")], size=15)
 rows_card(s, M + cw + 0.2, y, cw, chh, "해법 · 정책 밖 검측 3단계",
           [("G1", "primary", "**잡기 확인**: 하중 · 집게 각도"), ("G2", "primary", "**놓기 전 보정**: 벽돌 위치"),
            ("G3", "primary", "**놓은 뒤 재배치**: 벽돌당 1회")], label_fill="primary", inline=True, pill_w=0.62)
@@ -580,15 +580,24 @@ x3 = M + 2 * (cw + 0.2)
 card(s, x3, y, cw, chh, fill="soft", line=None, radius=0.16)
 hpill(s, x3 + 0.16, y + 0.14, "결과 · 소형 실험 (블록 3개)", "success", "white", 14)
 mtext(s, x3 + 0.2, y + 0.56, cw - 0.4, chh - 0.62,
-      [("Diffusion 완성률", 16, "ink", True), ("35 % → 75 %", 30, "primary", True), ("ACT 완성률", 16, "ink", True), ("0 % → 54 %", 30, "primary", True),
+      [("Diffusion 완성률 · 단독 → + 검측", 16, "ink", True), ("35 % → 75 %", 30, "primary", True),
+       ("ACT 완성률 · 단독 → + 검측", 16, "ink", True), ("0 % → 54 %", 30, "primary", True),
        ("카메라 위치 추정 오차 평균 0.43 mm", 15, "inkdeep", False)], spacing=1.0, after=3)
-ty = y + chh + 0.22
+ey = y + chh + 0.12
+card(s, M, ey, CW, 1.05, fill="soft", line=None, radius=0.14)
+text(s, M + 0.2, ey, CW - 0.4, 1.05,
+     ["**실험 조건 (소형)**: SO-ARM100 · 블록 3개 2+1 적층 · 대본 시연으로 학습 · 학습 seed 1000 · 검측 위치 = 정답 좌표",
+      "**35 · 0 · 75 · 54 %** = 실험 3 넓은 배치 (±30 mm · ±60°) · 시험 배치 Diffusion 40 · ACT 48개",
+      "**90 % → 2 %** = 실험 1 좁은 배치 (±5 mm · ±10°) · Diffusion 100회",
+      "**바로잡는 시연** = 벽돌을 일부러 밀어 놓고 다시 맞추는 동작을 담은 시연"],
+     13, "inkdeep", anchor=MSO_ANCHOR.MIDDLE, spacing=1.0, after=1)
+ty = ey + 1.05 + 0.04
 section_label(s, M, ty, 4, "중간발표 1 이후")
-steps = [("10/20", "대형 환경"), ("10/22–26", "데이터 재수집"), ("10/26", "예비 평가"), ("10/28–29", "원인 분석"), ("11/02", "지표 개정"), ("11/03", "제안 3개")]
+steps = [("10/20", "대형 환경"), ("10/22–26", "데이터 재수집"), ("10/26", "예비 평가"), ("10/28–29", "원인 분석"), ("11/02", "지표 개정"), ("11/03", "제안 3개")]
 sw = CW / 6
 for k, (d, t_) in enumerate(steps):
     last = k == len(steps) - 1
-    chevron(s, M + k * sw, ty + 0.42, sw + 0.12, 1.0, f"{d}\n{t_}", fill="primary" if last else "soft", color="white" if last else "inkdeep",
+    chevron(s, M + k * sw, ty + 0.38, sw + 0.12, 0.84, f"{d}\n{t_}", fill="primary" if last else "soft", color="white" if last else "inkdeep",
             size=17, first=(k == 0))
 note(s, "14조 · 중간발표 2")
 page_no(s, 2)
@@ -608,8 +617,17 @@ rows = [["항목", "중간발표 1", "현재"],
         ["검측 위치", "정답 좌표", "**작업대 카메라**"],
         ["실험 설계", "검측 누적 추가", "**2×2×2 요인 설계 (8조건)**"],
         ["반복", "seed 1", "**seed 3**"]]
-RX = M + LW + 0.3
-th3 = table(s, RX, y, W - M - RX, rows, [1.6, 2.6, 3.1], size=17, row_h=0.6, head_h=0.46)
+RX = M + LW + 0.3; RW = W - M - RX
+section_label(s, RX, y - 0.02, RW, "3단 일자 벽 · L 990 × H 191 mm · 줄눈 10 mm")
+dw = 1.0 / 0.191 * 0.990; dx0 = RX + (RW - dw) / 2; sc = dw / 0.990; dbot = y + 0.42 + 1.0
+for c_, xs in enumerate([[0.19] * 5, [0.09] + [0.19] * 4 + [0.09], [0.19] * 5]):
+    xx = dx0; yy_ = dbot - (c_ + 1) * 0.057 * sc - c_ * 0.010 * sc
+    for L_ in xs:
+        rect(s, xx, yy_, L_ * sc, 0.057 * sc, "brickhalf" if L_ < 0.1 else "brick", None)
+        xx += (L_ + 0.010) * sc
+rect(s, dx0 - 0.12, dbot + 0.01, dw + 0.24, 0.025, "inkdeep", None)
+th3 = table(s, RX, dbot + 0.18, RW, rows, [1.6, 2.6, 3.1], size=16, row_h=0.4, head_h=0.4)
+th3 += dbot + 0.18 - y
 info_card(s, M, sy, LW, y + th3 - sy, "왜 실척인가", ["**축소 모형이 아닌 실척 벽돌**로 쌓아야 시방 기준 (KCS 41 34 00)으로 평가하는 의미가 생김"],
           size=18, tag="p3 why")
 note(s, "14조 · 중간발표 2 · 벽돌 규격 KS L 4201")
@@ -758,10 +776,10 @@ for k, (a, b) in enumerate(seq):
 sy = y + 1.05 + 0.2
 strip(s, sy, 0.72, "차례가 어긋나면 다른 두 규칙의 효과가 묻힘 → **차례 맞추기를 먼저 확인** · 효과가 없으면 해당 가설은 기각", fill="soft", tag="p10 why")
 rows = [["기간", "할 일"],
-        ["[__/__ – __/__]", "**차례 맞추기** 구현 · 100벽 평가 / 2단 진입 벽 기록 재분석 (쌓임 근거)"],
-        ["[__/__ – __/__]", "**놓기 전 판정** 추가 · 걸침률 비교"],
-        ["[__/__ – __/__]", "모르타르 모델 보완 → **쌓임 막기** · 단 사이 오차 분석"],
-        ["[__/__ – 12/7]", "mm 오차 · 민감도 분석, 보고서 · 발표 준비"],
+        ["11/11 – 11/17", "**차례 맞추기** 구현 · 100벽 평가 / 2단 진입 벽 기록 재분석 (쌓임 근거)"],
+        ["11/18 – 11/24", "**놓기 전 판정** 추가 · 걸침률 비교"],
+        ["11/25 – 12/01", "모르타르 모델 보완 → **쌓임 막기** · 단 사이 오차 분석"],
+        ["12/02 – 12/07", "mm 오차 · 민감도 분석, 보고서 · 발표 준비"],
         ["12/8", "**최종발표**"]]
 table(s, M, sy + 0.72 + 0.22, CW, rows, [2.4, 9.9], size=17, row_h=0.5, head_h=0.44)
 note(s, "자원: RTX 5090 1대 · 학습 1회 6~9시간 · 일정은 회의 후 확정")
