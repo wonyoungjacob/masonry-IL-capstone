@@ -23,6 +23,20 @@ _TRUTH, _HT, _HG = ["--gate-pose-source", "truth"], ["--gate-target", "held_trut
 COND.update({"all_truth": COND["all"] + _TRUTH, "all_truth_held": COND["all"] + _TRUTH + _HT, "all_held": COND["all"] + _HG,
              "g1": ["--g1"], "g1g2": ["--g1", "--g2"], "g1g3": ["--g1", "--g3"], "g2g3": ["--g2", "--g3"],
              "g1g2_held": ["--g1", "--g2"] + _HG, "g1g3_held": ["--g1", "--g3"] + _HG, "g2g3_held": ["--g2", "--g3"] + _HG})
+# 2026-11-10 (실험파이프라인_실패원인제거_20261110.md): "<condition>+<fix>+<fix>" adds wall3/gates.py FIXES, e.g. all_held+k1+k6
+
+
+def cond_flags(name):
+    base, *fixes = name.split("+")
+    if base not in COND:
+        raise SystemExit(f"unknown condition {base!r}")
+    if fixes:
+        from wall3.gates import fix_fields
+        fix_fields(fixes)                              # unknown fix names fail here, before any job starts
+        return COND[base] + ["--gate-fix", *fixes]
+    return COND[base]
+
+
 PERCH_MM = 20.0          # 'filled' but the brick centre more than this above its design height (10-29: perched on a neighbour)
 
 
@@ -84,6 +98,13 @@ def summarize(walls):
             g2_skipped_far=sum(e.get("skipped") == "far" for x in g for e in x["g2"]),
             g2_in_hand_measured=sum(e.get("in_hand_src") in ("camera", "truth") for e in g2),
             g1_grasped_turn_brick=sum(e.get("audit_max_rise_brick") == k and (e.get("audit_max_rise_mm") or 0) > 10 for e, k in g1k))
+        g0 = [e for x in g for e in x.get("g0", [])]                                     # 2026-11-10 K2
+        if g0:
+            out["gates"]["g0"] = {"grasps": len(g0), "g1_grasped": sum(e.get("g1_grasped") is True for e in g0),
+                                  "tcp_off_mm_median": float(np.median([e["tcp_off_mm"] for e in g0]))}
+        g1r = [e for x in g for e in x["g1"] if "retract" in e]                          # 2026-11-10 K1
+        if g1r:
+            out["gates"]["g1_fail_retracts"] = len(g1r)
         tg = [e for x in g for e in x.get("target", []) if e.get("used")]
         if tg:
             t1 = [e for e in tg if e.get("g1_grasped") is True]
@@ -123,10 +144,10 @@ def main():
             for ci, part in enumerate(np.array_split(seeds, a.chunks)):
                 d = out / f"{pol}_{cond}_part{ci}"
                 cmd = [sys.executable, "-m", "wall3.rollout", "--ckpt", CKPT[pol], "--env-version", a.env_version,
-                       "--seeds", *map(str, part), "--out", str(d)] + COND[cond] + (["--record-first"] if ci == 0 else [])
+                       "--seeds", *map(str, part), "--out", str(d)] + cond_flags(cond) + (["--record-first"] if ci == 0 else [])
                 jobs.append((pol, cond, ci, d, cmd))
     (out / "plan.json").write_text(json.dumps({"seeds": [seeds[0], seeds[-1]], "env_version": a.env_version, "ckpt": CKPT,
-                                               "conditions": COND, "jobs": [[p, c, i, str(d)] for p, c, i, d, _ in jobs],
+                                               "conditions": {c: cond_flags(c) for c in a.conditions}, "jobs": [[p, c, i, str(d)] for p, c, i, d, _ in jobs],
                                                "started": time.strftime("%Y-%m-%d %H:%M:%S"),
                                                "git_commit": subprocess.check_output(["git", "-C", str(SIM), "rev-parse", "HEAD"], text=True).strip()},
                                               indent=1))

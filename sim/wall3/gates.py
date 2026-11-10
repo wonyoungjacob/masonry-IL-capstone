@@ -19,6 +19,17 @@ G2를 끄고 G3만 켜면 놓는 순간 가로채 그 자리에서 그대로 놓
   target: G2 · G3의 기준 자리. "turn" 차례 번호 k / "held_truth" G1 순간 참값으로 들린 벽돌의 자리 (진단) /
           "held_grasp" G1 순간 손(관절값 순기구학) xy에서 가장 가까운 공급칸의 자리 (도면의 공급대 배치만 씀, 참값 안 씀).
   turn이 아니면 감사 기록(audit_*)은 실제로 손에 든 벽돌(참값)로 남긴다.
+
+실패 원인을 하나씩 없애는 추가 제어 (2026-11-10, 01_사기설/실험파이프라인_실패원인제거_20261110.md). 기본값은 모두 꺼짐(그 전과 같은 동작).
+  K1 g1_fail_retract: G1이 '안 쥠'으로 판정해 집게를 연 뒤, 5 cm 들고 철수 자세(시연의 시작 자세)로 보낸 다음 정책에 돌려준다
+     (그 전: 그 자리에서 집게만 열고 돌려줌 → 정책이 시연에 없던 공중 자세에서 다시 시작). 롤아웃은 이 철수를 '정책의 철수 완료'로
+     세지 않는다(pop_gate_retract).
+  K6 g3_find_r: G3가 놓인 벽돌을 찾는 반경(설계 자리 중심에서). 그 전 4 cm. 이웃 벽돌 중심은 15 cm 이상 떨어져 있다.
+  K2 g0_align (G0 집기 정렬): 정책이 집게를 연 채 어떤 공급칸 중심에서 g0_zone_xy 안, 접근 높이 + g0_zone_z 아래로 내려오면
+     가로챈다. 도면의 공급칸 중심 · 방향(env.supply_pose, 흩어짐 ±10 mm · ±10°는 모름)으로 대본의 집기 동작(위로 → 정렬 →
+     내려감 → 닫기 → 1.5 cm 들기)을 한 뒤 G1 판정(켜져 있으면)을 하고 정책에 돌려준다. 공급칸마다 g0_max_tries번까지,
+     G1이 '쥠'으로 판정한 공급칸(정책이 집었든 G0가 집었든)은 다시 가로채지 않는다. 정책은 어느 벽돌로 갈지와 운반을 맡는다.
+     사전 확인(wall3/diag_nominal_grasp.py, 10벽 × 16장): 160 / 160 G1 '쥠', 손 안 어긋남 길이 ≤ 10.7 mm · 폭 ≤ 5.1 mm.
 """
 from __future__ import annotations
 
@@ -68,6 +79,14 @@ class GateConfig:
     target: str = "turn"             # 2026-11-03: G2 · G3 reference slot: "turn" (k) | "held_truth" (진단) | "held_grasp"
     held_grasp_max: float = 0.10     # m: held_grasp nearest supply slot farther than this = undetermined (use k)
     held_truth_min_rise: float = 0.01  # m: held_truth needs a brick lifted more than this (else k)
+    g1_fail_retract: bool = False    # 2026-11-10 K1: after a G1 'not grasped', lift and go to the retract pose before handing back
+    g1_fail_lift: float = 0.05       # m: K1 straight lift before the joint move to the retract pose
+    g3_find_r: float = 0.04          # m: 2026-11-10 K6: G3 looks for the laid brick within this of its design centre
+    g0_align: bool = False           # 2026-11-10 K2: grasp at the drawing's supply-slot centre when the policy descends there open
+    g0_zone_xy: float = 0.06         # m: TCP within this (xy) of a supply-slot centre
+    g0_zone_z: float = 0.03          # m: ... and below the approach height (grasp height + expert approach) plus this
+    g0_open_max: float = 0.15        # policy grip command below this = the jaw is (still) open
+    g0_max_tries: int = 2            # G0 grasps per supply slot and wall
 
     def __post_init__(self):
         if self.pose_source not in POSE_SOURCES:
@@ -77,6 +96,24 @@ class GateConfig:
 
     def to_dict(self):
         return asdict(self)
+
+
+# 2026-11-10: added controls, one per failure cause (실험파이프라인_실패원인제거_20261110.md). name -> GateConfig fields
+FIXES = {
+    "k1": {"g1_fail_retract": True},      # R_10S: G1 '안 쥠' 뒤 철수 자세로 돌려줌
+    "k6": {"g3_find_r": 0.07},            # R_6G: G3 찾는 반경 4 -> 7 cm
+    "k2": {"g0_align": True},             # R_10S · R_7*: 도면 공급칸 중심에서 집기 (G0 집기 정렬)
+}
+
+
+def fix_fields(fixes):
+    """GateConfig fields for a list of fix names (order kept, unknown names rejected)."""
+    out = {}
+    for f in fixes or ():
+        if f not in FIXES:
+            raise ValueError(f"unknown gate fix {f!r} (known: {sorted(FIXES)})")
+        out.update(FIXES[f])
+    return out
 
 
 class WallGates:
@@ -100,18 +137,24 @@ class WallGates:
         self.truth = self.cfg.pose_source == "truth"
         self.default = self.cfg.pose_source == "camera" and self.cfg.target == "turn"     # = the gates before 2026-11-03
         self.carrying, self.tgt, self.held_b = False, 0, None
+        self._gate_retracted = False                    # K1: the arm is at the retract pose because of a gate, not the policy
+        self.g0_tries, self.g0_taken = [0] * env.n, set()  # K2 bookkeeping per wall
 
     # ------------------------------------------------------------------ per brick
     def start_brick(self, k, deadline_t):
         # target != turn: a brick still in the hand keeps its reference slot into the next turn (the policy sometimes places
         # in the next turn the brick it picked in this one); a new wall (k = 0) always starts empty
         keep = self.cfg.target != "turn" and k > 0 and self.carrying
+        if k == 0:
+            self.g0_tries, self.g0_taken = [0] * self.env.n, set()
         self.k, self.deadline = k, deadline_t
         if not keep:
             self.carrying, self.hold_cmd = False, None
             self.tgt, self.held_b = k, None
         self.trig.reset()
         self.ev = {"g1": [], "g2": [], "g3": []}
+        if self.cfg.g0_align:
+            self.ev["g0"] = []
         self.z_start = [self.env.brick_pose(j)[0][2] for j in range(self.env.n)]      # audit only
 
     def end_brick(self):
@@ -174,6 +217,11 @@ class WallGates:
     # ------------------------------------------------------------------ hooks around the policy's step
     def before(self, act):
         """Called with the policy's action before it is executed. True = the gate handled the step(s) itself."""
+        if self.cfg.g0_align and not self.carrying:
+            i = self._g0_slot(act)
+            if i is not None:
+                self._g0_grasp(i)
+                return True
         if not self.carrying or self.hold_cmd is None:
             return False
         if float(act[6]) >= self.hold_cmd - self.cfg.release_drop:
@@ -204,9 +252,14 @@ class WallGates:
         p, _ = self.env.tcp()
         if not self.trig.update(float(act[6]), p[2]):
             return
+        self._g1_moment(act)
+
+    def _g1_moment(self, act):
+        """The G1 moment (closed and lifted 1.5 cm, by the policy or by G0): reference slot, G1 check, then hand back."""
         dec = self._decide_target()                         # the G1 moment: reference slot (kept until the release)
         if self.g1 is None:                                 # no check: treat as carrying
             self._take(act, dec, None)
+            self._g0_mark_taken()
             return
         m = self.g1.measure(act[:6], float(act[6]), (lambda lb: self.on_frame(lb, self.k)) if self.on_frame else None)
         ok = self.g1.decide(m)
@@ -216,6 +269,7 @@ class WallGates:
                               "audit_max_rise_mm": round(max(rise) * 1000, 1)})
         if ok:
             self._take(act, dec, True)
+            self._g0_mark_taken()
         else:
             if not self.default:
                 self.ev.setdefault("target", []).append({**dec[2], "g1_grasped": False, "used": False})
@@ -223,9 +277,90 @@ class WallGates:
                 self.env.step(act[:6], self.env.cfg.gripper.open_ctrl)
                 if self.on_frame:
                     self.on_frame("G1 open", self.k)
+            if self.cfg.g1_fail_retract:
+                self.ev["g1"][-1]["retract"] = self._g1_fail_retract()
             self.trig.reset()
         if self.policy is not None:
             self.policy.reset()
+
+    def _g1_fail_retract(self):
+        """K1: open hand straight up by g1_fail_lift, then the expert's joint move to the retract pose (pitch joints rise first)."""
+        env, ex = self.env, self.ex
+        go = env.cfg.gripper.open_ctrl
+        self._sync_expert(go)
+        p, R = env.tcp()
+        ex._cart_move(p + [0, 0, self.cfg.g1_fail_lift], R, 0.3, go, None, "g1_fail_up")
+        ex._joint_move(np.array(ex.q_ret), go, None, "g1_fail_retract")
+        self._gate_retracted = True
+        return {"t_done": int(env.t), "q_err_rad": round(float(np.abs(env.arm_q() - ex.q_ret).max()), 4)}
+
+    # ------------------------------------------------------------------ K2 G0 grasp alignment (2026-11-10)
+    def _g0_mark_taken(self):
+        p, _ = self.env.tcp()
+        i, _ = nearest_supply_slot(p[:2], self.env.cfg.supply_slots, self.cfg.held_grasp_max)
+        if i is not None:
+            self.g0_taken.add(i)
+
+    def _g0_heights(self, i):
+        pos, _ = self.env.supply_pose(i)                     # drawing: slot centre, table height (no scatter)
+        z_grasp = pos[2] + self.ex.dzp
+        return pos, z_grasp, z_grasp + self.ex.cfg.approach
+
+    def _g0_slot(self, act):
+        """The supply slot the policy is descending onto with an open jaw (None if not)."""
+        c, env = self.cfg, self.env
+        if float(act[6]) >= c.g0_open_max:
+            return None
+        p, _ = env.tcp()
+        i, d = nearest_supply_slot(p[:2], env.cfg.supply_slots, c.g0_zone_xy)
+        if i is None or i in self.g0_taken or self.g0_tries[i] >= c.g0_max_tries:
+            return None
+        _, _, z_app = self._g0_heights(i)
+        if p[2] > z_app + c.g0_zone_z:
+            return None
+        z_next = float(self.ex.ik.fk(np.asarray(act[:6], float))[0][2])
+        if z_next >= p[2] - 1e-4:                            # not going down
+            return None
+        return i
+
+    def _g0_grasp(self, i):
+        """Expert grasp at the drawing's centre of supply slot i, then the G1 moment."""
+        env, ex = self.env, self.ex
+        gc = env.cfg.gripper
+        go = gc.open_ctrl
+        self.g0_tries[i] += 1
+        pos, z_grasp, z_app = self._g0_heights(i)
+        p0, _ = env.tcp()
+        ev = {"t": int(env.t), "supply_slot": int(i), "turn": int(self.k), "try": self.g0_tries[i],
+              "tcp_off_mm": round(float(np.hypot(*(p0[:2] - pos[:2]))) * 1000, 1), "tcp_z_above_grasp_mm": round((p0[2] - z_grasp) * 1000, 1)}
+        self._sync_expert(go)
+        p, R = env.tcp()
+        if p[2] < z_app:                                     # straight up first: the fingers may be near the brick already
+            ex._cart_move(np.r_[p[:2], z_app], R, 0.3, go, None, "g0_up")
+        if not self._move_tcp(np.r_[pos[:2], z_app], 0.0, go, None, "g0_align", T=0.5):
+            ev["result"] = "ik_failed"
+            self.ev["g0"].append(ev)
+            self._handback()
+            return
+        p, R = env.tcp()
+        ex._cart_move(np.r_[pos[:2], z_grasp], R, ex.cfg.t_down, go, None, "g0_descend")
+        n = int(round(ex.cfg.t_close / self.dt))
+        cg = ex.grip_close_cmd()
+        ex._hold(n, [min(cg, G.ramp(gc, True, (j + 1) * self.dt, go)) for j in range(n)], None, "g0_close")
+        p, R = env.tcp()
+        ex._cart_move(p + [0, 0, self.g1cfg.lift], R, 0.3, cg, None, "g0_lift")
+        a = np.asarray(env.last_action, float).copy()
+        ng1 = len(self.ev["g1"])
+        self.trig.reset()
+        self._g1_moment(a)                                   # G1 check (if on) and hand back
+        ev["g1_grasped"] = self.ev["g1"][ng1]["grasped"] if len(self.ev["g1"]) > ng1 else None
+        ev["result"] = "done"
+        self.ev["g0"].append(ev)
+
+    def pop_gate_retract(self):
+        """True once after a gate moved the arm to the retract pose (the rollout must not count it as the policy's retract)."""
+        r, self._gate_retracted = self._gate_retracted, False
+        return r
 
     def _handback(self):
         self.trig.reset()
@@ -510,7 +645,7 @@ class WallGates:
                 ex._play(path[i:i + 1], 0.0, None, "g3_view")
                 self.view_steps += 1
                 if i >= 3:
-                    dd = self._find_truth(xy, 0.04, zr) if self.truth else self.cam.find(xy, r=0.04, z_range=zr, L=L, yaw_prior=yaw_d)
+                    dd = self._find_truth(xy, c.g3_find_r, zr) if self.truth else self.cam.find(xy, r=c.g3_find_r, z_range=zr, L=L, yaw_prior=yaw_d)
                     if dd is not None and dd["full"]:
                         return dd
                     if c.g3_partial_margin is not None and dd is not None and \
@@ -520,10 +655,10 @@ class WallGates:
                     d = dd if dd is not None else d
         ex._joint_move(np.array(ex.q_ret), 0.0, None, "g3_view_retract", lag=0.0)
         if self.truth:
-            d2 = self._find_truth(xy, 0.04, zr)
+            d2 = self._find_truth(xy, c.g3_find_r, zr)
         else:
             self.cam._key = None
-            d2 = self.cam.find(xy, r=0.04, z_range=zr, L=L, yaw_prior=yaw_d)
+            d2 = self.cam.find(xy, r=c.g3_find_r, z_range=zr, L=L, yaw_prior=yaw_d)
         return d2 if d2 is not None else d
 
     def _g3(self, k):

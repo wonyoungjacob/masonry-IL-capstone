@@ -78,6 +78,8 @@ def run_wall(env, policy, pre, post, cfg_in, seed, torch, rec=None, q_ret=None, 
                     t_m = env.t
                     gates.after(act)                              # G1 (or carrying bookkeeping)
                     gate_steps += env.t - t_m
+                    if gates.pop_gate_retract():                  # 2026-11-10 K1: a gate retract is not the policy's retract
+                        left, still = False, 0
             q = env.arm_q()
             qhist.append(q)
             zmax = max(zmax, env.brick_pose(k)[0][2])
@@ -129,7 +131,12 @@ def main():
                     help="G2 · G3 brick poses from the camera, or the simulator truth (진단 전용, 2026-11-03)")
     ap.add_argument("--gate-target", choices=("turn", "held_truth", "held_grasp"), default="turn",
                     help="G2 · G3 reference slot: turn k / brick lifted (truth, 진단) / nearest supply slot at the G1 moment")
+    ap.add_argument("--gate-fix", nargs="*", default=[],
+                    help="added controls (wall3/gates.py FIXES, 2026-11-10 실험파이프라인_실패원인제거): k1 (needs --g1), k2, k6 (needs --g3)")
     a = ap.parse_args()
+    need = {"k1": a.g1, "k6": a.g3, "k2": True}
+    if any(not need.get(f, True) for f in a.gate_fix):
+        raise SystemExit("--gate-fix k1 은 --g1, k6 은 --g3 와 함께만")
     if (a.gate_pose_source != "camera" or a.gate_target != "turn") and not (a.g2 or a.g3):
         raise SystemExit("--gate-pose-source / --gate-target 는 --g2 또는 --g3 와 함께만")
     if any(not any(lo <= s <= hi for lo, hi in ALLOWED) for s in a.seeds):
@@ -149,15 +156,15 @@ def main():
     gates = None
     if a.g1 or a.g2 or a.g3:
         from wall3.g1 import G1Config
-        from wall3.gates import WallGates, GateConfig
+        from wall3.gates import WallGates, GateConfig, fix_fields
         gates = WallGates(env, policy, g1=a.g1, g2=a.g2, g3=a.g3,
                           g1_cfg=G1Config(thr_load=a.g1_thr_load, thr_angle=a.g1_thr_angle),
-                          cfg=GateConfig(pose_source=a.gate_pose_source, target=a.gate_target))
+                          cfg=GateConfig(pose_source=a.gate_pose_source, target=a.gate_target, **fix_fields(a.gate_fix)))
     meta = {"ckpt": a.ckpt, "env_version": a.env_version, "policy_type": pcfg.type, "n_action_steps": pcfg.n_action_steps,
             "input_features": {k: list(v.shape) for k, v in pcfg.input_features.items()},
             "git_commit": subprocess.check_output(["git", "-C", str(SIM), "rev-parse", "HEAD"], text=True).strip(), "limit_s": LIMIT_S,
             "gates": (gates.summary_config() if gates is not None else None),
-            "gate_pose_source": a.gate_pose_source, "gate_target": a.gate_target,
+            "gate_pose_source": a.gate_pose_source, "gate_target": a.gate_target, "gate_fix": a.gate_fix,
             "scene_sha256": hashlib.sha256(json.dumps(env.cfg.to_dict(), sort_keys=True, default=float).encode()).hexdigest()}
     res = []
     for i, seed in enumerate(a.seeds):

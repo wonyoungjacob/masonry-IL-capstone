@@ -15,7 +15,7 @@ import numpy as np
 
 SIM = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SIM))
-SRC = {"policy": 0, "g1": 1, "g2g3": 2, "other": 3}     # who issued the step: policy loop / G1 check / G2·G3 placing / settle
+SRC = {"policy": 0, "g1": 1, "g2g3": 2, "other": 3, "g0": 4}     # who issued the step: policy loop / G1 check / G2·G3 placing / settle
 
 
 def main():
@@ -26,6 +26,7 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--gate-pose-source", choices=("camera", "truth"), default="camera", help="= rollout (2026-11-03)")
     ap.add_argument("--gate-target", choices=("turn", "held_truth", "held_grasp"), default="turn", help="= rollout (2026-11-03)")
+    ap.add_argument("--gate-fix", nargs="*", default=[], help="= rollout (2026-11-10)")
     ap.add_argument("--compare", nargs="*", default=[], help="rollout.json files of the evaluation run to compare with")
     a = ap.parse_args()
     if any(not (700300 <= s <= 700399) for s in a.seeds):
@@ -44,16 +45,16 @@ def main():
     from wall3.config import scene_config, RETRACT_Q
     from wall3.scene import WallEnv
     from wall3.g1 import G1Config
-    from wall3.gates import WallGates, GateConfig
+    from wall3.gates import WallGates, GateConfig, fix_fields
     from wall3.rollout import run_wall
     policy, pcfg, pre, post = load_policy(a.ckpt, "cuda", None, None)
     cfg_in = set(pcfg.input_features)
     env = WallEnv(scene_config(a.env_version))
     q_ret = np.array(RETRACT_Q)
     gates = WallGates(env, policy, g1=True, g2=True, g3=True, g1_cfg=G1Config(thr_load=4.5, thr_angle=0.47),
-                      cfg=GateConfig(pose_source=a.gate_pose_source, target=a.gate_target))   # = rollout --g1 --g2 --g3
+                      cfg=GateConfig(pose_source=a.gate_pose_source, target=a.gate_target, **fix_fields(a.gate_fix)))   # = rollout --g1 --g2 --g3
     meta = {"ckpt": a.ckpt, "env_version": a.env_version, "policy_type": pcfg.type, "gates": gates.summary_config(),
-            "gate_pose_source": a.gate_pose_source, "gate_target": a.gate_target,
+            "gate_pose_source": a.gate_pose_source, "gate_target": a.gate_target, "gate_fix": a.gate_fix,
             "git_commit": subprocess.check_output(["git", "-C", str(SIM), "rev-parse", "HEAD"], text=True).strip(),
             "scene_sha256": hashlib.sha256(json.dumps(env.cfg.to_dict(), sort_keys=True, default=float).encode()).hexdigest(),
             "script": "diag_trace", "src_codes": SRC}
@@ -89,6 +90,7 @@ def main():
         return g
     gates.before = mark(gates.before, SRC["g2g3"])
     gates.after = mark(gates.after, SRC["g1"])
+    gates._g0_grasp = mark(gates._g0_grasp, SRC["g0"])         # 2026-11-10 K2 (inside before)
 
     res = []
     for seed in a.seeds:

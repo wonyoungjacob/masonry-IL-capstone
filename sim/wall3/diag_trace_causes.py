@@ -24,7 +24,7 @@ from pathlib import Path
 
 import numpy as np
 
-SRCN = {0: "정책", 1: "G1", 2: "G2·G3", 3: "마무리"}
+SRCN = {0: "정책", 1: "G1", 2: "G2·G3", 3: "마무리", 4: "G0"}   # 4: 2026-11-10 K2 G0 집기 정렬
 EXIST_XY, EXIST_Z, EXIST_TILT = 0.045, 0.0285, 45.0          # = spec_metrics (채움 기준)
 
 
@@ -152,7 +152,7 @@ def analyse(z, wall, design, aim_max=None, perch=None):
         wall_carry = [m for m in moves[j] if m["carry"] and m["dxy_mm"] > 300 and m["src"] == 0]
         r = {"slot": j_slot, "brick": j, "perched": perched, "final": fp.round(3).tolist(), "final_tilt_deg": round(tl, 1), "final_dxy_mm": round(dj), "final_dz_mm": round(dz),
              "state": st, "moves": moves[j], "policy_transport_k": [m["k"] for m in wall_carry],
-             "gate_moved": [m["k"] for m in moves[j] if m["src"] == 2 and (m["carry"] or m["dxy_mm"] > 30)]}
+             "gate_moved": [m["k"] for m in moves[j] if m["src"] in (2, 4) and (m["carry"] or m["dxy_mm"] > 30)]}
         if untouched or not big:
             att = [x for x in attempts if x["k"] == j]
             aims = collections.Counter((x["aim"], x["aim_gone"]) for x in att)
@@ -175,7 +175,7 @@ def analyse(z, wall, design, aim_max=None, perch=None):
             else:
                 busy = [b for b in range(n) if b != j and any(c["s"] - 2 <= m["s"] <= c["e"] + 2 for c in carried[b])]
                 act = f"{who} 동작 중 밀림(차례 {m['k']}" + (f", 그때 벽돌 {busy} 운반 중)" if busy else ")")
-            r.update(actor=("G2·G3" if m["src"] == 2 else "정책") + (" 운반" if m["carry"] else " 밀림") + ref, last_k=m["k"],
+            r.update(actor=({2: "G2·G3", 4: "G0"}.get(m["src"], "정책")) + (" 운반" if m["carry"] else " 밀림") + ref, last_k=m["k"],
                      text=f"{act} → {st} (xy {dj:.0f} mm, 높이 {dz:+.0f} mm, 기울기 {tl:.0f}°)")
         out.append(r)
     return out, moves, attempts

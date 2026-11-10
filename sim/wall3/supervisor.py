@@ -8,6 +8,8 @@
 계산만 한다: 보고서 · 커밋은 하지 않는다.
 
 실행: cd sim && venv/bin/python -m wall3.supervisor   (상태: outputs/wall3/supervisor_20261104/STATUS.txt)
+     다른 계획: venv/bin/python -m wall3.supervisor --plan wall3.plan_ladder_20261110
+     (계획 모듈은 SUP_NAME · STAGES와, 있으면 post_stage(sname, st)를 둔다. 2026-11-10)
 """
 import collections, json, os, shlex, shutil, signal, subprocess, sys, time, traceback
 from pathlib import Path
@@ -258,7 +260,20 @@ def tick(st):
     return False
 
 
+def use_plan(name):
+    """2026-11-10: run another plan module's stages with its own state folder (the jobs logic above is unchanged)."""
+    global SUP, STATE, STAGES, post_stage
+    import importlib
+    m = importlib.import_module(name)
+    SUP = SIM / W / m.SUP_NAME
+    STATE = SUP / "state.json"
+    STAGES = m.STAGES
+    post_stage = getattr(m, "post_stage", lambda sname, st: None)
+
+
 def main():
+    if "--plan" in sys.argv:
+        use_plan(sys.argv[sys.argv.index("--plan") + 1])
     SUP.mkdir(parents=True, exist_ok=True)
     st = json.loads(STATE.read_text()) if STATE.exists() else {"status": "실행중", "stages": {}, "jobs": {}, "notes": []}
     log(f"감독 시작 pid {os.getpid()}")
