@@ -54,6 +54,8 @@ AFFIL = ["¹ 학생회원 · 연세대학교 건설환경공학과 학사과정(
 
 LF = "eval_lf_20261110_compare.json"
 G1FIX = "eval_lf_g1fix_20261111_compare.json"
+G2C = "eval_lg_g2c_20261111_compare.json"            # 11-11 SDCG(G2c) 추가 시도: Full + G2c 대 Full 다시 (있으면 결론에 한 줄)
+G2C_KEY = "eval_lg_full2_20261111/act_all_held+k2+k7+k8"
 FULL_KEY = "eval_lf_full_20261110/act_all_held+k2+k7"
 # 역방향 제거 줄: (compare json, 키, 줄 이름, 종류) — 종류 'full' · 'loo' · 'none' · 'diag'
 ROWS = [
@@ -984,14 +986,24 @@ def build(a):
               (f" ({diag['diff']:+.2f}장): 남은 실패의 주원인은 카메라 오차가 아닌 것으로 보임".replace("-", "−"), {})], sz=16, bullet=True, after=3),
         para([("한계", {"bold": True}), (f": 시방 합격 {full['spec']} % (목표 70 %) · 시뮬레이션 · 개발 배치 100벽, 시험 배치 평가 전", {})],
              sz=16, bullet=True)]
-    s.text(RX, y, CW, 5.0, concl, name="결론 글")
-    y += 5.2
-    s.text(RX, y, CW, 2.35, [para([("정책을 다시 학습하지 않고, ‘지금 손에 든 벽돌’을 아는 검측 단계로", {"bold": True, "color": "FFFFFF"})],
+    c2 = d.compare(G2C)
+    conc_h = 5.0
+    if c2 is not None and G2C_KEY in c2["conditions"]:
+        e2 = c2["conditions"][G2C_KEY]
+        v, h2, hb = e2["vs_base"], e2["first_unfilled_hist"], c2["conditions"][c2["base"]]["first_unfilled_hist"]
+        concl.insert(-1, para([("추가 시도 SDCG (놓기 확약 G2c)", {"bold": True}),
+                               (f": 자리 6 실패 {hb.get('6', 0)} → {h2.get('6', 0)}벽, 그러나 힘 오감지로 새 실패 → 전체 "
+                                f"{v['diff_mean']:+.2f} [{v['ci95'][0]:+.2f}, {v['ci95'][1]:+.2f}]장, Full에서 제외 · "
+                                "VPRA는 3단 벽에선 실패 원인 아님".replace("-", "−"), {})], sz=16, bullet=True, after=3))
+        conc_h = 6.5
+    s.text(RX, y, CW, conc_h, concl, name="결론 글")
+    y += conc_h + 0.2
+    s.text(RX, y, CW, 2.0 if conc_h > 5.0 else 2.35, [para([("정책을 다시 학습하지 않고, ‘지금 손에 든 벽돌’을 아는 검측 단계로", {"bold": True, "color": "FFFFFF"})],
                                   sz=18, algn="ctr", color="FFFFFF", after=2),
                              para([(f"벽당 {none['fill']:.1f} → {full['fill']:.2f}장 (16장 중) · 시방 합격 0 → {full['spec']}벽", {"bold": True, "color": "FFFFFF"})],
                                   sz=20, algn="ctr", color="FFFFFF")],
            fill="1B4F8F", geom="roundRect", anchor="ctr", name="핵심 메시지")
-    y += 2.5
+    y += 2.15 if conc_h > 5.0 else 2.5
     s.text(RX, y, CW, 0.75, [para("주요 문헌: Zhao et al. (2023) ACT, RSS · Todorov et al. (2012) MuJoCo, IROS · KCS 41 34 00 조적공사 표준시방서",
                                   sz=11, color="5B6370")], name="문헌")
     right_end = y + 0.75
@@ -1041,7 +1053,8 @@ def write_md(md, d, a, pptx, figd, prev, F, warns, errs):
     L.append("| 오른쪽 04 | 결과 1: 사다리 | 1 ~ 5단계 벽당 채운 자리 · 16장 완성 · 시방 합격 | 그림 (작은 그래프 2개) |")
     L.append("| 오른쪽 05 | 결과 2: 하나씩 끄기 | 줄마다 벽당 채운 자리 · 시방 합격 · Full 대비 짝 차이 [95 % 구간] 그래프와 같은 값의 표 | 그림 · PowerPoint 표 |")
     L.append("| 오른쪽 06 | 남은 실패 | 처음 못 채운 자리 분포(Full · Full − G0 · 검측 없음, 1 · 2 · 3단 띠) | 그림 |")
-    L.append("| 오른쪽 08 | 결론 | 5줄 · 핵심 메시지 상자 · 주요 문헌 | 글 |\n")
+    has_g2c = d.compare(G2C) is not None
+    L.append(f"| 오른쪽 08 | 결론 | {6 if has_g2c else 5}줄{' (SDCG 추가 시도 한 줄 포함)' if has_g2c else ''} · 핵심 메시지 상자 · 주요 문헌 | 글 |\n")
     L.append("## 역방향 제거 줄 (포스터 05절과 같은 값)\n")
     L.append("| 조건 | 벽당 채운 자리 | 16장 완성 | 시방 합격 | Full 대비 [95 % 구간] | 출처 |")
     L.append("|---|---|---|---|---|---|")
@@ -1080,7 +1093,12 @@ def write_md(md, d, a, pptx, figd, prev, F, warns, errs):
     L.append("- **제목**: 제출 초록 제목(‘모방학습 조적 로봇의 파지·배치 검측 단계별 효과’)을 그대로 두었다. 내용은 초록의 3장 실험이 아니라 3단 16장 벽 실험(11-10 역방향 제거)이다. 학회 규정상 제목을 바꿀 수 있는지 확인이 필요하다.")
     L.append("- **저자 · 소속**: 이전 포스터(`KSARC2026_포스터_논문본문반영.pptx`)의 줄을 그대로 옮겼다.")
     L.append("- **이름**: 이전 포스터의 ‘G0 실행가능성 필터’와 이번 ‘G0 집기 정렬’은 다른 제어다. 이번 포스터는 11-10 이름 정리(G0 · G1 · G2 · G2w · G3 · H)만 쓴다.")
-    L.append("- **SDCG · VPRA**: 아직 포스터에 없다. 넣게 되면 새 Full과 줄을 `--rows-json` 또는 `--extra`로 주고 `--tag`를 새로 해 다시 만든다.")
+    if d.compare(G2C) is not None:
+        L.append("- **SDCG · VPRA**: 결론에 한 줄로만 넣었다. SDCG는 G2c(놓기 확약)로 구현해 Full + G2c 대 Full 다시를 쟀다"
+                 " (`eval_lg_g2c_20261111_compare.json`). 겨냥한 자리 6 실패는 줄었으나 전체 효과가 0을 걸쳐 Full에 넣지 않았다."
+                 " VPRA는 완성벽 시방 여유로 3단 벽의 실패 원인이 아니라 구현하지 않았다. 표 · 그래프의 Full은 G0 + G1 + G2 + G2w + G3 + H다.")
+    else:
+        L.append("- **SDCG · VPRA**: 아직 포스터에 없다. 넣게 되면 새 Full과 줄을 `--rows-json` 또는 `--extra`로 주고 `--tag`를 새로 해 다시 만든다.")
     L.append("- **최종 평가**: 시험 배치(730000번대)는 쓰지 않았다(사용 허락 필요). 포스터 숫자는 개발 배치다.")
     L.append("- **글꼴**: 양식대로 나눔고딕 · 나눔고딕 ExtraBold · 맑은 고딕. 나눔고딕이 없는 PC에서는 다른 글꼴로 바뀌어 줄바꿈이 달라질 수 있다.")
     L.append("- **빼기 기호**: 나눔고딕에 수학 빼기(−, U+2212) · ≫ 글자가 없어서, pptx 글자(표 · 글상자)에서는 ‘Full – G0’처럼 짧은 줄표(–)로 바꿔 넣었다. 그림(PNG) 안은 −를 그대로 쓴다.\n")
