@@ -4,6 +4,7 @@ K1: G1이 빈손으로 판정하면 집게를 연 뒤 철수 자세로 보내고
 K2: 정책이 집게를 연 채 공급칸 위로 내려오면 도면 공급칸 중심에서 집고 G1 판정 뒤 운반 중 상태로 돌려준다. 이웃은 그대로.
     집게를 닫는 중 · 올라가는 중 · 너무 높음 · 이미 집은 칸에서는 가로채지 않는다.
 K6: G3가 놓인 벽돌을 찾는 반경이 설정값을 따른다. 기본값은 그 전과 같다.
+K7: 손에 든 벽돌을 설계 자리에서 22 cm 떨어진 곳에서 놓기 시작하면 K7일 때만 G2가 넘겨받아 제자리에 놓는다.
 K1 + K2: G0가 빈 공급칸을 집어 G1이 '안 쥠'이면 before() 안에서 철수한다. 롤아웃은 before · after 어느 쪽 뒤에서도 그 철수를 알아듣는다.
 실행: cd sim && MUJOCO_GL=egl PYTHONPATH=. venv/bin/python -m unittest discover -s tests -p "test_wall3_gate_fix.py" -v
 """
@@ -24,6 +25,8 @@ class FixConfigTest(unittest.TestCase):
         self.assertEqual(fix_fields([]), {})
         self.assertEqual(fix_fields(["k1", "k6"]), {"g1_fail_retract": True, "g3_find_r": 0.07})
         self.assertEqual(fix_fields(["k2"]), {"g0_align": True})
+        self.assertEqual(fix_fields(["k7"]), {"near_slot": 0.40})
+        self.assertEqual(GateConfig().near_slot, 0.15)
         self.assertFalse(GateConfig().g0_align)
         for k, v in FIXES.items():
             GateConfig(**v)                                   # every fix is a valid config
@@ -177,6 +180,69 @@ class K1K2Test(unittest.TestCase):
         line = [l for l in src.splitlines() if "gates.pop_gate_retract()" in l][0]
         body = [l for l in src.splitlines() if "if gates is not None and gates.before(act)" in l][0]
         self.assertEqual(len(line) - len(line.lstrip()), len(body) - len(body.lstrip()))   # same level as the before/after branch
+
+
+class K7WideG2Test(unittest.TestCase):
+    """K7: the policy starts to release the held brick 22 cm from its design slot (as in the L1 slot-11 failures, behind the
+    wall line). With K7 G2 takes over and lays it on its slot; without K7 (15 cm) G2 lets the policy release it there."""
+
+    def grab(self, fixes):
+        from wall3.config import scene_config
+        from wall3.expert import WallExpert
+        from wall3.g1 import G1Config
+        from wall3.ik import down_R
+        from wall3.scene import WallEnv
+        self.env = env = WallEnv(scene_config("main_v1_eval"))
+        self.ex = ex = WallExpert(env)
+        env.reset(700323, arm_q=ex.q_ret)
+        ex.on_step, ex.q_cmd, ex.grip_cmd, ex.fail, ex.touch, ex.brick_k = None, ex.q_ret.copy(), 0.0, None, [], 3
+        ex.in_hand, ex.max_drift, ex.steps = None, 0.0, 0
+        ex._watch = lambda held, phase: None
+        g = WallGates(env, None, g1=True, g2=True, g1_cfg=G1Config(thr_load=4.5, thr_angle=0.47),
+                      cfg=GateConfig(target="held_grasp", **fix_fields(["k2"] + fixes)))
+        g.start_brick(0, env.t + 10_000)
+        g.k = 1
+        pos, _, z_app = g._g0_heights(3)
+        p = np.r_[pos[:2] + [0.02, 0.02], z_app - 0.01]
+        ex._joint_move(ex._solve(p, down_R(0.0), ex.q_ret, ex.q_ret[0]), 0.0, None, "to_test_pose")
+        q_down = ex._solve(p - [0, 0, 0.01], down_R(0.0), env.arm_q(), env.arm_q()[0])
+        self.assertTrue(g.before(np.r_[q_down, 0.0]))                     # G0 grasps brick 3
+        self.assertTrue(g.carrying)
+        self.assertEqual(g.tgt, 3)
+        d = env.design[3]
+        self.rel = np.r_[d["x"] - 0.20, d["y"] + 0.10, 0.30]             # 224 mm from the slot, behind the wall line
+        pt, _ = env.tcp()
+        ex._cart_move(np.r_[pt[:2], 0.30], down_R(0.0), 0.8, g.hold_cmd, None, "up")
+        ex._joint_move(ex._solve(self.rel, down_R(0.0), env.arm_q(), env.arm_q()[0]), g.hold_cmd, None, "carry")
+        return env, g
+
+    def test_k7_takes_over(self):
+        env, g = self.grab(["k7"])
+        act = np.r_[env.arm_q(), g.hold_cmd - 0.05]                        # the policy starts to open
+        self.assertTrue(g.before(act))
+        e = g.ev["g2"][-1]
+        self.assertEqual(e["slot"], 3)
+        self.assertNotIn("skipped", e)
+        self.assertGreater(e["moved_mm"], 150)
+        # laid on its slot = counted as filled by the evaluation (spec_metrics existence check: xy 45 mm, z 28.5 mm, tilt 45°).
+        # Not G2's usual 1 ~ 3 mm: in this test the lock lets go at the start of the lift (torque limit, as in 52 of the 64
+        # filled slot-11 carries in L1) and the brick slips about 35 mm along the jaw before G2 sees it.
+        pb, qb = env.brick_pose(3)
+        d = env.design[3]
+        self.assertLess(float(np.hypot(pb[0] - d["x"], pb[1] - d["y"])), 0.045)
+        self.assertLess(abs(pb[2] - d["z"]), 0.0285)
+        w, x, y, z = qb
+        self.assertLess(np.degrees(np.arccos(np.clip(1 - 2 * (x * x + y * y), -1, 1))), 45.0)
+        self.assertFalse(g.carrying)
+
+    def test_without_k7_the_policy_releases(self):
+        env, g = self.grab([])
+        act = np.r_[env.arm_q(), g.hold_cmd - 0.05]
+        self.assertFalse(g.before(act))
+        e = g.ev["g2"][-1]
+        self.assertEqual(e.get("skipped"), "far")
+        self.assertGreater(e["dist_mm"], 150)
+        self.assertLess(e["dist_mm"], 400)
 
 
 class K6RadiusTest(unittest.TestCase):
