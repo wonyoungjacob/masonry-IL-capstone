@@ -31,6 +31,11 @@ LADDER = [
 LADDER_BASE = {"L1": "E3 = G1 + G2 + G3 + H (다시)", "L2": "G0 + G1 + G2 + G3 + H (다시)", "L3": "G0 + G1 + G2 + G3 + H (다시)"}
 
 
+# 줄 주석 (11-10 밤 확인, 진행상황.md): 이 줄은 참고 줄로 강등
+ROW_NOTE = {"Lf07_noG1": "참고 줄: G1을 끄면 G0가 손을 돌려줄 때 정책 리셋이 빠지는 구현 누락이 있어(gates.py `_g1_moment`의 G1 꺼짐 분기), "
+                         "G1의 몫이 아니라 그 누락의 영향을 잰 값이다"}
+
+
 def rule(ci):
     lo, hi = ci
     return "남김 (하한 > 0)" if lo > 0 else ("뺌 (상한 < 0)" if hi < 0 else "뺌 (0 걸침, 마감 규칙 (a))")
@@ -79,9 +84,11 @@ def main():
             md.append(f"| {i} | {label} (`{cond}`) | 없음{(' (' + r['error'] + ')') if r else ' (돌지 않음 · 포기)'} | | | | | |")
             continue
         v = r.get("vs_base")
-        md.append(f"| {i} | {label} (`{cond}`) | {row_stats(r)} | {fmt_vs(v) if v else '기준'} | "
+        lab2 = f"{label} (`{cond}`)" + (" ※" if name in ROW_NOTE else "")
+        md.append(f"| {i} | {lab2} | {row_stats(r)} | {fmt_vs(v) if v else '기준'} | "
                   f"{(str(v['walls_up']) + ' · ' + str(v['walls_down'])) if v else '–'} |")
-    md += ["", "- 한 제어의 몫 = Full − (Full에서 그것만 끈 줄) = 위 짝 차이의 부호를 뒤집은 값.",
+    md += [""] + [f"- ※ {ROW_NOTE[n]}." for n, _, _, _ in P.ROWS if n in ROW_NOTE]
+    md += ["- 한 제어의 몫 = Full − (Full에서 그것만 끈 줄) = 위 짝 차이의 부호를 뒤집은 값.",
            "- (진단) 줄은 G2 · G3의 위치와 손에 든 벽돌 판별을 참값으로 바꾼 조건(`all_truth_held`)이다. 실제 로봇에서는 불가능하다.", ""]
     md += ["### 표 2. 사다리 짝 비교 (같은 회차에서 다시 돌린 기준과)", "",
            "| 회차 | 기준 (값) | 더한 제어 | 벽당 채운 자리 | 16장 완성 | 시방 합격 | 짝 차이 [95 % 구간] | 판정 |", "|---|---|---|---|---|---|---|---|"]
