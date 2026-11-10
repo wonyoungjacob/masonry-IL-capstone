@@ -9,7 +9,7 @@ Full = G0 + G1 + G2 + G3 + H (+ G2w: L3 짝 비교 구간 하한 > 0이면, 마�
 
 실행: cd sim && venv/bin/python -m wall3.supervisor --plan wall3.plan_lf_20261110
 """
-K7_IN_FULL = None            # L3 판정으로 채움 (True / False). 비어 있으면 계획을 읽을 때 멈춘다
+K7_IN_FULL = True            # L3 판정 (11-10 19:00): E3+G0+G2w 대 E3+G0 다시 +0.41 [+0.01, +0.81], 하한 > 0 → 넣음 (마감 규칙 (a))
 
 if K7_IN_FULL not in (True, False):
     raise SystemExit("plan_lf_20261110: K7_IN_FULL을 L3 판정으로 채운 뒤 돌린다")
