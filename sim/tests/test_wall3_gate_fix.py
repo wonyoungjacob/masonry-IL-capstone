@@ -4,6 +4,7 @@ K1: G1이 빈손으로 판정하면 집게를 연 뒤 철수 자세로 보내고
 K2: 정책이 집게를 연 채 공급칸 위로 내려오면 도면 공급칸 중심에서 집고 G1 판정 뒤 운반 중 상태로 돌려준다. 이웃은 그대로.
     집게를 닫는 중 · 올라가는 중 · 너무 높음 · 이미 집은 칸에서는 가로채지 않는다.
 K6: G3가 놓인 벽돌을 찾는 반경이 설정값을 따른다. 기본값은 그 전과 같다.
+K1 + K2: G0가 빈 공급칸을 집어 G1이 '안 쥠'이면 before() 안에서 철수한다. 롤아웃은 before · after 어느 쪽 뒤에서도 그 철수를 알아듣는다.
 실행: cd sim && MUJOCO_GL=egl PYTHONPATH=. venv/bin/python -m unittest discover -s tests -p "test_wall3_gate_fix.py" -v
 """
 import unittest
@@ -140,6 +141,42 @@ class K2AlignTest(unittest.TestCase):
         ex._joint_move(ex._solve(p, self.R(0.0), env.arm_q(), env.arm_q()[0]), 0.0, None, "up")
         q = ex._solve(p - [0, 0, 0.01], self.R(0.0), env.arm_q(), env.arm_q()[0])
         self.assertIsNone(g._g0_slot(np.r_[q, 0.0]))
+
+
+class K1K2Test(unittest.TestCase):
+    """K1 + K2: G0 grasps an empty supply slot, G1 says not grasped, K1 sends the arm to the retract pose inside before().
+    The rollout must hear about that retract too (pop once), whichever gate call did it."""
+
+    def setUp(self):
+        K2AlignTest.setUp(self)                               # same scene and arm pose as the K2 tests (not their test cases)
+        import mujoco
+        self.gates.cfg.g1_fail_retract = True
+        a = self.env.brick_qadr[10]
+        self.env.data.qpos[a:a + 3] = [0.0, -1.3, 0.03]       # brick 10 away from its supply slot: an empty grasp
+        self.env.data.qvel[:] = 0
+        mujoco.mj_forward(self.env.model, self.env.data)
+        self.env.step(self.env.arm_q(), 0.0)
+
+    def test_empty_g0_then_retract(self):
+        env, g = self.env, self.gates
+        self.assertTrue(g.before(np.r_[self.q_down, 0.0]))
+        e = g.ev["g0"][-1]
+        self.assertEqual((e["supply_slot"], e["result"], e["g1_grasped"]), (10, "done", False))
+        self.assertTrue(g.ev["g1"][-1]["retract"])
+        self.assertFalse(g.carrying)
+        self.assertLess(np.abs(env.arm_q() - np.asarray(self.ex.q_ret)).max(), 0.02)
+        self.assertTrue(g.pop_gate_retract())
+        self.assertFalse(g.pop_gate_retract())
+
+    def test_rollout_checks_after_both_gate_calls(self):
+        import inspect
+        from wall3 import rollout
+        src = inspect.getsource(rollout.run_wall)
+        i_pop = src.index("gates.pop_gate_retract()")
+        self.assertGreater(i_pop, src.index("gates.after(act)"))
+        line = [l for l in src.splitlines() if "gates.pop_gate_retract()" in l][0]
+        body = [l for l in src.splitlines() if "if gates is not None and gates.before(act)" in l][0]
+        self.assertEqual(len(line) - len(line.lstrip()), len(body) - len(body.lstrip()))   # same level as the before/after branch
 
 
 class K6RadiusTest(unittest.TestCase):

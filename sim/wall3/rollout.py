@@ -78,8 +78,8 @@ def run_wall(env, policy, pre, post, cfg_in, seed, torch, rec=None, q_ret=None, 
                     t_m = env.t
                     gates.after(act)                              # G1 (or carrying bookkeeping)
                     gate_steps += env.t - t_m
-                    if gates.pop_gate_retract():                  # 2026-11-10 K1: a gate retract is not the policy's retract
-                        left, still = False, 0
+            if gates is not None and gates.pop_gate_retract():   # 2026-11-10 K1: a gate retract is not the policy's retract
+                left, still = False, 0                           # (after G1 in after(), or after G0 + G1 inside before())
             q = env.arm_q()
             qhist.append(q)
             zmax = max(zmax, env.brick_pose(k)[0][2])
