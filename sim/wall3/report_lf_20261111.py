@@ -163,7 +163,7 @@ def main():
             ax.set_ylabel("벽 수", color=ink2, fontsize=9)
         axs[-1].set_xticks(xs, [str(x) for x in range(16)] + ["완성"])
         axs[-1].set_xlabel("처음 못 채운 자리 (0부터, '완성' = 16장 다 채움)", color=ink2, fontsize=9)
-        axs[0].set_ylim(0, 105)
+        axs[0].set_ylim(0, 115)
         fig.suptitle(f"처음 못 채운 자리 분포 ({NOTE})", fontsize=11, color=ink, x=0.01, ha="left")
         fig.tight_layout()
         fig.savefig(a.out_png, dpi=200, facecolor=surf)
