@@ -132,11 +132,11 @@ def main():
     ap.add_argument("--gate-target", choices=("turn", "held_truth", "held_grasp"), default="turn",
                     help="G2 · G3 reference slot: turn k / brick lifted (truth, 진단) / nearest supply slot at the G1 moment")
     ap.add_argument("--gate-fix", nargs="*", default=[],
-                    help="added controls (wall3/gates.py FIXES, 2026-11-10 실험파이프라인_실패원인제거): k1 (needs --g1), k2, k6 (needs --g3), k7 (needs --g2)")
+                    help="added controls (wall3/gates.py FIXES, 2026-11-10 실험파이프라인_실패원인제거): k1 (needs --g1), k2, k6 (needs --g3), k7 (needs --g2), k8 (needs --g2, 2026-11-11 G2c SDCG)")
     a = ap.parse_args()
-    need = {"k1": a.g1, "k6": a.g3, "k2": True, "k7": a.g2}
+    need = {"k1": a.g1, "k6": a.g3, "k2": True, "k7": a.g2, "k8": a.g2}
     if any(not need.get(f, True) for f in a.gate_fix):
-        raise SystemExit("--gate-fix k1 은 --g1, k6 은 --g3, k7 은 --g2 와 함께만")
+        raise SystemExit("--gate-fix k1 은 --g1, k6 은 --g3, k7 · k8 은 --g2 와 함께만")
     if (a.gate_pose_source != "camera" or a.gate_target != "turn") and not (a.g2 or a.g3):
         raise SystemExit("--gate-pose-source / --gate-target 는 --g2 또는 --g3 와 함께만")
     if any(not any(lo <= s <= hi for lo, hi in ALLOWED) for s in a.seeds):

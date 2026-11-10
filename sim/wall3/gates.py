@@ -33,6 +33,15 @@ G2를 끄고 G3만 켜면 놓는 순간 가로채 그 자리에서 그대로 놓
   K7 near_slot 0.40 (G2 넓게 받기, R_11): 손에 든 벽돌을 정책이 놓기 시작할 때, 손이 그 벽돌의 설계 자리에서 이 거리(xy) 안이면
      G2 · G3가 넘겨받는다. 그 전 15 cm. 근거(L1 추적, K2): 벽돌 11을 쥔 90번 중 놓기 시작한 곳이 15 cm 안인 64번은 모두 G2가 놓아
      채웠고, 19 ~ 33 cm인 26번은 모두 G2가 넘겨받지 않아 정책이 놓았고 벽 뒤로 떨어졌다. 공급대와 벽은 80 cm 넘게 떨어져 있다.
+  K8 sdcg (G2c 확약 게이트, 방법론 제안 SDCG (b)(c), 2026-11-11): 놓기(확약)는 측정과 힘으로 확인된 뒤에만 한다.
+     (b) G2가 손 안 벽돌을 어느 시점에서도 재지 못하면, 손을 10 cm 올리고 로봇 쪽으로 12 cm 옮긴 다른 팔 자세에서 다시 잰다.
+     (c) 마지막 8 cm는 천천히 내리며 손목 힘을 본다(2 s, 0.5 s 멈춰 영점, 8 N 넘게 2스텝 = 닿음). 놓을 높이보다 30 mm 넘게
+         위에서 닿으면(벽돌 끝이 같은 단 이웃 위에 걸림, 약 57 mm) 놓지 않고, 먼저 놓인 이웃(k − 1)의 반대쪽으로 6 mm 옮겨 다시
+         내린다. 또 닿으면 다른 쪽으로 6 mm. 끝내 못 맞추면 그 자리에 둔다.
+         손 안 높이를 모를 때(재지 못함)는 닿을 때까지 3 cm 더 내려간다.
+     근거(Full 추적, 진단): 자리 6 처음 실패 9벽 중 8벽은 첫 G2가 손 안을 재지 못한 채 '어긋남 0'으로 놓아 7 ~ 11 mm 어긋났고,
+     벽돌 끝이 자리 5 위에 걸쳐 떨어졌다. 한 벽(700315)은 정책이 먼저 벽돌을 자리 5에 대고 눌러 손 안에서 22 mm 밀려 올라가 있었다.
+     시방 합격 기준(채점) · G3 문턱은 바꾸지 않는다(SDCG (a)의 시방 유도 합격 영역은 구현하지 않음).
 """
 from __future__ import annotations
 
@@ -90,6 +99,20 @@ class GateConfig:
     g0_zone_z: float = 0.03          # m: ... and below the approach height (grasp height + expert approach) plus this
     g0_open_max: float = 0.15        # policy grip command below this = the jaw is (still) open
     g0_max_tries: int = 2            # G0 grasps per supply slot and wall
+    sdcg: bool = False               # 2026-11-11 K8 G2c (SDCG): re-measure an unmeasured held brick, guarded last descent
+    sdcg_guard_from: float = 0.08    # m: the last part of the G2 descent (above the place height) is slow and force-guarded
+    sdcg_guard_T: float = 2.0        # s: duration of that guarded part (slow, 2 mm per control step: stop before the brick
+                                     #    turns between the pads; at 4 mm / step it did, unit test 11-11)
+    sdcg_f_thr: float = 8.0          # N: wrist force change from the tare above this, sdcg_n_over steps in a row = contact
+                                     #    (tare after 0.5 s still; a contact changes it by 10 ~ 50 N; unit test 11-11)
+    sdcg_n_over: int = 2             # control steps in a row over sdcg_f_thr = contact
+    sdcg_early: float = 0.030        # m: contact with the TCP higher than place height + this = early (a brick end on a same-
+                                     #    course neighbour: about H = 57 mm; the bed itself was felt up to 13 mm high, test 11-11)
+    sdcg_shift: float = 0.006        # m: after an early contact, shift the brick this far (x try) away from the touching end
+    sdcg_tries: int = 2              # re-tries after an early contact
+    sdcg_view_up2: float = 0.10      # m: extra in-hand views this much higher ...
+    sdcg_view_back: float = 0.12     # m: ... and this far toward the robot (another arm pose) when no view saw a brick end
+    sdcg_extra_down: float = 0.03    # m: unmeasured brick (height in the hand unknown): go on down to contact, at most this
 
     def __post_init__(self):
         if self.pose_source not in POSE_SOURCES:
@@ -107,6 +130,7 @@ FIXES = {
     "k6": {"g3_find_r": 0.07},            # R_6G: G3 찾는 반경 4 -> 7 cm
     "k2": {"g0_align": True},             # R_10S · R_7*: 도면 공급칸 중심에서 집기 (G0 집기 정렬)
     "k7": {"near_slot": 0.40},            # R_11: G2가 놓기를 넘겨받는 거리 15 -> 40 cm (G2 넓게 받기)
+    "k8": {"sdcg": True},                 # 2026-11-11 R_6G: G2c 확약 게이트 (SDCG): 못 재면 다시 재기 + 마지막 하강 힘 감시
 }
 
 
@@ -558,6 +582,9 @@ class WallGates:
         ex._cart_move(np.r_[p[:2], max(p[2], tcp_place_z + c.view_up)], R, 0.4, grip, k, "g2_up")
         hb, p, R, tries = self._measure_held(k) if measure else (None, *env.tcp(), [])
         ev["views"] = tries
+        if hb is None and measure and c.sdcg:                    # K8 (SDCG b): not measured -> do not commit yet, look again
+            hb, p, R, tries2 = self._sdcg_remeasure(k, grip)     # from another arm pose (higher, toward the robot)
+            ev["sdcg_remeasure"] = {"views": tries2, "ok": hb is not None}
         tcp_yaw = float(np.arctan2(R[1, 0], R[0, 0]))
         if hb is None:
             u0, c0, dpsi, src = 0.0, 0.0, 0.0, "nominal"         # grasp position unknown: assume a centred, aligned grasp
@@ -598,14 +625,125 @@ class WallGates:
             if hb2 is not None:
                 err = xy - hb2["pos"][:2]
                 ev["residual_mm"] = round(float(np.hypot(*err)) * 1000, 2)      # logged only
-        # 4) straight down to the place height and release
-        p, R = env.tcp()
-        ex._cart_move(np.r_[p[:2], tcp_place_z], R, 0.6, grip, k, "g2_descend")
+        # 4) straight down to the place height and release (K8: the last part slow and force-guarded)
+        if c.sdcg:
+            ev["sdcg"] = self._sdcg_descend(k, tcp_place_z, grip, ax_t, unknown_height=hb is None)
+        else:
+            p, R = env.tcp()
+            ex._cart_move(np.r_[p[:2], tcp_place_z], R, 0.6, grip, k, "g2_descend")
         self._open_and_lift(k, grip)
         bp, byaw = self._audit(k)
         ev["audit_after_mm"] = round(float(np.hypot(*(bp[:2] - xy))) * 1000, 2)
         ev["audit_after_yaw_deg"] = round(float(np.degrees(_fold(byaw - yaw_d))), 2)
         self.ev["g2"].append(ev)
+
+    # ------------------------------------------------------------------ K8 G2c commitment gate (SDCG, 2026-11-11)
+    def _sdcg_remeasure(self, k, grip):
+        """SDCG (b): no view saw a brick end -> measure again from another arm pose (higher, toward the robot), then
+        come back. In the Full trace the failed views were at the wall's left end (wrist over the held brick, 2026-11-11)."""
+        env, ex, c = self.env, self.ex, self.cfg
+        p0, R0 = env.tcp()
+        yaw0 = float(np.arctan2(R0[1, 0], R0[0, 0]))
+        toward_robot = -p0[:2] / max(float(np.linalg.norm(p0[:2])), 1e-6)
+        q = np.r_[p0[:2] + c.sdcg_view_back * toward_robot, p0[2] + c.sdcg_view_up2]
+        if not self._move_tcp(q, yaw0, grip, k, "g2c_view_move", T=0.5, exact_yaw=True):
+            return None, *env.tcp(), []
+        hb, p, R, tries = self._measure_held(k)
+        self._move_tcp(p0, yaw0, grip, k, "g2c_view_back", T=0.5, exact_yaw=True)
+        p, R = env.tcp()
+        return hb, p, R, tries                                   # the grasp position along the brick is the same here
+
+    def _sdcg_descend(self, k, z_place, grip, ax_t, unknown_height=False):
+        """SDCG (c): fast down to z_place + guard_from, then slow and force-guarded down to the place height.
+        A contact well above the place height (> sdcg_early) means a brick end is on something (a neighbour): lift, shift
+        the brick and try again: first away from the same-course neighbour laid before it (slot k - 1, the building order),
+        then to the other side. The wrist torque is not used for the side: at the contact the brick turns between the pads
+        (unit test 2026-11-11: the force / torque contact point came out on the wrong end); it is only logged.
+        unknown_height (the camera never measured the held brick): go on down to contact, at most sdcg_extra_down."""
+        env, ex, c = self.env, self.ex, self.cfg
+        out = {"tries": []}
+        p, R = env.tcp()
+        xy0, shift = p[:2].copy(), 0.0
+        z_g = z_place + c.sdcg_guard_from
+        noop = lambda held, phase: None
+        for attempt in range(c.sdcg_tries + 1):
+            xy = xy0 + shift * ax_t
+            p, R = env.tcp()
+            if p[2] < z_g - 1e-3:
+                ex._cart_move(np.r_[p[:2], z_g], R, 0.3, grip, k, "g2c_up")
+            p, R = env.tcp()
+            ex._cart_move(np.r_[xy, z_g], R, 0.8 if attempt == 0 else 0.4, grip, k, "g2c_to_guard")
+            if ex.fail:                                          # IK: fall back to the plain descent
+                out["result"] = f"fallback:{ex.fail}"
+                ex.fail = None
+                p, R = env.tcp()
+                ex._cart_move(np.r_[p[:2], z_place], R, 0.6, grip, k, "g2_descend")
+                return out
+            fts = []
+            ex._watch = lambda held, phase: fts.append(env.wrist_ft())
+            try:
+                ex._hold(10, grip, k, "g2c_tare")               # 0.5 s still: the arm stops ringing; tare = last 5 steps
+            finally:
+                ex._watch = noop
+            F0 = np.mean([f for f, _ in fts[-5:]], axis=0)
+            T0 = np.mean([t for _, t in fts[-5:]], axis=0)
+            hit, over = {}, [0]
+
+            def watch(held, phase, F0=F0, T0=T0, hit=hit, over=over):
+                F, Tq = env.wrist_ft()
+                dF = F - F0
+                over[0] = over[0] + 1 if abs(float(dF[2])) > c.sdcg_f_thr else 0
+                if over[0] >= c.sdcg_n_over:                     # control steps in a row
+                    hit.update(dF=dF, dT=Tq - T0, z=float(env.tcp()[0][2]), t=int(env.t))
+                    ex.fail = "sdcg_contact"
+            z_end = z_place - (c.sdcg_extra_down if unknown_height else 0.0)
+            T = c.sdcg_guard_T * (z_g - z_end) / c.sdcg_guard_from
+            ex._watch = watch
+            try:
+                ex._cart_move(np.r_[xy, z_end], R, T, grip, k, "g2c_descend")
+            finally:
+                ex._watch = noop
+            if ex.fail and ex.fail != "sdcg_contact":
+                out["result"] = f"ik:{ex.fail}"
+                ex.fail = None
+                return out
+            ex.fail = None
+            rec = {"shift_mm": round(shift * 1000, 1)}
+            if not hit:
+                rec["contact"] = None                            # reached the end height without contact: release here
+                out["tries"].append(rec)
+                out["result"] = "placed"
+                return out
+            dz = hit["z"] - z_place
+            rec.update(contact_dz_mm=round(dz * 1000, 1), dFz_N=round(float(hit["dF"][2]), 1), t=hit["t"])
+            if dz <= c.sdcg_early:                               # touched at about the expected height: release here
+                out["tries"].append(rec)
+                out["result"] = "placed"
+                return out
+            # early contact: which end? the contact point (perpendicular to the force) r = (F x T) / |F|^2,
+            # the same whatever sign convention the sensor uses
+            dF, dT = hit["dF"], hit["dT"]
+            r = np.cross(dF, dT) / max(float(dF @ dF), 1e-9)
+            rec["contact_along_mm_log"] = round(float(r[:2] @ ax_t) * 1000, 1)       # logged only (see docstring)
+            out["tries"].append(rec)
+            if attempt == c.sdcg_tries:
+                break
+            away = self._sdcg_away(k, ax_t)
+            shift = away * c.sdcg_shift if attempt == 0 else -away * c.sdcg_shift
+        out["result"] = "gave_up"                                # still early contact: lift and put it down unguarded
+        p, R = env.tcp()
+        ex._cart_move(np.r_[p[:2], z_g], R, 0.3, grip, k, "g2c_up")
+        ex._cart_move(np.r_[xy0 + shift * ax_t, z_place], R, 0.6, grip, k, "g2_descend")
+        return out
+
+    def _sdcg_away(self, k, ax_t):
+        """+1 / -1 along ax_t: away from the same-course neighbour laid before slot k (k - 1, else k + 1)."""
+        d = self.env.design
+        nb = k - 1 if k > 0 and d[k - 1]["course"] == d[k]["course"] else k + 1
+        if nb >= len(d) or d[nb]["course"] != d[k]["course"]:
+            return 1.0
+        v = np.array([d[k]["x"] - d[nb]["x"], d[k]["y"] - d[nb]["y"]])     # from the neighbour to slot k
+        return 1.0 if float(v @ ax_t) >= 0 else -1.0
 
     def _release_here(self, k, grip):
         """G3 without G2: the policy's release, done where the hand is (no measurement, no correction)."""
