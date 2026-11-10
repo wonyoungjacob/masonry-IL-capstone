@@ -6,6 +6,7 @@ K2: 정책이 집게를 연 채 공급칸 위로 내려오면 도면 공급칸 �
 K6: G3가 놓인 벽돌을 찾는 반경이 설정값을 따른다. 기본값은 그 전과 같다.
 K7: 손에 든 벽돌을 설계 자리에서 22 cm 떨어진 곳에서 놓기 시작하면 K7일 때만 G2가 넘겨받아 제자리에 놓는다.
 K1 + K2: G0가 빈 공급칸을 집어 G1이 '안 쥠'이면 before() 안에서 철수한다. 롤아웃은 before · after 어느 쪽 뒤에서도 그 철수를 알아듣는다.
+K2, G1 꺼짐 (11-11 고침): G0가 집고 돌려줄 때 G1이 꺼져 있어도 정책을 한 번 리셋한다. 정책 스스로 집을 때(G0 없음)는 그대로 리셋하지 않는다.
 실행: cd sim && MUJOCO_GL=egl PYTHONPATH=. venv/bin/python -m unittest discover -s tests -p "test_wall3_gate_fix.py" -v
 """
 import unittest
@@ -180,6 +181,54 @@ class K1K2Test(unittest.TestCase):
         line = [l for l in src.splitlines() if "gates.pop_gate_retract()" in l][0]
         body = [l for l in src.splitlines() if "if gates is not None and gates.before(act)" in l][0]
         self.assertEqual(len(line) - len(line.lstrip()), len(body) - len(body.lstrip()))   # same level as the before/after branch
+
+
+class _CountReset:
+    def __init__(self):
+        self.n = 0
+
+    def reset(self):
+        self.n += 1
+
+
+class K2WithoutG1Test(unittest.TestCase):
+    """K2 with G1 off (Full − G1, 2026-11-11 fix): after the G0 grasp the policy is reset once, as with G1 on.
+    Before the fix the G1-off branch of _g1_moment returned before the reset and the policy went on with its old chunk
+    (open jaw over the supply table). The policy's own grasp with G1 off still does not reset the policy (unchanged)."""
+
+    def setUp(self):
+        K2AlignTest.setUp(self)                               # same scene and arm pose as the K2 tests
+        self.pol = _CountReset()
+        self.gates = WallGates(self.env, self.pol, g1=False, g2=True, g3=True,
+                               cfg=GateConfig(target="held_grasp", **fix_fields(["k2"])))
+        self.gates.start_brick(0, self.env.t + 10_000)
+        self.gates.k = 6
+
+    def test_g0_without_g1_resets_the_policy(self):
+        env, g = self.env, self.gates
+        z0 = env.brick_pose(10)[0][2]
+        self.assertTrue(g.before(np.r_[self.q_down, 0.0]))
+        e = g.ev["g0"][-1]
+        self.assertEqual((e["supply_slot"], e["result"], e["g1_grasped"]), (10, "done", None))
+        self.assertEqual(g.ev["g1"], [])
+        self.assertTrue(g.carrying)
+        self.assertEqual(g.tgt, 10)
+        self.assertGreater(env.brick_pose(10)[0][2] - z0, 0.005)
+        self.assertEqual(self.pol.n, 1)
+
+    def test_g0_with_g1_resets_once(self):
+        K2AlignTest.setUp(self)                               # G1 on (the K2 tests' gates), with a counting policy
+        pol = _CountReset()
+        self.gates.policy = pol
+        self.assertTrue(self.gates.before(np.r_[self.q_down, 0.0]))
+        self.assertEqual(self.gates.ev["g0"][-1]["g1_grasped"], True)
+        self.assertEqual(pol.n, 1)
+
+    def test_policy_grasp_without_g1_no_reset(self):
+        g = self.gates
+        g._g1_moment(np.r_[self.env.arm_q(), 0.3])            # the policy's own G1 moment (no G0): unchanged, no reset
+        self.assertTrue(g.carrying)
+        self.assertEqual(self.pol.n, 0)
 
 
 class K7WideG2Test(unittest.TestCase):

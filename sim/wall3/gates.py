@@ -357,6 +357,8 @@ class WallGates:
         ng1 = len(self.ev["g1"])
         self.trig.reset()
         self._g1_moment(a)                                   # G1 check (if on) and hand back
+        if self.g1 is None:                                  # 2026-11-11: G1 off → _g1_moment returns before its policy reset;
+            self._handback()                                 # G0 moved the arm, so the policy's old action chunk must go
         ev["g1_grasped"] = self.ev["g1"][ng1]["grasped"] if len(self.ev["g1"]) > ng1 else None
         ev["result"] = "done"
         self.ev["g0"].append(ev)
