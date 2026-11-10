@@ -992,7 +992,7 @@ def build(a):
         e2 = c2["conditions"][G2C_KEY]
         v, h2, hb = e2["vs_base"], e2["first_unfilled_hist"], c2["conditions"][c2["base"]]["first_unfilled_hist"]
         concl.insert(-1, para([("추가 시도 SDCG (놓기 확약 G2c)", {"bold": True}),
-                               (f": 자리 6 실패 {hb.get('6', 0)} → {h2.get('6', 0)}벽, 그러나 힘 오감지로 새 실패 → 전체 "
+                               (f": 자리 6 실패 {hb.get('6', 0)} → {h2.get('6', 0)}벽, 그러나 다른 자리에 새 실패 → 전체 "
                                 f"{v['diff_mean']:+.2f} [{v['ci95'][0]:+.2f}, {v['ci95'][1]:+.2f}]장, Full에서 제외 · "
                                 "VPRA는 3단 벽에선 실패 원인 아님".replace("-", "−"), {})], sz=16, bullet=True, after=3))
         conc_h = 6.5
@@ -1095,7 +1095,8 @@ def write_md(md, d, a, pptx, figd, prev, F, warns, errs):
     L.append("- **이름**: 이전 포스터의 ‘G0 실행가능성 필터’와 이번 ‘G0 집기 정렬’은 다른 제어다. 이번 포스터는 11-10 이름 정리(G0 · G1 · G2 · G2w · G3 · H)만 쓴다.")
     if d.compare(G2C) is not None:
         L.append("- **SDCG · VPRA**: 결론에 한 줄로만 넣었다. SDCG는 G2c(놓기 확약)로 구현해 Full + G2c 대 Full 다시를 쟀다"
-                 " (`eval_lg_g2c_20261111_compare.json`). 겨냥한 자리 6 실패는 줄었으나 전체 효과가 0을 걸쳐 Full에 넣지 않았다."
+                 " (`eval_lg_g2c_20261111_compare.json`). 겨냥한 자리 6 실패는 줄었으나 다른 자리(7 · 1단)에 새 실패가 생겨 전체 효과가 0을 걸쳤다."
+                 " 새 실패의 일부는 힘 감지의 오감지로 보인다(추론, 스토리라인 'SDCG · VPRA 검토'). Full에 넣지 않았다."
                  " VPRA는 완성벽 시방 여유로 3단 벽의 실패 원인이 아니라 구현하지 않았다. 표 · 그래프의 Full은 G0 + G1 + G2 + G2w + G3 + H다.")
     else:
         L.append("- **SDCG · VPRA**: 아직 포스터에 없다. 넣게 되면 새 Full과 줄을 `--rows-json` 또는 `--extra`로 주고 `--tag`를 새로 해 다시 만든다.")
