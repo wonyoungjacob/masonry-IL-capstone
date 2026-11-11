@@ -1,0 +1,111 @@
+{
+ "act_all_held+k2+k7+k8": {
+  "walls": 100,
+  "spec_pass": 59,
+  "slots_filled_mean": 13.57,
+  "iou_mean": 0.817749788870612,
+  "filled_rate_by_slot": [
+   1.0,
+   0.96,
+   0.96,
+   0.96,
+   0.95,
+   0.93,
+   0.92,
+   0.85,
+   0.87,
+   0.87,
+   0.85,
+   0.85,
+   0.72,
+   0.64,
+   0.63,
+   0.61
+  ],
+  "lifted_rate_by_slot": [
+   1.0,
+   1.0,
+   0.0,
+   0.01,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.01,
+   0.03,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "filled_err_mm": {
+   "n": 1357,
+   "median": 0.5536244214266564,
+   "p90": 2.5265212412343074
+  },
+  "policy_time_s_per_brick": 12.4868125,
+  "gate_time_s_per_brick": 16.564906250000003,
+  "wall_clock_s_per_wall": 90.7602192735672,
+  "walls_complete": 60,
+  "slots_filled_median": 16.0,
+  "first_unfilled_hist": {
+   "1": 4,
+   "3": 1,
+   "4": 1,
+   "5": 1,
+   "6": 1,
+   "7": 7,
+   "10": 1,
+   "11": 5,
+   "12": 10,
+   "13": 6,
+   "14": 1,
+   "15": 2,
+   "16": 60
+  },
+  "filled_but_perched": 1,
+  "gates": {
+   "g1_checks": 6419,
+   "g1_grasped": 1389,
+   "g1_grasped_but_target_not_lifted": 1189,
+   "g2_releases": 2012,
+   "g2_in_hand_by_camera": 1999,
+   "g2_in_hand_err_mm_median": 0.61,
+   "g3_inspections": 1384,
+   "g3_seen": 1312,
+   "g3_bad": 630,
+   "g3_replaced": 628,
+   "g3_meas_err_mm_median": 0.295,
+   "g3_replace_after_mm_median": 0.26,
+   "g2_interventions": 2012,
+   "g2_skipped_far": 5,
+   "g2_in_hand_measured": 1999,
+   "g1_grasped_turn_brick": 199,
+   "g0": {
+    "grasps": 1384,
+    "g1_grasped": 1378,
+    "tcp_off_mm_median": 22.5
+   },
+   "target": {
+    "method": [
+     "held_grasp"
+    ],
+    "decisions": 1389,
+    "undetermined": 3,
+    "g1_true": 1389,
+    "g1_true_no_brick_lifted": 0,
+    "g1_true_match": 1386,
+    "match_rate": 0.9978401727861771,
+    "match_rate_all_g1_true": 0.9978401727861771,
+    "slot_ne_turn": 1181
+   }
+  }
+ },
+ "_meta": {
+  "failed_jobs": [],
+  "elapsed_s": 1225.0665004253387,
+  "finished": "2026-11-11 02:47:34"
+ }
+}

@@ -214,12 +214,12 @@ def build(a):
     sources = dict(res["sources"])
     global DIFF, G2C_V
     dsum = pm.W / "eval_lf_full_diffusion_20261110" / "summary.json"
-    dv = json.loads(dsum.read_text())["diffusion_all_held+k2+k7"]
+    dv = json.loads(dsum.read_bytes())["diffusion_all_held+k2+k7"]
     DIFF = {"fill": dv["slots_filled_mean"], "complete": dv["walls_complete"], "spec": dv["spec_pass"]}
     gc = pm.W / "eval_lg_g2c_20261111_compare.json"
-    G2C_V = json.loads(gc.read_text())["conditions"]["eval_lg_full2_20261111/act_all_held+k2+k7+k8"]["vs_base"]
+    G2C_V = json.loads(gc.read_bytes())["conditions"]["eval_lg_full2_20261111/act_all_held+k2+k7+k8"]["vs_base"]
     for q in (dsum, gc):
-        sources[str(q.relative_to(SIM))] = sha16(q)
+        sources[pm.relkey(q)] = sha16(q)
     plt = mpl_setup()
     figd.mkdir(parents=True)
 

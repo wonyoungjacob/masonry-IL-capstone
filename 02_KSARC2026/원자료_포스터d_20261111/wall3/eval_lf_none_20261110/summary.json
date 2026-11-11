@@ -1,0 +1,63 @@
+{
+ "act_none": {
+  "walls": 100,
+  "spec_pass": 0,
+  "slots_filled_mean": 2.0,
+  "iou_mean": 0.09235134237276586,
+  "filled_rate_by_slot": [
+   1.0,
+   1.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "lifted_rate_by_slot": [
+   1.0,
+   0.01,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "filled_err_mm": {
+   "n": 200,
+   "median": 24.78799648670853,
+   "p90": 31.498779212128827
+  },
+  "policy_time_s_per_brick": 10.185906250000002,
+  "gate_time_s_per_brick": 0.0,
+  "wall_clock_s_per_wall": 21.6477724981308,
+  "walls_complete": 0,
+  "slots_filled_median": 2.0,
+  "first_unfilled_hist": {
+   "2": 100
+  },
+  "filled_but_perched": 0
+ },
+ "_meta": {
+  "failed_jobs": [],
+  "elapsed_s": 315.08833956718445,
+  "finished": "2026-11-10 19:24:33"
+ }
+}

@@ -19,7 +19,7 @@ class TestPrimaryMetrics(unittest.TestCase):
 
     def test_matches_compare_json(self):
         for f in ("eval_lf_20261110_compare.json", "eval_lf_g1fix_20261111_compare.json"):
-            c = json.loads((W / f).read_text())
+            c = json.loads((W / f).read_bytes())
             for k, v in c["conditions"].items():
                 if k not in self.rows:
                     continue

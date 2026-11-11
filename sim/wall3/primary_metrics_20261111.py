@@ -9,13 +9,23 @@
 
 실행: cd sim && PYTHONPATH=. venv/bin/python -m wall3.primary_metrics_20261111 [--out outputs/wall3/primary_metrics_20261111.json]
 """
-import argparse, hashlib, json
+import argparse, hashlib, json, os
 from pathlib import Path
 
 import numpy as np
 
 SIM = Path(__file__).resolve().parents[1]
-W = SIM / "outputs" / "wall3"
+# 결과 폴더. 다른 PC에서는 커밋된 복사본(02_KSARC2026/원자료_포스터d_20261111/wall3)을 WALL3_OUT으로 준다.
+W = Path(os.environ["WALL3_OUT"]).resolve() if os.environ.get("WALL3_OUT") else SIM / "outputs" / "wall3"
+
+
+def relkey(p):
+    """출처 기록용 경로: 원래 위치면 sim/ 기준(outputs/wall3/...), 복사본이면 outputs/wall3/... 형태로 맞춘다."""
+    p = Path(p).resolve()
+    try:
+        return str(p.relative_to(SIM))
+    except ValueError:
+        return str(Path("outputs") / "wall3" / p.relative_to(W))
 
 # (줄 이름, 평가 폴더/조건, 종류) — 포스터 05절과 같은 줄 + Full 다시 잰 두 번(실행 간 흔들림)
 ROWS = [
@@ -64,8 +74,8 @@ def load(key):
     d, cond = key.split("/", 1)
     walls, files = {}, {}
     for p in sorted((W / d).glob(f"{cond}_part*/rollout.json")):
-        files[str(p.relative_to(SIM))] = hashlib.sha256(p.read_bytes()).hexdigest()[:16]
-        for w in json.loads(p.read_text())["walls"]:
+        files[relkey(p)] = hashlib.sha256(p.read_bytes()).hexdigest()[:16]
+        for w in json.loads(p.read_bytes())["walls"]:
             walls[w["seed"]] = w
     return walls, files
 
@@ -143,7 +153,7 @@ def main():
     if out.exists():
         raise SystemExit(f"{out} 이미 있음: 덮어쓰지 않음")
     res = compute()
-    out.write_text(json.dumps(res, ensure_ascii=False, indent=1))
+    out.write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
     print(res["note"])
     print(f"{'조건':<18}{'채운자리':>8}{'완성':>6}{'시방':>6}{'완성−불합격':>8}  완성률 차이 %p [95 %]       ②p95  ③p95  ④p95  불합격 항목")
     for r in res["rows"]:
