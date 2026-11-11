@@ -16,7 +16,7 @@ from pathlib import Path
 import numpy as np
 
 from wall3 import primary_metrics_20261111 as pm
-from wall3.poster_ksarc_20261111 import INK, INK2, mpl_setup
+from wall3.poster_ksarc_20261111 import GREY, INK, INK2, ORANGE, mpl_setup
 from wall3.poster_ksarc_20261111d import ORDER, wall_rects
 
 THR = 0.875                     # = (90 − 6) / (90 + 6): 벽면 직각 방향 6 mm 밀림
@@ -24,7 +24,16 @@ THR_ALT = [(0.810, "높이 방향 6 mm 밀림 (51 / 63)"), (0.875, "너비 방�
            (0.939, "길이 방향 6 mm 밀림 (184 / 196)"), (0.900, "수평 회전 약 5° (평가지표 md 3절 표)")]
 NOTE = "개발 배치 100벽(시작값 700300 ~ 700399) · 최종 평가 전"
 OUT = pm.SIM.parent / "02_KSARC2026" / "예비그림_3DIoU_20261111"
-LO, HI = "#f4f7fb", "#163f73"
+LO, HI = "#ffffff", ORANGE                         # 0 = 흰색 → 100 = 주황 (사용자 지시 11-11)
+EDGE = "#c3c9d1"                                    # 0(흰색) 칸도 벽 모양이 보이게 모든 벽돌에 옅은 테두리
+
+
+def case_box(fig, cell, top_pad=0.052, pad=0.006):
+    """조건 하나(벽 2개 + 제목)를 직사각형으로 묶는다. cell = gridspec 칸."""
+    from matplotlib.patches import Rectangle
+    b = cell.get_position(fig)
+    fig.patches.append(Rectangle((b.x0 - pad, b.y0 - pad), b.width + 2 * pad, b.height + top_pad + pad, transform=fig.transFigure,
+                                 fill=False, edgecolor=GREY, linewidth=1.1))
 
 
 def counts(walls, thr):
@@ -38,7 +47,7 @@ def draw(ax, vals, title, cmap, ex=1.9):
     for (x0, z0, L, H), v in zip(wall_rects(), vals):
         z = z0 * ex
         c = cmap(v / 100.0)
-        ax.add_patch(Rectangle((x0, z), L, H * ex, facecolor=c, edgecolor="white", linewidth=1.2))
+        ax.add_patch(Rectangle((x0, z), L, H * ex, facecolor=c, edgecolor=EDGE, linewidth=0.9))
         lum = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
         ax.text(x0 + L / 2, z + H * ex / 2, f"{int(v)}", ha="center", va="center", fontsize=8.5,
                 color="white" if lum < 0.5 else INK)
@@ -70,22 +79,23 @@ def main():
 
     plt = mpl_setup()
     from matplotlib.colors import LinearSegmentedColormap
-    cmap = LinearSegmentedColormap.from_list("seq", [LO, "#7fa6d6", HI])
+    cmap = LinearSegmentedColormap.from_list("seq", [LO, HI])
     w_cm, h_cm = 26.6, 19.0
     fig = plt.figure(figsize=(w_cm / 2.54, h_cm / 2.54), dpi=300)
-    gs = fig.add_gridspec(4, 2, left=0.01, right=0.99, top=0.835, bottom=0.015, wspace=0.08, hspace=0.42)
+    gs = fig.add_gridspec(4, 2, left=0.018, right=0.982, top=0.83, bottom=0.02, wspace=0.1, hspace=0.5)
     for i, lab in enumerate(ORDER):
         ws = data[lab]
         fc, ic = counts(ws, THR)
         comp = sum(all(w["eval"]["slots_filled"]) for w in ws)
         spec = sum(bool(w["eval"]["spec_pass"]) for w in ws)
+        case_box(fig, gs[i // 2, i % 2])
         sg = gs[i // 2, i % 2].subgridspec(1, 2, wspace=0.06)
         ax1, ax2 = fig.add_subplot(sg[0]), fig.add_subplot(sg[1])
         draw(ax1, fc, "채움 (100벽 중)", cmap)
         draw(ax2, ic, f"채움 + IoU ≥ {THR} (예비)", cmap)
-        ax1.text(0.0, 1.32, lab, transform=ax1.transAxes, ha="left", va="bottom", fontsize=12.5, color=INK,
+        ax1.text(0.0, 1.30, lab, transform=ax1.transAxes, ha="left", va="bottom", fontsize=12.5, color=INK,
                  fontweight="bold" if lab == "Full" else None)
-        ax1.text(1.06, 1.32, f"완성 {comp} · 시방 합격 {spec} (벽 단위)", transform=ax1.transAxes, ha="left", va="bottom",
+        ax1.text(1.06, 1.30, f"완성 {comp} · 시방 합격 {spec} (벽 단위)", transform=ax1.transAxes, ha="left", va="bottom",
                  fontsize=10, color=INK2)
     cax = fig.add_axes([0.66, 0.935, 0.3, 0.016])
     cb = fig.colorbar(plt.cm.ScalarMappable(norm=plt.Normalize(0, 100), cmap=cmap), cax=cax, orientation="horizontal")
