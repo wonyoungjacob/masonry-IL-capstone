@@ -1,0 +1,178 @@
+{
+ "meta": {
+  "traj": "outputs/prl/s2_traj_20261112",
+  "seeds": [
+   800000,
+   800001,
+   800002,
+   800003,
+   800004,
+   800005,
+   800006,
+   800007,
+   800008,
+   800009,
+   800010,
+   800011,
+   800012,
+   800013,
+   800014,
+   800015,
+   800016,
+   800017,
+   800018,
+   800019
+  ],
+  "cams": [
+   "SA1",
+   "SA2",
+   "SB1",
+   "SB2",
+   "SC1",
+   "SD1",
+   "WA1",
+   "WB1",
+   "WC1",
+   "WC2",
+   "WD1",
+   "WE1",
+   "H0",
+   "H1",
+   "H2"
+  ],
+  "extra": {
+   "WA2": {
+    "pos": [
+     0.0,
+     0.65,
+     1.3
+    ],
+    "target": [
+     0.0,
+     0.6,
+     0.0
+    ],
+    "up": [
+     0,
+     1,
+     0
+    ],
+    "fovy": 70.88069798464743,
+    "side": "wall"
+   },
+   "G1": {
+    "pos": [
+     2.2,
+     -0.5,
+     1.2
+    ],
+    "target": [
+     0.0,
+     0.03999999999999998,
+     0.235
+    ],
+    "up": [
+     0,
+     0,
+     1
+    ],
+    "fovy": 70.88069798464743,
+    "side": "both"
+   }
+  },
+  "every": 5,
+  "render": [
+   640,
+   480
+  ],
+  "traj_env_sha256": "4dcb6e7e2d08d99a808b00863d9eb0647777f4e9c4813e67a1ab4f429f7e2aee",
+  "elapsed_s": 0.7687966823577881
+ },
+ "clearance_m": {
+  "SA1": {
+   "robot": 0.10476496831306875,
+   "gripper": null,
+   "scene": null
+  },
+  "SA2": {
+   "robot": 0.3520276448616516,
+   "gripper": null,
+   "scene": null
+  },
+  "SB1": {
+   "robot": 0.5,
+   "gripper": null,
+   "scene": null
+  },
+  "SB2": {
+   "robot": 0.5,
+   "gripper": null,
+   "scene": null
+  },
+  "SC1": {
+   "robot": 0.5,
+   "gripper": null,
+   "scene": null
+  },
+  "SD1": {
+   "robot": 0.3990061878006109,
+   "gripper": null,
+   "scene": null
+  },
+  "WA1": {
+   "robot": 0.47802957473575775,
+   "gripper": null,
+   "scene": null
+  },
+  "WB1": {
+   "robot": 0.5,
+   "gripper": null,
+   "scene": null
+  },
+  "WC1": {
+   "robot": 0.5,
+   "gripper": null,
+   "scene": null
+  },
+  "WC2": {
+   "robot": 0.5,
+   "gripper": null,
+   "scene": null
+  },
+  "WD1": {
+   "robot": 0.4870990832222268,
+   "gripper": null,
+   "scene": null
+  },
+  "WE1": {
+   "robot": 0.5,
+   "gripper": null,
+   "scene": null
+  },
+  "H0": {
+   "robot": null,
+   "gripper": 0.05245497887060604,
+   "scene": 0.11296333789887278
+  },
+  "H1": {
+   "robot": null,
+   "gripper": 0.061536134100626694,
+   "scene": 0.16802405251259206
+  },
+  "H2": {
+   "robot": null,
+   "gripper": 0.06064954385196027,
+   "scene": 0.11891796454245183
+  },
+  "WA2": {
+   "robot": 0.07952208512237023,
+   "gripper": null,
+   "scene": null
+  },
+  "G1": {
+   "robot": 0.5,
+   "gripper": null,
+   "scene": null
+  }
+ }
+}

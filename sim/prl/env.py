@@ -20,10 +20,33 @@ def cam_model_name(name):
     return "wrist" if name == "H0" else name
 
 
+def make_renderer(model, h, w, mode):
+    """mujoco.Renderer for depth or segmentation images sampled at the pixel centres.
+    With the default 4 × multisampling MuJoCo reads depth / segmentation at sample 0 of each pixel, which sits
+    (−0.125, +0.375) px off the centre (image x right, y down): measured 2026-11-12, an oblique floor was 1 ~ 6 mm off
+    at 1 ~ 3.5 m. Colour images keep the multisampling (area average, like a real sensor)."""
+    old = model.vis.quality.offsamples
+    model.vis.quality.offsamples = 0
+    try:
+        r = mujoco.Renderer(model, h, w)
+    finally:
+        model.vis.quality.offsamples = old
+    if mode == "depth":
+        r.enable_depth_rendering()
+    elif mode == "seg":
+        r.enable_segmentation_rendering()
+    else:
+        raise ValueError(mode)
+    return r
+
+
 class DryEnv(WallEnv):
-    def __init__(self, cfg=None, fixed_cams=None, extra_cams=None):
+    def __init__(self, cfg=None, fixed_cams=None, extra_cams=None, cam_markers=False):
         """fixed_cams: {name: spec} to add (default: every candidate in prl.config.FIXED_CAMS).
-        extra_cams: more fixed cameras, e.g. the G1 grid (same spec keys: pos, target, up, fovy)."""
+        extra_cams: more fixed cameras, e.g. the G1 grid (same spec keys: pos, target, up, fovy).
+        cam_markers: add a hidden, non-colliding sphere at every camera (clearance checks on replayed trajectories only;
+        never use it for simulation: the wrist markers are extra geoms on the arm)."""
+        self.cam_markers = bool(cam_markers)
         self.cfg = cfg or C.dry_scene()
         if self.cfg.env_version != C.ENV_VERSION:
             raise ValueError(f"DryEnv needs env_version {C.ENV_VERSION!r}")
@@ -50,6 +73,9 @@ class DryEnv(WallEnv):
         for name, c in self.fixed_cams.items():
             wb.add_camera(name=name, pos=list(c["pos"]), quat=_look_at(c["pos"], c["target"], up=c.get("up", (0, 0, 1))),
                           fovy=float(c["fovy"]))
+            if self.cam_markers:
+                wb.add_geom(name=f"cam_{name}", type=mujoco.mjtGeom.mjGEOM_SPHERE, size=[C.CAM_BODY_R, 0, 0], pos=list(c["pos"]),
+                            contype=0, conaffinity=0, group=4, mass=0)
         att = s.site("attachment_site")
         qa = np.asarray(att.quat, float)
         Ra = _quat_rotmat(qa / np.linalg.norm(qa))
@@ -67,6 +93,12 @@ class DryEnv(WallEnv):
             y = np.cross(x, f)
             w3.add_camera(name=name, pos=cam_p, quat=_quat_from_R(np.stack([x, y, -f], axis=1)), fovy=float(c["fovy"]))
             self.wrist_mount[name] = {"pos_gripper": list(c["pos"]), "target_tcp_offset": list(c["target_tcp_offset"])}
+            if self.cam_markers:
+                w3.add_geom(name=f"cam_{name}", type=mujoco.mjtGeom.mjGEOM_SPHERE, size=[0.001, 0, 0], pos=cam_p,
+                            contype=0, conaffinity=0, group=4, mass=0)
+        if self.cam_markers:                      # H0 = the wall3 wrist camera: same point marker
+            w3.add_geom(name="cam_H0", type=mujoco.mjtGeom.mjGEOM_SPHERE, size=[0.001, 0, 0], pos=pa + Ra @ [0.085, 0.0, 0.055],
+                        contype=0, conaffinity=0, group=4, mass=0)
         return s
 
     # ------------------------------------------------------------------ no mortar
@@ -99,6 +131,13 @@ class DryEnv(WallEnv):
         return self
 
     # ------------------------------------------------------------------ images
+    def render(self, cam, w=None, h=None, depth=False):
+        w = w or self.cfg.img
+        h = h or self.cfg.img
+        if depth and (w, h, True) not in self.renderer:       # depth at the pixel centres (see make_renderer)
+            self.renderer[(w, h, True)] = make_renderer(self.model, h, w, "depth")
+        return super().render(cam, w, h, depth)
+
     def render_raw(self, cam, depth=False):
         """Raw 1280 × 960 image of a candidate camera (colour uint8, or depth in metres along the optical axis)."""
         return self.render(cam_model_name(cam), C.RAW_W, C.RAW_H, depth=depth)

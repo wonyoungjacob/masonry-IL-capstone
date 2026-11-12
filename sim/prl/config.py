@@ -162,3 +162,23 @@ def env_dict(scene: SceneConfig | None = None):
 def cams_dict():
     return {"raw": [RAW_W, RAW_H], "policy_img": POLICY_IMG, "fixed": FIXED_CAMS, "wrist": WRIST_CAMS,
             "g1_target": G1_TARGET, "g1_grid": G1_GRID, "depth_noise": DEPTH_NOISE}
+
+
+# ---- 2단계에서 확정한 카메라와 세팅 (prl/settings_20261112.json, prl.select_settings가 만든 것) ---------------------------------
+SETTINGS_JSON = "settings_20261112.json"
+
+
+def load_settings():
+    from pathlib import Path
+    return json.loads((Path(__file__).resolve().parent / SETTINGS_JSON).read_text())
+
+
+def final_cams(names=None):
+    """Fixed cameras of the six settings with their final poses (WA2 moved, G1 from the grid): {name: spec} for DryEnv."""
+    S = load_settings()
+    use = [n for n in (names or S["cameras_used"]) if n not in WRIST_CAMS]
+    return {n: S["camera_poses"][n] for n in use}
+
+
+def setting_cams(name):
+    return list(load_settings()["settings"][name]["cams"])

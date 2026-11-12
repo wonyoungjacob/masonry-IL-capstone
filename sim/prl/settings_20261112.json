@@ -1,0 +1,490 @@
+{
+ "source": {
+  "metrics": "outputs/prl/s2_metrics_c_20261112",
+  "clearance": "outputs/prl/s2_clearance_final_20261112/clearance.json",
+  "static": null
+ },
+ "best": {
+  "SA": "SA1",
+  "SB": "SB1",
+  "WA": "WA2",
+  "WC": "WC1",
+  "WDE": "WE1",
+  "H": "H0"
+ },
+ "ties": {
+  "SA": [
+   "SA1"
+  ],
+  "SB": [
+   "SB1",
+   "SB2"
+  ],
+  "WA": [
+   "WA2"
+  ],
+  "WC": [
+   "WC1"
+  ],
+  "WDE": [
+   "WE1"
+  ]
+ },
+ "wrist_score": {
+  "H0": 1.8767063617706299,
+  "H1": 1.1511469334363937,
+  "H2": 1.0159485042095184
+ },
+ "settings": {
+  "R0": {
+   "cams": [
+    "WB1",
+    "WA1",
+    "H0"
+   ],
+   "n_images": 3,
+   "static_supply": 10,
+   "static_wall": 16,
+   "static_ok": false,
+   "bad_pick_frac": 0.10141587092525518,
+   "bad_slot_frac": 0.011156186612576065,
+   "occlusion_ok": false,
+   "occlusion_index": 0.11257205753783125,
+   "n_pick_frames": 3037,
+   "n_slot_frames": 1972,
+   "supply_measure_cam": null,
+   "wall_measure_cam": "WA1"
+  },
+  "RA": {
+   "cams": [
+    "SA1",
+    "WA2",
+    "H0"
+   ],
+   "n_images": 3,
+   "static_supply": 14,
+   "static_wall": 16,
+   "static_ok": false,
+   "bad_pick_frac": 0.0,
+   "bad_slot_frac": 0.39046653144016225,
+   "occlusion_ok": false,
+   "occlusion_index": 0.39046653144016225,
+   "n_pick_frames": 3037,
+   "n_slot_frames": 1972,
+   "supply_measure_cam": "SA1",
+   "wall_measure_cam": "WA2"
+  },
+  "RB": {
+   "cams": [
+    "SB1",
+    "WC1",
+    "H0"
+   ],
+   "n_images": 3,
+   "static_supply": 16,
+   "static_wall": 16,
+   "static_ok": true,
+   "bad_pick_frac": 0.0,
+   "bad_slot_frac": 0.08823529411764706,
+   "occlusion_ok": false,
+   "occlusion_index": 0.08823529411764706,
+   "n_pick_frames": 3037,
+   "n_slot_frames": 1972,
+   "supply_measure_cam": "SB1",
+   "wall_measure_cam": "WC1"
+  },
+  "RC": {
+   "cams": [
+    "SA1",
+    "WC1",
+    "H0"
+   ],
+   "n_images": 3,
+   "static_supply": 16,
+   "static_wall": 16,
+   "static_ok": true,
+   "bad_pick_frac": 0.0,
+   "bad_slot_frac": 0.09026369168356999,
+   "occlusion_ok": false,
+   "occlusion_index": 0.09026369168356999,
+   "n_pick_frames": 3037,
+   "n_slot_frames": 1972,
+   "supply_measure_cam": "SA1",
+   "wall_measure_cam": "WC1"
+  },
+  "RD": {
+   "cams": [
+    "SB1",
+    "WE1",
+    "H0"
+   ],
+   "n_images": 3,
+   "static_supply": 16,
+   "static_wall": 16,
+   "static_ok": true,
+   "bad_pick_frac": 0.0,
+   "bad_slot_frac": 0.07961460446247465,
+   "occlusion_ok": false,
+   "occlusion_index": 0.07961460446247465,
+   "n_pick_frames": 3037,
+   "n_slot_frames": 1972,
+   "supply_measure_cam": "SB1",
+   "wall_measure_cam": "WE1"
+  },
+  "RE": {
+   "cams": [
+    "G1",
+    "H0"
+   ],
+   "n_images": 2,
+   "static_supply": 16,
+   "static_wall": 16,
+   "static_ok": true,
+   "bad_pick_frac": 0.0,
+   "bad_slot_frac": 0.0,
+   "occlusion_ok": true,
+   "occlusion_index": 0.0,
+   "n_pick_frames": 3037,
+   "n_slot_frames": 1972,
+   "supply_measure_cam": "G1",
+   "wall_measure_cam": "G1"
+  }
+ },
+ "cameras_used": [
+  "G1",
+  "H0",
+  "SA1",
+  "SB1",
+  "WA1",
+  "WA2",
+  "WB1",
+  "WC1",
+  "WE1"
+ ],
+ "camera_poses": {
+  "SA1": {
+   "pos": [
+    0.0,
+    -0.52,
+    1.45
+   ],
+   "target": [
+    0.0,
+    -0.52,
+    0.0
+   ],
+   "up": [
+    0,
+    1,
+    0
+   ],
+   "fovy": 70.88069798464743,
+   "side": "supply"
+  },
+  "SA2": {
+   "pos": [
+    0.0,
+    -0.52,
+    1.75
+   ],
+   "target": [
+    0.0,
+    -0.52,
+    0.0
+   ],
+   "up": [
+    0,
+    1,
+    0
+   ],
+   "fovy": 70.88069798464743,
+   "side": "supply"
+  },
+  "SB1": {
+   "pos": [
+    0.0,
+    -1.25,
+    1.5
+   ],
+   "target": [
+    0.0,
+    -0.5,
+    0.38
+   ],
+   "up": [
+    0,
+    0,
+    1
+   ],
+   "fovy": 70.88069798464743,
+   "side": "supply"
+  },
+  "SB2": {
+   "pos": [
+    0.0,
+    -1.45,
+    1.35
+   ],
+   "target": [
+    0.0,
+    -0.5,
+    0.38
+   ],
+   "up": [
+    0,
+    0,
+    1
+   ],
+   "fovy": 70.88069798464743,
+   "side": "supply"
+  },
+  "SC1": {
+   "pos": [
+    1.5,
+    -0.52,
+    1.5
+   ],
+   "target": [
+    0.0,
+    -0.52,
+    0.38
+   ],
+   "up": [
+    0,
+    0,
+    1
+   ],
+   "fovy": 70.88069798464743,
+   "side": "supply"
+  },
+  "SD1": {
+   "pos": [
+    0.0,
+    0.2,
+    1.9
+   ],
+   "target": [
+    0.0,
+    -0.52,
+    0.38
+   ],
+   "up": [
+    0,
+    0,
+    1
+   ],
+   "fovy": 70.88069798464743,
+   "side": "supply"
+  },
+  "WA1": {
+   "pos": [
+    0.0,
+    0.6,
+    1.85
+   ],
+   "target": [
+    0.0,
+    0.6,
+    0.0
+   ],
+   "up": [
+    0,
+    1,
+    0
+   ],
+   "fovy": 45.0,
+   "side": "wall"
+  },
+  "WB1": {
+   "pos": [
+    0.0,
+    1.75,
+    0.75
+   ],
+   "target": [
+    0.0,
+    0.55,
+    0.1
+   ],
+   "up": [
+    0,
+    0,
+    1
+   ],
+   "fovy": 50.0,
+   "side": "wall"
+  },
+  "WC1": {
+   "pos": [
+    0.0,
+    1.45,
+    1.1
+   ],
+   "target": [
+    0.0,
+    0.6,
+    0.09
+   ],
+   "up": [
+    0,
+    0,
+    1
+   ],
+   "fovy": 70.88069798464743,
+   "side": "wall"
+  },
+  "WC2": {
+   "pos": [
+    0.0,
+    1.2,
+    1.3
+   ],
+   "target": [
+    0.0,
+    0.6,
+    0.09
+   ],
+   "up": [
+    0,
+    0,
+    1
+   ],
+   "fovy": 70.88069798464743,
+   "side": "wall"
+  },
+  "WD1": {
+   "pos": [
+    1.35,
+    0.6,
+    0.95
+   ],
+   "target": [
+    0.0,
+    0.6,
+    0.09
+   ],
+   "up": [
+    0,
+    0,
+    1
+   ],
+   "fovy": 70.88069798464743,
+   "side": "wall"
+  },
+  "WE1": {
+   "pos": [
+    0.9,
+    1.4,
+    1.2
+   ],
+   "target": [
+    0.0,
+    0.6,
+    0.09
+   ],
+   "up": [
+    0,
+    0,
+    1
+   ],
+   "fovy": 70.88069798464743,
+   "side": "wall"
+  },
+  "H0": {
+   "model_name": "wrist",
+   "fovy": 80.0
+  },
+  "H1": {
+   "pos": [
+    0.1,
+    0.0,
+    0.0
+   ],
+   "target_tcp_offset": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fovy": 70.88069798464743
+  },
+  "H2": {
+   "pos": [
+    0.06,
+    -0.11,
+    0.05
+   ],
+   "target_tcp_offset": [
+    0.0,
+    -0.03,
+    0.12
+   ],
+   "fovy": 70.88069798464743
+  },
+  "WA2": {
+   "pos": [
+    0.0,
+    0.65,
+    1.3
+   ],
+   "target": [
+    0.0,
+    0.6,
+    0.0
+   ],
+   "up": [
+    0,
+    1,
+    0
+   ],
+   "fovy": 70.88069798464743,
+   "side": "wall"
+  },
+  "G1": {
+   "pos": [
+    2.2,
+    -0.5,
+    1.2
+   ],
+   "target": [
+    0.0,
+    0.03999999999999998,
+    0.235
+   ],
+   "up": [
+    0,
+    0,
+    1
+   ],
+   "fovy": 70.88069798464743,
+   "side": "both"
+  }
+ },
+ "wrist_mount_note": "H1 · H2: prl.config.WRIST_CAMS",
+ "moved": {
+  "WA2": {
+   "from": [
+    0.0,
+    0.6,
+    1.3
+   ],
+   "to": [
+    0.0,
+    0.65,
+    1.3
+   ],
+   "why": "팔과의 여유 0.047 m < 0.05 m"
+  }
+ },
+ "g1": {
+  "pos": [
+   2.2,
+   -0.5,
+   1.2
+  ],
+  "target": [
+   0.0,
+   0.03999999999999998,
+   0.235
+  ]
+ }
+}

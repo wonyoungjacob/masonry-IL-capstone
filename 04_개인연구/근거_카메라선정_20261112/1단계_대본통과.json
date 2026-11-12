@@ -1,0 +1,1070 @@
+{
+ "n": 50,
+ "n_pass": 50,
+ "n_clean_pass": 50,
+ "n_fail_run": 0,
+ "n_exists": 50,
+ "item_fail": {
+  "2_line_plane": 0,
+  "3_plumb": 0,
+  "4_position": 0,
+  "5_thickness": 0
+ },
+ "fail_reasons": [],
+ "elapsed_s": 137.77821016311646,
+ "workers": 10,
+ "walls": [
+  {
+   "seed": 800100,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.509537938859172,
+    "3": 0.5449003661541774,
+    "4": 0.43923938626111436
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 27.22083330154419
+  },
+  {
+   "seed": 800101,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.49040800669590456,
+    "3": 0.5553726781494239,
+    "4": 0.45753334564591075
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 27.6925265789032
+  },
+  {
+   "seed": 800102,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5044262106051574,
+    "3": 0.6396428346860938,
+    "4": 0.4549324483028583
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 27.209701776504517
+  },
+  {
+   "seed": 800103,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5276152143751501,
+    "3": 0.5508651710020018,
+    "4": 0.44558420011320266
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 27.043904542922974
+  },
+  {
+   "seed": 800104,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.4658152339572226,
+    "3": 0.7184910136998068,
+    "4": 0.44600670224781425
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2872,
+   "time_s": 27.015727519989014
+  },
+  {
+   "seed": 800105,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.4410439922079159,
+    "3": 0.5437899220654963,
+    "4": 0.4405587280781331
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 27.365964651107788
+  },
+  {
+   "seed": 800106,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.4866931293941091,
+    "3": 0.49460859064287543,
+    "4": 0.45247166837592
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2872,
+   "time_s": 27.49468159675598
+  },
+  {
+   "seed": 800107,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5921440155056535,
+    "3": 0.6191209521495544,
+    "4": 0.4481731411687395
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2874,
+   "time_s": 27.534900903701782
+  },
+  {
+   "seed": 800108,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5391823044971239,
+    "3": 0.60404629727695,
+    "4": 0.44402051891634375
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2872,
+   "time_s": 27.317188262939453
+  },
+  {
+   "seed": 800109,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5685038912537081,
+    "3": 0.6352084587588624,
+    "4": 0.44608422603198417
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2872,
+   "time_s": 27.032318830490112
+  },
+  {
+   "seed": 800110,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5526211352665041,
+    "3": 0.6266734431362719,
+    "4": 0.44989595030464624
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 26.822962045669556
+  },
+  {
+   "seed": 800111,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.44434126246461936,
+    "3": 0.6138205987701317,
+    "4": 0.4544345076594736
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2875,
+   "time_s": 27.080769777297974
+  },
+  {
+   "seed": 800112,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5119948766953166,
+    "3": 0.6290260715433593,
+    "4": 0.44804445570245655
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2874,
+   "time_s": 27.10395908355713
+  },
+  {
+   "seed": 800113,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5087617494622215,
+    "3": 0.5497956806236326,
+    "4": 0.4496312036073036
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 27.165838479995728
+  },
+  {
+   "seed": 800114,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5092949649901282,
+    "3": 0.7858868756697168,
+    "4": 0.45320721926500607
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2874,
+   "time_s": 27.31273341178894
+  },
+  {
+   "seed": 800115,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5797153540900701,
+    "3": 0.6962086891767472,
+    "4": 0.45095800679884057
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2874,
+   "time_s": 26.266033411026
+  },
+  {
+   "seed": 800116,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5715603938936933,
+    "3": 0.6682130507579265,
+    "4": 0.44649976744748354
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2874,
+   "time_s": 27.665273427963257
+  },
+  {
+   "seed": 800117,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.49408408385484387,
+    "3": 0.49449277042623585,
+    "4": 0.4519033766001712
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2872,
+   "time_s": 27.096303462982178
+  },
+  {
+   "seed": 800118,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5017257558248615,
+    "3": 0.5586956878773641,
+    "4": 0.45222101416375615
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2875,
+   "time_s": 26.867429733276367
+  },
+  {
+   "seed": 800119,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.4708616353663025,
+    "3": 0.5146968596181356,
+    "4": 0.4514169540880131
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 27.114465951919556
+  },
+  {
+   "seed": 800120,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5115253109247587,
+    "3": 0.5032370899403782,
+    "4": 0.44186217370667524
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2874,
+   "time_s": 27.226463317871094
+  },
+  {
+   "seed": 800121,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5178166437864979,
+    "3": 0.5993204636717264,
+    "4": 0.4447873333852659
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2879,
+   "time_s": 27.23310685157776
+  },
+  {
+   "seed": 800122,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5760106447557005,
+    "3": 0.6564933045730692,
+    "4": 0.4446873905380455
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 27.937788009643555
+  },
+  {
+   "seed": 800123,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.47078200948744464,
+    "3": 0.6137205826710623,
+    "4": 0.44753558545584937
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 27.066506147384644
+  },
+  {
+   "seed": 800124,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5137014105775307,
+    "3": 0.5225874219585425,
+    "4": 0.4539772841164469
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 27.07542586326599
+  },
+  {
+   "seed": 800125,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.49513704544285464,
+    "3": 0.7075713667014094,
+    "4": 0.4389840774424725
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 27.701436281204224
+  },
+  {
+   "seed": 800126,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5269534660136035,
+    "3": 0.535165060636611,
+    "4": 0.449147289496743
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 27.070455312728882
+  },
+  {
+   "seed": 800127,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5201949678850154,
+    "3": 0.6065029042768844,
+    "4": 0.4650287192636826
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 27.51065158843994
+  },
+  {
+   "seed": 800128,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.47256515660730136,
+    "3": 0.5809033973974698,
+    "4": 0.4435821820071295
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 27.056203603744507
+  },
+  {
+   "seed": 800129,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.566052357889746,
+    "3": 0.6567901871620263,
+    "4": 0.4483222575857315
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2871,
+   "time_s": 27.178324699401855
+  },
+  {
+   "seed": 800130,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.553994776997717,
+    "3": 0.6456138744272977,
+    "4": 0.44652223786123546
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2872,
+   "time_s": 27.61829400062561
+  },
+  {
+   "seed": 800131,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.48027094812881094,
+    "3": 0.6999583600565407,
+    "4": 0.4455542124993661
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 27.478161811828613
+  },
+  {
+   "seed": 800132,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5451612949391063,
+    "3": 0.6092858238166965,
+    "4": 0.43230320852405413
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2878,
+   "time_s": 27.86492109298706
+  },
+  {
+   "seed": 800133,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.49520693730524046,
+    "3": 0.7605779560008186,
+    "4": 0.4460471633989105
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2872,
+   "time_s": 27.450551748275757
+  },
+  {
+   "seed": 800134,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5224824800464538,
+    "3": 0.5386910862832384,
+    "4": 0.44301088095444197
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2874,
+   "time_s": 27.118171453475952
+  },
+  {
+   "seed": 800135,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.4839554586852305,
+    "3": 0.6479231312133127,
+    "4": 0.44530233910877737
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 27.10043239593506
+  },
+  {
+   "seed": 800136,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.4992022078092646,
+    "3": 0.5922929464501347,
+    "4": 0.4503146133061353
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2875,
+   "time_s": 26.794851541519165
+  },
+  {
+   "seed": 800137,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5114459031596227,
+    "3": 0.7141929719144402,
+    "4": 0.4531223065690204
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 26.84546422958374
+  },
+  {
+   "seed": 800138,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.489419714685878,
+    "3": 0.5860078169561689,
+    "4": 0.4452588854139128
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2872,
+   "time_s": 27.93194007873535
+  },
+  {
+   "seed": 800139,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5486304025389019,
+    "3": 0.6110683258422345,
+    "4": 0.4424999603159785
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 27.748727798461914
+  },
+  {
+   "seed": 800140,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5374881677193704,
+    "3": 0.793977051538719,
+    "4": 0.46100613374033816
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2874,
+   "time_s": 27.156611919403076
+  },
+  {
+   "seed": 800141,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5251103241016609,
+    "3": 0.563604892454661,
+    "4": 0.4547146080777775
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 27.000797271728516
+  },
+  {
+   "seed": 800142,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.4310719786697019,
+    "3": 0.7686373081182696,
+    "4": 0.4273870992150819
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2878,
+   "time_s": 26.96937394142151
+  },
+  {
+   "seed": 800143,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.4567212938755271,
+    "3": 0.7133340905813856,
+    "4": 0.44429496684528225
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2874,
+   "time_s": 26.89881467819214
+  },
+  {
+   "seed": 800144,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5057553715276167,
+    "3": 0.6168603141341045,
+    "4": 0.4453054999951078
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2872,
+   "time_s": 27.256170511245728
+  },
+  {
+   "seed": 800145,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5557096625846468,
+    "3": 0.6642771421286886,
+    "4": 0.45235044731506413
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 27.446131706237793
+  },
+  {
+   "seed": 800146,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5317481941170097,
+    "3": 0.6060301481234376,
+    "4": 0.45153778360285113
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2872,
+   "time_s": 28.028955936431885
+  },
+  {
+   "seed": 800147,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5211448093483241,
+    "3": 0.5755344035945908,
+    "4": 0.44696694713597385
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 26.769121408462524
+  },
+  {
+   "seed": 800148,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5756164478569968,
+    "3": 0.6323192576581649,
+    "4": 0.4529894308078486
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 27.02523946762085
+  },
+  {
+   "seed": 800149,
+   "fail": null,
+   "spec_pass": true,
+   "exists": true,
+   "items": {
+    "2_line_plane": true,
+    "3_plumb": true,
+    "4_position": true,
+    "5_thickness": true
+   },
+   "values_mm": {
+    "2": 0.5382920702355871,
+    "3": 0.6266048399694579,
+    "4": 0.45126352985747076
+   },
+   "clean_pass": true,
+   "overload_releases": 0,
+   "steps": 2873,
+   "time_s": 27.40984869003296
+  }
+ ],
+ "finished": "2026-11-12 19:00:20",
+ "env_sha256": "4dcb6e7e2d08d99a808b00863d9eb0647777f4e9c4813e67a1ab4f429f7e2aee"
+}
