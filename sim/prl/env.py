@@ -138,9 +138,19 @@ class DryEnv(WallEnv):
             self.renderer[(w, h, True)] = make_renderer(self.model, h, w, "depth")
         return super().render(cam, w, h, depth)
 
-    def render_raw(self, cam, depth=False):
-        """Raw 1280 × 960 image of a candidate camera (colour uint8, or depth in metres along the optical axis)."""
-        return self.render(cam_model_name(cam), C.RAW_W, C.RAW_H, depth=depth)
+    def render_raw(self, cam, depth=False, out=None):
+        """Raw 1280 × 960 image of a candidate camera (colour uint8, or depth in metres along the optical axis).
+        out: colour only, a (960, 1280, 3) uint8 buffer to render into (no allocation per frame: the collector records
+        nine cameras per step, and fresh 3.7 MB arrays fragmented the heap to twice the data size)."""
+        if out is None or depth:
+            return self.render(cam_model_name(cam), C.RAW_W, C.RAW_H, depth=depth)
+        key = (C.RAW_W, C.RAW_H, False)
+        if key not in self.renderer:
+            self.renderer[key] = mujoco.Renderer(self.model, C.RAW_H, C.RAW_W)
+        r = self.renderer[key]
+        r.update_scene(self.data, camera=cam_model_name(cam), scene_option=self.vopt)
+        r.render(out=out)
+        return out
 
     def policy_image(self, cam):
         return letterbox(self.render_raw(cam))

@@ -28,12 +28,11 @@ def save_npz(path, arrays, level=1):
                 np.lib.format.write_array(f, np.asanyarray(a), allow_pickle=False)
 
 
-def delta_encode(frames):
-    """(T, H, W, 3) uint8 → first frame + differences to the previous frame (uint8 wrap-around). Lossless."""
-    a = np.asarray(frames, np.uint8)
-    out = a.copy()
-    out[1:] = a[1:] - a[:-1]
-    return out
+def delta_encode(a):
+    """(T, H, W, 3) uint8 → first frame + differences to the previous frame (uint8 wrap-around), in place. Lossless."""
+    for t in range(len(a) - 1, 0, -1):
+        np.subtract(a[t], a[t - 1], out=a[t])
+    return a
 
 
 def load_images(z, cam):
@@ -45,7 +44,10 @@ class StepLog:
     def __init__(self, env, cams):
         self.env, self.cams = env, list(cams)
         self.rows = {k: [] for k in ("t", "phase", "brick", "state", "action", "closure", "fingers", "ft", "bricks", "tcp", "lock")}
-        self.img = {c: [] for c in self.cams}
+        self.cap = 3200                                     # frames per wall (the script takes about 2,870); grown if needed
+        self.n = 0
+        self.img = {c: np.empty((self.cap, IMG_H, IMG_W, 3), np.uint8) for c in self.cams}   # preallocated: no per-frame allocation
+        self.raw = np.empty((env.model.vis.global_.offheight, env.model.vis.global_.offwidth, 3), np.uint8)
 
     def __call__(self, env, action, phase, k):
         import mujoco
@@ -67,14 +69,17 @@ class StepLog:
         qt = np.zeros(4); mujoco.mju_mat2Quat(qt, R.ravel())
         self.rows["tcp"].append(np.r_[p, qt].astype(np.float32))
         self.rows["lock"].append(env.lock_state())
+        if self.n == self.cap:
+            self.cap += 800
+            self.img = {c: np.concatenate([v, np.empty((800, IMG_H, IMG_W, 3), np.uint8)]) for c, v in self.img.items()}
         for c in self.cams:
-            self.img[c].append(cv2.resize(env.render_raw(c), (IMG_W, IMG_H), interpolation=cv2.INTER_AREA))
+            cv2.resize(env.render_raw(c, out=self.raw), (IMG_W, IMG_H), dst=self.img[c][self.n], interpolation=cv2.INTER_AREA)
+        self.n += 1
 
     def arrays(self):
         out = {k: np.asarray(v) for k, v in self.rows.items()}
         for c in self.cams:
-            out[f"imgd_{c}"] = delta_encode(self.img[c])
-            self.img[c] = None
+            out[f"imgd_{c}"] = delta_encode(self.img[c][:self.n])
         return out
 
 
