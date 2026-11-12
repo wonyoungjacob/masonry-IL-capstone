@@ -87,3 +87,13 @@ for _s in ORDER:
                                           cmd=scoped(30, PY, "-m", "prl.eval_piece", "--ckpt",
                                                      f"{train_out(_s)}/run/checkpoints/last/pretrained_model", "--zone", "select",
                                                      "--seed0", "820000", "--n", "50", "--out", eval_out(_s)))]))
+
+# 2026-11-13 03:30: 진단 1개(결과 아님)를 RD 학습과 RD 시험 사이에 넣었다. RB의 장당 성공률이 낮게 나와(8.6 %), 장 단위 시험이 만드는
+# 관측이 학습 데이터의 관측과 같은지 학습 장면(810000)에서 확인한다(prl.diag_obs). GPU를 쓰므로 다른 작업과 겹치지 않게 단계로 넣었고,
+# 실패해도 본 계산을 막지 않게 종료 코드는 항상 0이다(결과는 summary.json이 있는지로 본다).
+DIAG = f"{O}/s4_diag_obs_RB_20261112"
+STAGES.insert([n for n, _ in STAGES].index("S4_train_RD") + 1,
+              ("S4_diag_obs_RB", [dict(name="S4_diag_obs_RB", kind="rc", module="prl.diag_obs", out=DIAG,
+                                       cmd=scoped(30, "bash", "-c", 'venv/bin/python -m prl.diag_obs "$@"; exit 0', "diag",
+                                                  "--ckpt", f"{train_out('RB')}/run/checkpoints/last/pretrained_model",
+                                                  "--dataset", ds("RB"), "--out", DIAG))]))
