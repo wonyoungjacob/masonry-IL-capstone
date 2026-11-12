@@ -12,7 +12,7 @@
       합치기: python -m prl.to_lerobot --merge <part0> <part1> ... --root data/<이름>
       세팅별: python -m prl.to_lerobot --subset data/<master> --cams SB1 WC1 H0 --root data/<이름>
 """
-import argparse, hashlib, json, subprocess, sys, time
+import argparse, ctypes, gc, hashlib, json, resource, subprocess, sys, time
 from pathlib import Path
 
 import numpy as np
@@ -38,6 +38,25 @@ def features(cams):
     f["info.phase"] = {"dtype": "float32", "shape": (1,), "names": ["phase_id"]}
     f["info.grip_lock"] = {"dtype": "float32", "shape": (4,), "names": ["locked", "lock_brick", "pad_n_left", "pad_n_right"]}
     return f
+
+
+try:
+    _libc = ctypes.CDLL("libc.so.6")
+
+    def trim():
+        """Give freed heap memory back to the system (each episode starts 9 encoders with many threads: freed memory stays in the
+        allocator's per-thread arenas and the process grows wall after wall otherwise)."""
+        _libc.malloc_trim(0)
+except OSError:
+    def trim():
+        pass
+
+
+def rss_gb():
+    for line in open("/proc/self/status"):
+        if line.startswith("VmRSS"):
+            return int(line.split()[1]) / 1048576
+    return float("nan")
 
 
 def pad_frames(frames):
@@ -83,8 +102,11 @@ def build(raw_dirs, root: Path, repo_id: str, max_walls=0, video_mb=50, part=Non
     ep_meta, wall_meta = [], []
     ep = 0
     t0 = time.time()
+    z = img = None
     for wi, w in enumerate(use):
         assert w["cams"] == cams, "raw walls recorded different cameras"
+        z = img = None                       # free the previous wall BEFORE loading the next (2026-11-12: two walls at once
+        gc.collect()                         # plus the encoders reached the 10G limit; the parts were killed at wall boundaries)
         with np.load(w["_raw_dir"] / "raw" / w["raw_file"]) as zf:
             z = {k: zf[k] for k in zf.files if not k.startswith("imgd_")}
             img = {c: load_images(zf, c) for c in cams}                  # unpadded (padding per frame keeps the memory at one wall)
@@ -106,6 +128,7 @@ def build(raw_dirs, root: Path, repo_id: str, max_walls=0, video_mb=50, part=Non
                               "info.phase": np.array([z["phase"][i]], np.float32),
                               "info.grip_lock": z["lock"][i]})
             ds.save_episode()
+            trim()
             ep_meta.append({"episode_index": ep, "wall_index": wi, "seed": w["seed"], "slot": k, "course": s["course"],
                             "position": s["index"], "half": s["half"], "start_step": b["start"], "end_step": b["end"],
                             "frames": b["end"] - b["start"], "duration_s": b["duration_s"], "target": tgt.tolist(),
@@ -114,7 +137,9 @@ def build(raw_dirs, root: Path, repo_id: str, max_walls=0, video_mb=50, part=Non
         wall_meta.append({"wall_index": wi, "seed": w["seed"], "spec_pass": w["eval"]["spec_pass"],
                           "raw_dir": str(w["_raw_dir"]), "raw_file": w["raw_file"], "raw_sha256": w["raw_sha256"],
                           "marks": [[b["slot"], b["start"], b["end"]] for b in w["bricks"]]})
-        print(f"wall {w['seed']}: 16 episodes ({ep} total, {time.time() - t0:.0f} s)", flush=True)
+        print(f"wall {w['seed']}: 16 episodes ({ep} total, {time.time() - t0:.0f} s, rss {rss_gb():.2f} GB, "
+              f"peak {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576:.2f} GB)", flush=True)
+    z = img = None
     ds.finalize()
     meta = root / "meta"
     (meta / "prl_episodes.json").write_text(json.dumps(ep_meta, indent=1, default=float))
@@ -203,9 +228,11 @@ def check_raw(root: Path, cams, n_img_walls=2):
     rng = np.random.default_rng(0)
     mad = {c: [] for c in cams}
     pick = sorted(rng.choice(len(wall_meta), size=min(n_img_walls, len(wall_meta)), replace=False).tolist())
+    raw = None
     for wi in pick:
         w = wall_meta[wi]
         first = sum(e["frames"] for e in ep_meta if e["wall_index"] < wi)
+        raw = None                                # one wall in memory at a time
         with np.load(Path(w["raw_dir"]) / "raw" / w["raw_file"]) as zf:
             raw = {c: load_images(zf, c) for c in cams}
         offs = np.cumsum([0] + [e["frames"] for e in by_wall[wi]])
@@ -234,8 +261,8 @@ def check_raw(root: Path, cams, n_img_walls=2):
     return rep
 
 
-def finish(root: Path, cams, t_build):
-    rep = check_raw(root, cams)
+def finish(root: Path, cams, t_build, n_img_walls=2):
+    rep = check_raw(root, cams, n_img_walls)
     r = subprocess.run([sys.executable, "-m", "wall3.check_videos", "--root", str(root), "--out", str(root / "meta" / "prl_check_videos.json")],
                        capture_output=True, text=True, cwd=SIM)
     rep["videos_all_decode"] = r.returncode == 0
@@ -265,6 +292,7 @@ def main():
     ap.add_argument("--cams", nargs="*", default=None, help="cameras of the subset")
     ap.add_argument("--threads", type=int, default=4, help="encoder threads per camera stream")
     ap.add_argument("--no-verify", action="store_true", help="parts: verified after the merge")
+    ap.add_argument("--img-walls", type=int, default=2, help="walls whose decoded frames are compared with the raw frames")
     a = ap.parse_args()
     root = Path(a.root)
     if root.exists():
@@ -283,7 +311,7 @@ def main():
     if a.no_verify:
         print(f"built {root} ({time.time() - t0:.0f} s), not verified")
         return
-    finish(root, cams, time.time() - t0)
+    finish(root, cams, time.time() - t0, a.img_walls)
 
 
 if __name__ == "__main__":

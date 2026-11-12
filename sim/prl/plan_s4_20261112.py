@@ -21,6 +21,10 @@ N_PARTS = 6
 SETTINGS = json.loads((SIM / "prl" / "settings_20261112.json").read_text())["settings"]
 ORDER = ["RB", "RD", "RC", "RE", "RA", "R0"]         # 기하 조건에 가까운 세팅부터(결과가 먼저 필요한 순), 6개 모두 돈다
 PROBE = f"{O}/s4_probe_20261112"
+# 2026-11-12 23:25 (변환 1차 중단 뒤): 인코더 스레드 1(카메라 9개가 이미 나란히 돈다), 영상 파일 한도 10 MB.
+# 에피소드를 붙일 때마다 그 파일 전체를 다시 쓰므로 한도 50 MB에서는 벽 하나에 수 GB를 다시 썼다(HDD).
+# 합치기도 같은 한도라서 대부분 복사만 한다. 합친 뒤 검사는 영상 비교 벽을 30개로 늘렸다.
+CONV_OPTS = ["--threads", "1", "--video-mb", "10"]
 
 
 def scoped(mem_gb, *cmd):
@@ -64,12 +68,13 @@ STAGES = [
     ("S4_convert_S3_measure",
      [dict(name=f"S4_conv_p{i}", kind="rc", module="prl.to_lerobot", out=part(i),
            cmd=scoped(10, *venv("-m", "prl.to_lerobot", "--raw", COLLECT, "--root", part(i), "--max-walls", "300",
-                                "--part", str(i), str(N_PARTS), "--no-verify"))) for i in range(N_PARTS)]
+                                "--part", str(i), str(N_PARTS), "--no-verify", *CONV_OPTS))) for i in range(N_PARTS)]
      + [dict(name="S3_measure", kind="summary", module="prl.measure", out=f"{O}/s3_measure_20261112",
              cmd=scoped(30, PY, "-m", "prl.measure", "--zone", "select", "--seed0", "820000", "--n", "100",
                         "--out", f"{O}/s3_measure_20261112", "--workers", "8"))]),
     ("S4_merge", [dict(name="S4_merge", kind="rc", module="prl.to_lerobot", out=MASTER,
-                       cmd=scoped(16, *venv("-m", "prl.to_lerobot", "--merge", *[part(i) for i in range(N_PARTS)], "--root", MASTER)))]),
+                       cmd=scoped(16, *venv("-m", "prl.to_lerobot", "--merge", *[part(i) for i in range(N_PARTS)], "--root", MASTER,
+                                            "--video-mb", "10", "--img-walls", "30")))]),
     ("S4_subsets", [dict(name=f"S4_subset_{s}", kind="rc", module="prl.to_lerobot", out=ds(s),
                          cmd=scoped(10, *venv("-m", "prl.to_lerobot", "--subset", MASTER, "--cams", *SETTINGS[s]["cams"], "--root", ds(s))))
                     for s in ORDER]),
