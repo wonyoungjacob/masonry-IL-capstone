@@ -112,6 +112,13 @@ def main():
     log = out / "train.log"
     run = out / "run"
     tag = re.sub(r"[^A-Za-z0-9]", "-", out.name)[-40:]
+    # a lerobot-train left over from an earlier wrapper of this run (the wrapper died, its scope lived on): stop it first
+    left = subprocess.run(["systemctl", "--user", "list-units", "--plain", "--no-legend", f"prl-tr-{tag}-*", f"prl-probe-{tag}-*"],
+                          capture_output=True, text=True).stdout.split("\n")
+    for line in left:
+        if line.strip():
+            subprocess.run(["systemctl", "--user", "kill", "--signal=KILL", line.split()[0]], capture_output=True)
+            time.sleep(5)
     state = {"vram_peak_mib": 0, "ram_peak_gb": 0.0, "mem_log": [], "chunks": [], "deaths": [], "vram_idle_mib": gpu_used_mib()}
     base = [f"--dataset.repo_id=local/{ds.name}", f"--dataset.root={a.dataset}", f"--dataset.video_backend={a.backend}",
             "--policy.type=act", "--policy.device=cuda", "--policy.push_to_hub=false", f"--seed={a.seed}",
@@ -153,6 +160,19 @@ def main():
         except (OSError, ValueError, KeyError):
             return 0
 
+    # page cache: read the dataset once if it is at most 40 % of the RAM (the disk is a spinning HDD)
+    files = [f for f in (SIM / a.dataset).rglob("*") if f.is_file() and f.suffix in (".mp4", ".parquet")]
+    size_gb = sum(f.stat().st_size for f in files) / 2 ** 30
+    ram_gb = int(open("/proc/meminfo").readline().split()[1]) / 1048576
+    state["prewarm"] = {"dataset_gb": size_gb, "done": False}
+    if size_gb <= 0.4 * ram_gb:
+        t1 = time.time()
+        for f in files:
+            with open(f, "rb") as fh:
+                while fh.read(1 << 24):
+                    pass
+        state["prewarm"].update(done=True, seconds=time.time() - t1)
+
     resumes = 0
     while True:
         done = ckpt_step()
@@ -189,7 +209,8 @@ def main():
             "policy_type": cfg["type"], "chunk_size": cfg.get("chunk_size"), "n_action_steps": cfg.get("n_action_steps"),
             "loss_first": losses[0] if losses else None, "loss_last": losses[-1] if losses else None, "loss_nan": any(x != x for x in losses),
             "vram_peak_gb": state["vram_peak_mib"] / 1024, "vram_idle_mib": state["vram_idle_mib"], "ram_peak_gb": state["ram_peak_gb"],
-            "chunks": state["chunks"], "deaths": state["deaths"], "mem_log": state["mem_log"], "elapsed_s": time.time() - t0,
+            "chunks": state["chunks"], "deaths": state["deaths"], "mem_log": state["mem_log"], "prewarm": state["prewarm"],
+            "elapsed_s": time.time() - t0,
             "mem_max_gb": a.mem_gb, "finished": time.strftime("%F %T")}
     (out / "summary.json").write_text(json.dumps(summ, indent=1))
     print(json.dumps({k: v for k, v in summ.items() if k not in ("mem_log", "chunks")}, indent=1))
