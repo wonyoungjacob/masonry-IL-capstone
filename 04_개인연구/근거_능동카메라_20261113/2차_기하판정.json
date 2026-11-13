@@ -1,0 +1,403 @@
+{
+ "source": {
+  "settings": "prl/active_settings_20261113.json",
+  "final": "outputs/prl/a2_final_20261113",
+  "fixed": "outputs/prl/s2_metrics_c_20261112"
+ },
+ "spec": {
+  "lever_m": 0.03,
+  "pan_lim": [
+   -170.0,
+   170.0
+  ],
+  "tilt_lim": [
+   -80.0,
+   30.0
+  ],
+  "w_max": 100.0,
+  "a_max": 400.0,
+  "fovy": 70.88069798464743,
+  "kind": "d435"
+ },
+ "settings": {
+  "A1": {
+   "cams": {
+    "P1": {
+     "mount": "M173",
+     "role": "lead",
+     "base": [
+      1.6,
+      -0.9,
+      1.0
+     ],
+     "pan0": 149.5657642465566,
+     "leave": "release",
+     "name": "A1_P1"
+    }
+   },
+   "n_cameras": 2,
+   "items": [
+    {
+     "name": "시선 도달",
+     "pass": true,
+     "value": "16/16 · 16/16",
+     "excess": 0.0
+    },
+    {
+     "name": "집기 접근 가림",
+     "pass": true,
+     "value": "0.0 %",
+     "excess": 0.0
+    },
+    {
+     "name": "놓기 접근 가림",
+     "pass": true,
+     "value": "0.9 %",
+     "excess": 0.0
+    },
+    {
+     "name": "추종",
+     "pass": true,
+     "value": "100.0 % · 100.0 %",
+     "excess": 0.0
+    }
+   ],
+   "bad_pick_frac": 0.0,
+   "bad_slot_frac": 0.008620689655172414,
+   "track_pick": 1.0,
+   "track_place": 1.0,
+   "n_pick_frames": 3037,
+   "n_slot_frames": 1972,
+   "mm_far_supply": 3.9435065458573257,
+   "mm_far_wall": 4.017382358026507,
+   "px224_whole": {
+    "supply": 3.9939074062259285,
+    "wall": 3.9204632759270166
+   },
+   "px224_fovea": {
+    "supply": 11.411164017788366,
+    "wall": 11.201323645505761
+   }
+  },
+  "A2": {
+   "cams": {
+    "P1": {
+     "mount": "M173",
+     "role": "lead",
+     "base": [
+      1.6,
+      -0.9,
+      1.0
+     ],
+     "pan0": 149.5657642465566,
+     "leave": "release",
+     "name": "A2_P1"
+    },
+    "P2": {
+     "mount": "M108",
+     "role": "slot",
+     "base": [
+      0.0,
+      1.6,
+      0.6
+     ],
+     "pan0": -90.0,
+     "leave": "release",
+     "name": "A2_P2"
+    }
+   },
+   "n_cameras": 3,
+   "items": [
+    {
+     "name": "시선 도달",
+     "pass": true,
+     "value": "16/16 · 16/16",
+     "excess": 0.0
+    },
+    {
+     "name": "집기 접근 가림",
+     "pass": true,
+     "value": "0.0 %",
+     "excess": 0.0
+    },
+    {
+     "name": "놓기 접근 가림",
+     "pass": true,
+     "value": "0.0 %",
+     "excess": 0.0
+    },
+    {
+     "name": "추종",
+     "pass": true,
+     "value": "100.0 % · 100.0 %",
+     "excess": 0.0
+    }
+   ],
+   "bad_pick_frac": 0.0,
+   "bad_slot_frac": 0.0,
+   "track_pick": 1.0,
+   "track_place": 1.0,
+   "n_pick_frames": 3037,
+   "n_slot_frames": 1972,
+   "mm_far_supply": 3.9435065458573257,
+   "mm_far_wall": 1.8275244859878461,
+   "px224_whole": {
+    "supply": 3.9939074062259285,
+    "wall": 8.618215581109725
+   },
+   "px224_fovea": {
+    "supply": 11.411164017788366,
+    "wall": 24.623473088884932
+   }
+  },
+  "A3": {
+   "cams": {
+    "P1": {
+     "mount": "M089",
+     "role": "pick",
+     "base": [
+      0.0,
+      -0.9,
+      1.0
+     ],
+     "pan0": 90.0,
+     "leave": "release",
+     "name": "A3_P1"
+    },
+    "P2": {
+     "mount": "M108",
+     "role": "slot",
+     "base": [
+      0.0,
+      1.6,
+      0.6
+     ],
+     "pan0": -90.0,
+     "leave": "release",
+     "name": "A3_P2"
+    }
+   },
+   "n_cameras": 3,
+   "items": [
+    {
+     "name": "시선 도달",
+     "pass": true,
+     "value": "16/16 · 16/16",
+     "excess": 0.0
+    },
+    {
+     "name": "집기 접근 가림",
+     "pass": true,
+     "value": "0.0 %",
+     "excess": 0.0
+    },
+    {
+     "name": "놓기 접근 가림",
+     "pass": true,
+     "value": "0.4 %",
+     "excess": 0.0
+    },
+    {
+     "name": "추종",
+     "pass": true,
+     "value": "100.0 % · 100.0 %",
+     "excess": 0.0
+    }
+   ],
+   "bad_pick_frac": 0.0,
+   "bad_slot_frac": 0.0035496957403651115,
+   "track_pick": 1.0,
+   "track_place": 1.0,
+   "n_pick_frames": 3037,
+   "n_slot_frames": 1972,
+   "mm_far_supply": 1.876346403458336,
+   "mm_far_wall": 1.8275244859878461,
+   "px224_whole": {
+    "supply": 8.393972440787493,
+    "wall": 8.618215581109725
+   },
+   "px224_fovea": {
+    "supply": 23.982778402249973,
+    "wall": 24.623473088884932
+   }
+  }
+ },
+ "cameras": {
+  "A1_P1": {
+   "role": "lead",
+   "base": [
+    1.6,
+    -0.9,
+    1.0
+   ],
+   "bad_pick_with_H0": 0.0,
+   "bad_slot_with_H0": 0.008620689655172414,
+   "bad_pick_alone": 0.0,
+   "bad_slot_alone": 0.008620689655172414,
+   "track_pick": 1.0,
+   "track_place": 1.0,
+   "reach_supply": 16,
+   "reach_wall": 16
+  },
+  "A2_P1": {
+   "role": "lead",
+   "base": [
+    1.6,
+    -0.9,
+    1.0
+   ],
+   "bad_pick_with_H0": 0.0,
+   "bad_slot_with_H0": 0.008620689655172414,
+   "bad_pick_alone": 0.0,
+   "bad_slot_alone": 0.008620689655172414,
+   "track_pick": 1.0,
+   "track_place": 1.0,
+   "reach_supply": 16,
+   "reach_wall": 16
+  },
+  "A2_P2": {
+   "role": "slot",
+   "base": [
+    0.0,
+    1.6,
+    0.6
+   ],
+   "bad_pick_with_H0": 0.10240368784985182,
+   "bad_slot_with_H0": 0.0035496957403651115,
+   "bad_pick_alone": 0.20118538030951597,
+   "bad_slot_alone": 0.0035496957403651115,
+   "track_pick": 0.19262430029634509,
+   "track_place": 1.0,
+   "reach_supply": 8,
+   "reach_wall": 16
+  },
+  "A3_P1": {
+   "role": "pick",
+   "base": [
+    0.0,
+    -0.9,
+    1.0
+   ],
+   "bad_pick_with_H0": 0.0,
+   "bad_slot_with_H0": 0.2773833671399594,
+   "bad_pick_alone": 0.0,
+   "bad_slot_alone": 0.7358012170385395,
+   "track_pick": 1.0,
+   "track_place": 0.12170385395537525,
+   "reach_supply": 16,
+   "reach_wall": 6
+  },
+  "A3_P2": {
+   "role": "slot",
+   "base": [
+    0.0,
+    1.6,
+    0.6
+   ],
+   "bad_pick_with_H0": 0.10240368784985182,
+   "bad_slot_with_H0": 0.0035496957403651115,
+   "bad_pick_alone": 0.20118538030951597,
+   "bad_slot_alone": 0.0035496957403651115,
+   "track_pick": 0.19262430029634509,
+   "track_place": 1.0,
+   "reach_supply": 8,
+   "reach_wall": 16
+  },
+  "M173_hand": {
+   "role": "hand",
+   "base": [
+    1.6,
+    -0.9,
+    1.0
+   ],
+   "bad_pick_with_H0": 0.0,
+   "bad_slot_with_H0": 0.008620689655172414,
+   "bad_pick_alone": 0.0,
+   "bad_slot_alone": 0.008620689655172414,
+   "track_pick": 0.636154099440237,
+   "track_place": 1.0,
+   "reach_supply": 16,
+   "reach_wall": 16
+  },
+  "M173_fixed": {
+   "role": "fixed",
+   "base": [
+    1.6,
+    -0.9,
+    1.0
+   ],
+   "bad_pick_with_H0": 0.0,
+   "bad_slot_with_H0": 0.008620689655172414,
+   "bad_pick_alone": 0.0,
+   "bad_slot_alone": 0.008620689655172414,
+   "track_pick": 0.9305235429700363,
+   "track_place": 1.0,
+   "reach_supply": 16,
+   "reach_wall": 16
+  },
+  "M108_hand": {
+   "role": "hand",
+   "base": [
+    0.0,
+    1.6,
+    0.6
+   ],
+   "bad_pick_with_H0": 0.10240368784985182,
+   "bad_slot_with_H0": 0.007606490872210953,
+   "bad_pick_alone": 0.20118538030951597,
+   "bad_slot_alone": 0.007606490872210953,
+   "track_pick": 0.707935462627593,
+   "track_place": 1.0,
+   "reach_supply": 8,
+   "reach_wall": 16
+  },
+  "M108_fixed": {
+   "role": "fixed",
+   "base": [
+    0.0,
+    1.6,
+    0.6
+   ],
+   "bad_pick_with_H0": 0.10240368784985182,
+   "bad_slot_with_H0": 0.0035496957403651115,
+   "bad_pick_alone": 0.20118538030951597,
+   "bad_slot_alone": 0.0035496957403651115,
+   "track_pick": 0.8682910767204478,
+   "track_place": 1.0,
+   "reach_supply": 8,
+   "reach_wall": 16
+  },
+  "M089_hand": {
+   "role": "hand",
+   "base": [
+    0.0,
+    -0.9,
+    1.0
+   ],
+   "bad_pick_with_H0": 0.37668752057951926,
+   "bad_slot_with_H0": 0.24594320486815416,
+   "bad_pick_alone": 0.49983536384590055,
+   "bad_slot_alone": 0.6308316430020284,
+   "track_pick": 0.35034573592360885,
+   "track_place": 1.0,
+   "reach_supply": 16,
+   "reach_wall": 6
+  },
+  "M089_fixed": {
+   "role": "fixed",
+   "base": [
+    0.0,
+    -0.9,
+    1.0
+   ],
+   "bad_pick_with_H0": 0.20612446493249917,
+   "bad_slot_with_H0": 0.263184584178499,
+   "bad_pick_alone": 0.45604214685544947,
+   "bad_slot_alone": 0.6480730223123732,
+   "track_pick": 0.0,
+   "track_place": 1.0,
+   "reach_supply": 16,
+   "reach_wall": 6
+  }
+ }
+}
