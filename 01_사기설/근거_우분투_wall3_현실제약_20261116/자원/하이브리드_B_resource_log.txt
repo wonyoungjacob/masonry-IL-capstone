@@ -1,0 +1,6 @@
+23:44:59 시작 part0 {'mem_avail_gb': 55.6, 'load1': 1.1, 'gpu_free_mb': 32093.0}
+23:45:19 시작 part1 {'mem_avail_gb': 52.7, 'load1': 1.3, 'gpu_free_mb': 30006.0}
+23:45:39 시작 part2 {'mem_avail_gb': 50.2, 'load1': 2.3, 'gpu_free_mb': 28198.0}
+23:45:59 시작 part3 {'mem_avail_gb': 47.7, 'load1': 3.4, 'gpu_free_mb': 26389.0}
+23:46:19 시작 part4 {'mem_avail_gb': 45.2, 'load1': 5.0, 'gpu_free_mb': 24690.0}
+23:46:39 시작 part5 {'mem_avail_gb': 42.6, 'load1': 6.5, 'gpu_free_mb': 22881.0}

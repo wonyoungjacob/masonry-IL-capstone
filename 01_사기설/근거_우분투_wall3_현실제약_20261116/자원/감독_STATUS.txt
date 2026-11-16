@@ -1,0 +1,10 @@
+갱신 2026-11-17 00:50:59  상태: 모두 끝  
+R_none          R_act_none                               끝        재시작 0
+R_none          R_script_none                            끝        재시작 0
+R_A             R_act_A                                  끝        재시작 0
+R_A             R_script_A                               끝        재시작 0
+R_B             R_act_B                                  끝        재시작 0
+R_B             R_script_B                               끝        재시작 0
+R_AB            R_act_AB                                 끝        재시작 0
+R_AB            R_script_AB                              끝        재시작 0
+R_report        R_report                                 끝        재시작 0

@@ -1,0 +1,24 @@
+2026-11-16 22:45:58 감독 시작 pid 25451
+2026-11-16 22:45:58 시작 R_act_none (wrapper pid 25452): venv/bin/python -m wall3.eval_real_20261116 --out outputs/wall3/eval_real_act_none_20261116 --condition act_real_none --chunks 6 --parallel 6 --env-version main_v1_eval
+2026-11-16 22:45:58 시작 R_script_none (wrapper pid 25454): venv/bin/python -m wall3.eval_real_20261116 --out outputs/wall3/eval_real_script_none_20261116 --condition script_real_none --chunks 6 --parallel 6 --env-version main_v1_eval
+2026-11-16 22:59:58 끝 R_script_none
+2026-11-16 23:15:58 끝 R_act_none
+2026-11-16 23:15:58 단계 끝 R_none
+2026-11-16 23:15:58 시작 R_act_A (wrapper pid 39939): venv/bin/python -m wall3.eval_real_20261116 --out outputs/wall3/eval_real_act_A_20261116 --condition act_real_A --chunks 6 --parallel 6 --env-version main_v1_eval
+2026-11-16 23:15:58 시작 R_script_A (wrapper pid 39941): venv/bin/python -m wall3.eval_real_20261116 --out outputs/wall3/eval_real_script_A_20261116 --condition script_real_A --chunks 6 --parallel 6 --env-version main_v1_eval
+2026-11-16 23:30:59 끝 R_script_A
+2026-11-16 23:44:59 끝 R_act_A
+2026-11-16 23:44:59 단계 끝 R_A
+2026-11-16 23:44:59 시작 R_act_B (wrapper pid 54889): venv/bin/python -m wall3.eval_real_20261116 --out outputs/wall3/eval_real_act_B_20261116 --condition act_real_B --chunks 6 --parallel 6 --env-version main_v1_eval
+2026-11-16 23:44:59 시작 R_script_B (wrapper pid 54891): venv/bin/python -m wall3.eval_real_20261116 --out outputs/wall3/eval_real_script_B_20261116 --condition script_real_B --chunks 6 --parallel 6 --env-version main_v1_eval
+2026-11-16 23:58:59 끝 R_script_B
+2026-11-17 00:14:59 끝 R_act_B
+2026-11-17 00:14:59 단계 끝 R_B
+2026-11-17 00:14:59 시작 R_act_AB (wrapper pid 69110): venv/bin/python -m wall3.eval_real_20261116 --out outputs/wall3/eval_real_act_AB_20261116 --condition act_real_AB --chunks 6 --parallel 6 --env-version main_v1_eval
+2026-11-17 00:14:59 시작 R_script_AB (wrapper pid 69112): venv/bin/python -m wall3.eval_real_20261116 --out outputs/wall3/eval_real_script_AB_20261116 --condition script_real_AB --chunks 6 --parallel 6 --env-version main_v1_eval
+2026-11-17 00:29:59 끝 R_script_AB
+2026-11-17 00:43:59 끝 R_act_AB
+2026-11-17 00:43:59 단계 끝 R_AB
+2026-11-17 00:43:59 시작 R_report (wrapper pid 83064): venv/bin/python -m wall3.report_real_20261116 --out outputs/wall3/report_real_20261116.json
+2026-11-17 00:44:59 끝 R_report
+2026-11-17 00:44:59 단계 끝 R_report
