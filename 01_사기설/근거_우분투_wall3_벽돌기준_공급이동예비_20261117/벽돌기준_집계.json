@@ -1,0 +1,179 @@
+{
+ "note": "개발 배치 100벽(700300 ~ 700399) · 최종 평가 아님 · 벽돌 성공 = 설계 자리가 채워짐(평가지표 2.4절 조건 1의 자리별 판정) · 구간 = 벽 단위 부트스트랩 95 % (10000번, 시드 0)",
+ "conditions": {
+  "Full (ACT + 검측, 11-10)": {
+   "bricks_ok": 1365,
+   "bricks_tried": 1600,
+   "brick_pct": 85.3125,
+   "brick_pct_ci": [
+    81.0,
+    89.3125
+   ],
+   "walls_complete": 60,
+   "walls_spec_pass": 60,
+   "min_bricks_in_a_wall": 1
+  },
+  "Full + G2t (하이브리드 대표, 11-16)": {
+   "bricks_ok": 1462,
+   "bricks_tried": 1600,
+   "brick_pct": 91.375,
+   "brick_pct_ci": [
+    86.875,
+    95.375
+   ],
+   "walls_complete": 83,
+   "walls_spec_pass": 79,
+   "min_bricks_in_a_wall": 1
+  },
+  "정책 없음 (대본 + 검측, 11-16)": {
+   "bricks_ok": 1586,
+   "bricks_tried": 1600,
+   "brick_pct": 99.125,
+   "brick_pct_ci": [
+    98.3125,
+    99.75
+   ],
+   "walls_complete": 94,
+   "walls_spec_pass": 88,
+   "min_bricks_in_a_wall": 12
+  },
+  "현실 제약 하이브리드 · 없음": {
+   "bricks_ok": 1600,
+   "bricks_tried": 1600,
+   "brick_pct": 100.0,
+   "brick_pct_ci": [
+    100.0,
+    100.0
+   ],
+   "walls_complete": 100,
+   "walls_spec_pass": 96,
+   "min_bricks_in_a_wall": 16
+  },
+  "현실 제약 하이브리드 · A": {
+   "bricks_ok": 1564,
+   "bricks_tried": 1600,
+   "brick_pct": 97.75,
+   "brick_pct_ci": [
+    95.875,
+    99.25
+   ],
+   "walls_complete": 94,
+   "walls_spec_pass": 93,
+   "min_bricks_in_a_wall": 10
+  },
+  "현실 제약 하이브리드 · B": {
+   "bricks_ok": 1600,
+   "bricks_tried": 1600,
+   "brick_pct": 100.0,
+   "brick_pct_ci": [
+    100.0,
+    100.0
+   ],
+   "walls_complete": 100,
+   "walls_spec_pass": 100,
+   "min_bricks_in_a_wall": 16
+  },
+  "현실 제약 하이브리드 · A + B": {
+   "bricks_ok": 1552,
+   "bricks_tried": 1600,
+   "brick_pct": 97.0,
+   "brick_pct_ci": [
+    94.75,
+    98.875
+   ],
+   "walls_complete": 92,
+   "walls_spec_pass": 92,
+   "min_bricks_in_a_wall": 10
+  },
+  "현실 제약 제어만 · 없음": {
+   "bricks_ok": 1600,
+   "bricks_tried": 1600,
+   "brick_pct": 100.0,
+   "brick_pct_ci": [
+    100.0,
+    100.0
+   ],
+   "walls_complete": 100,
+   "walls_spec_pass": 100,
+   "min_bricks_in_a_wall": 16
+  },
+  "현실 제약 제어만 · A": {
+   "bricks_ok": 1600,
+   "bricks_tried": 1600,
+   "brick_pct": 100.0,
+   "brick_pct_ci": [
+    100.0,
+    100.0
+   ],
+   "walls_complete": 100,
+   "walls_spec_pass": 100,
+   "min_bricks_in_a_wall": 16
+  },
+  "현실 제약 제어만 · B": {
+   "bricks_ok": 1600,
+   "bricks_tried": 1600,
+   "brick_pct": 100.0,
+   "brick_pct_ci": [
+    100.0,
+    100.0
+   ],
+   "walls_complete": 100,
+   "walls_spec_pass": 100,
+   "min_bricks_in_a_wall": 16
+  },
+  "현실 제약 제어만 · A + B": {
+   "bricks_ok": 1600,
+   "bricks_tried": 1600,
+   "brick_pct": 100.0,
+   "brick_pct_ci": [
+    100.0,
+    100.0
+   ],
+   "walls_complete": 100,
+   "walls_spec_pass": 100,
+   "min_bricks_in_a_wall": 16
+  }
+ },
+ "pairs": {
+  "Full + G2t (하이브리드 대표, 11-16) − 정책 없음 (대본 + 검측, 11-16)": {
+   "brick_pct_diff": -7.75,
+   "ci": [
+    -12.314062499999999,
+    -3.75
+   ],
+   "bricks_diff": -124
+  },
+  "현실 제약 하이브리드 · 없음 − 현실 제약 제어만 · 없음": {
+   "brick_pct_diff": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "bricks_diff": 0
+  },
+  "현실 제약 하이브리드 · A − 현실 제약 제어만 · A": {
+   "brick_pct_diff": -2.25,
+   "ci": [
+    -4.125,
+    -0.75
+   ],
+   "bricks_diff": -36
+  },
+  "현실 제약 하이브리드 · B − 현실 제약 제어만 · B": {
+   "brick_pct_diff": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "bricks_diff": 0
+  },
+  "현실 제약 하이브리드 · A + B − 현실 제약 제어만 · A + B": {
+   "brick_pct_diff": -3.0,
+   "ci": [
+    -5.25,
+    -1.125
+   ],
+   "bricks_diff": -48
+  }
+ }
+}

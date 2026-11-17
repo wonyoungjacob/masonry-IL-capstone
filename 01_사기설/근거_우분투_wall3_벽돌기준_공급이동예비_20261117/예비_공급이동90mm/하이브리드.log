@@ -1,0 +1,3 @@
+Loading weights from local directory
+[act A=0 B=1] seed 700300: filled 3/16, spec False, G0v 8 (not seen 5, grasped 3), wall 46 s (sim 432 s)
+[act A=0 B=1] seed 700301: filled 3/16, spec False, G0v 8 (not seen 5, grasped 3), wall 49 s (sim 485 s)

@@ -1,0 +1,2 @@
+[script A=0 B=1] seed 700300: filled 1/16, spec False, G0v 24 (not seen 16, grasped 8), wall 30 s (sim 207 s)
+[script A=0 B=1] seed 700301: filled 3/16, spec False, G0v 27 (not seen 22, grasped 5), wall 25 s (sim 204 s)
